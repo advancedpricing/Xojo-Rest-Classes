@@ -42,10 +42,10 @@ Inherits Xojo.Net.HTTPSocket
 	#tag Method, Flags = &h0
 		 Shared Function RESTTypeToHTTPAction(type As RESTTypes) As Text
 		  select case type
-		  case RESTTypes.Authenticate, RESTTypes.Read, RESTTypes.GET
+		  case RESTTypes.Read, RESTTypes.GET
 		    return "GET"
 		    
-		  case RESTTypes.Create, RESTTypes.POST
+		  case RESTTypes.Create, RESTTypes.Authenticate, RESTTypes.POST
 		    return "POST"
 		    
 		  case RESTTypes.DELETE
