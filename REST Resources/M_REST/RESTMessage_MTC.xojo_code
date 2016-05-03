@@ -23,6 +23,36 @@ Inherits Xojo.Net.HTTPSocket
 		End Sub
 	#tag EndEvent
 
+	#tag Event
+		Sub PageReceived(URL as Text, HTTPStatus as Integer, Content as xojo.Core.MemoryBlock)
+		  mIsConnected = false
+		  ResponseReceivedMicroseconds = Microseconds
+		  
+		  dim response as Auto
+		  dim jsonText as text
+		  dim goodJSON as boolean = true
+		  
+		  try 
+		    jsonText = ExpectedTextEncoding.ConvertDataToText( Content )
+		  catch err as RuntimeException
+		    response = Content
+		    goodJSON = false
+		  end try
+		  
+		  if goodJSON then
+		    try
+		      response = Xojo.Data.ParseJSON( jsonText )
+		    catch err as Xojo.Data.InvalidJSONException
+		      response = jsonText
+		      goodJSON = false
+		    end try
+		  end if
+		  
+		  RaiseEvent ResponseReceived URL, HTTPStatus, response 
+		  
+		End Sub
+	#tag EndEvent
+
 
 	#tag Method, Flags = &h0
 		Sub Constructor()
@@ -30,12 +60,44 @@ Inherits Xojo.Net.HTTPSocket
 		  Super.Constructor
 		  
 		  TimeoutTimer = new Xojo.Core.Timer
-		  TimeoutTimer.Period = TimeoutSeconds \ 1000
 		  TimeoutTimer.Mode = Xojo.Core.Timer.Modes.Off
 		  
 		  AddHandler TimeoutTimer.Action, WeakAddressOf TimeoutTimer_Action
 		  
+		  ExpectedTextEncoding = Xojo.Core.TextEncoding.UTF8
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub Destructor()
+		  if TimeoutTimer isa Object then
+		    TimeoutTimer.Mode = Xojo.Core.Timer.Modes.Off
+		    RemoveHandler TimeoutTimer.Action, WeakAddressOf TimeoutTimer_Action
+		    TimeoutTimer = nil
+		  end if
 		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Disconnect()
+		  if IsConnected then
+		    mIsConnected = false
+		    TimeoutTimer.Mode = Xojo.Core.Timer.Modes.Off
+		    super.Disconnect
+		  end if
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub PrepareToSend()
+		  mIsConnected = true
+		  RequestSentMicroseconds = Microseconds
+		  ResponseReceivedMicroseconds = -1.0
+		  
+		  TimeoutTimer.Period = TimeOutSeconds * 1000
+		  TimeoutTimer.Mode = Xojo.Core.Timer.Modes.Multiple
 		End Sub
 	#tag EndMethod
 
@@ -67,12 +129,28 @@ Inherits Xojo.Net.HTTPSocket
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub Send(type As RESTTypes)
+		  dim action as text = HTTPAction
+		  if action = RESTTypes.Unknown then
+		    raise new M_REST.RESTException( "REST type was not specified" )
+		  end if
+		  
+		  dim url as text = RaiseEvent GetURLPattern
+		  url = url.Trim
+		  
+		  #pragma warning "Finish this!!"
+		  
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h1
 		Protected Sub Send(Method as Text, URL as Text)
 		  //
 		  // Disable external access to this
 		  //
 		  
+		  PrepareToSend
 		  super.Send( Method, URL )
 		  
 		End Sub
@@ -84,6 +162,7 @@ Inherits Xojo.Net.HTTPSocket
 		  // Disable external access to this
 		  //
 		  
+		  PrepareToSend
 		  super.Send( Method, URL, File )
 		End Sub
 	#tag EndMethod
@@ -97,8 +176,9 @@ Inherits Xojo.Net.HTTPSocket
 		    end if
 		  end if
 		  
-		  if not IsConnected then
-		    sender.Mode = Xojo.Core.Timer.Modes.Off
+		  sender.Mode = Xojo.Core.Timer.Modes.Off
+		  if IsConnected then
+		    sender.Mode = Xojo.Core.Timer.Modes.Multiple
 		  end if
 		  
 		End Sub
@@ -122,12 +202,20 @@ Inherits Xojo.Net.HTTPSocket
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
+		Event ResponseReceived(url As Text, HTTPStatus As Integer, response As Auto)
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
 		Event TimedOut() As Boolean
 	#tag EndHook
 
 
 	#tag Property, Flags = &h0
 		DefaultRESTType As RESTTypes = RESTTypes.Unknown
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		ExpectedTextEncoding As Xojo.Core.TextEncoding
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -157,17 +245,12 @@ Inherits Xojo.Net.HTTPSocket
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mRequestSentMicroseconds As Double
+		Private RequestSentMicroseconds As Double = -1.0
 	#tag EndProperty
 
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  return mRequestSentMicroseconds
-			End Get
-		#tag EndGetter
-		RequestSentMicroseconds As Double
-	#tag EndComputedProperty
+	#tag Property, Flags = &h21
+		Private ResponseReceivedMicroseconds As Double = -1.0
+	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
@@ -187,6 +270,27 @@ Inherits Xojo.Net.HTTPSocket
 			End Get
 		#tag EndGetter
 		RESTType As RESTTypes
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  dim roundTrip as double
+			  
+			  if ResponseReceivedMicroseconds < 0.0 or RequestSentMicroseconds < 0.0 then
+			    roundTrip = -1.0
+			  else
+			    roundTrip = ( ResponseReceivedMicroseconds - RequestSentMicroseconds ) / 1000.0
+			  end if
+			  
+			  if roundTrip < 0.0 then
+			    roundTrip = -1.0
+			  end if
+			  
+			  return roundTrip
+			End Get
+		#tag EndGetter
+		RoundTripMs As Double
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h0
@@ -273,7 +377,7 @@ Inherits Xojo.Net.HTTPSocket
 			Type="String"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="RequestSentMicroseconds"
+			Name="RequestSentMs"
 			Group="Behavior"
 			Type="Double"
 		#tag EndViewProperty
