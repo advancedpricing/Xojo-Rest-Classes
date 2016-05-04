@@ -186,6 +186,10 @@ Inherits Xojo.Net.HTTPSocket
 
 
 	#tag Hook, Flags = &h0
+		Event ContinueWaiting() As Boolean
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
 		Event Disconnected()
 	#tag EndHook
 
@@ -205,9 +209,6 @@ Inherits Xojo.Net.HTTPSocket
 		Event ResponseReceived(url As Text, HTTPStatus As Integer, response As Auto)
 	#tag EndHook
 
-	#tag Hook, Flags = &h0
-		Event TimedOut() As Boolean
-	#tag EndHook
 
 
 	#tag Property, Flags = &h0
