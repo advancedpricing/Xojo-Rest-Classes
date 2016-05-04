@@ -105,25 +105,25 @@ Inherits Xojo.Net.HTTPSocket
 		 Shared Function RESTTypeToHTTPAction(type As RESTTypes) As Text
 		  select case type
 		  case RESTTypes.Read, RESTTypes.GET
-		    return "GET"
+		    return kActionGet
 		    
 		  case RESTTypes.Create, RESTTypes.Authenticate, RESTTypes.POST
-		    return "POST"
+		    return kActionPost
 		    
 		  case RESTTypes.DELETE
-		    return "DELETE"
+		    return kActionDelete
 		    
 		  case RESTTypes.UpdateReplace, RESTTypes.PUT
-		    return "PUT"
+		    return kActionPut
 		    
 		  case RESTTypes.UpdateModify, RESTTypes.PATCH
-		    return "PATCH"
+		    return kActionPatch
 		    
 		  case RESTTypes.OPTIONS
-		    return "OPTIONS"
+		    return kActionOptions
 		    
 		  case else
-		    return "Unknown"
+		    return kActionUnknown
 		    
 		  end select
 		End Function
@@ -132,7 +132,7 @@ Inherits Xojo.Net.HTTPSocket
 	#tag Method, Flags = &h0
 		Sub Send(type As RESTTypes)
 		  dim action as text = HTTPAction
-		  if action = RESTTypes.Unknown then
+		  if action = kActionUnknown then
 		    raise new M_REST.RESTException( "REST type was not specified" )
 		  end if
 		  
@@ -300,6 +300,28 @@ Inherits Xojo.Net.HTTPSocket
 	#tag Property, Flags = &h21
 		Private TimeoutTimer As Xojo.Core.Timer
 	#tag EndProperty
+
+
+	#tag Constant, Name = kActionDelete, Type = Text, Dynamic = False, Default = \"DELETE", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = kActionGet, Type = Text, Dynamic = False, Default = \"GET", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = kActionOptions, Type = Text, Dynamic = False, Default = \"OPTIONS", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = kActionPatch, Type = Text, Dynamic = False, Default = \"PATCH", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = kActionPost, Type = Text, Dynamic = False, Default = \"POST", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = kActionPut, Type = Text, Dynamic = False, Default = \"PUT", Scope = Protected
+	#tag EndConstant
+
+	#tag Constant, Name = kActionUnknown, Type = Text, Dynamic = False, Default = \"Unknown", Scope = Protected
+	#tag EndConstant
 
 
 	#tag Enum, Name = RESTTypes, Type = Integer, Flags = &h0
