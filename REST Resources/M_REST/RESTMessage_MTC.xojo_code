@@ -141,6 +141,11 @@ Inherits Xojo.Net.HTTPSocket
 		  
 		  #pragma warning "Finish this!!"
 		  
+		  dim payload as Xojo.Core.Dictionary
+		  if RaiseEvent CancelSend( url, action, payload ) then
+		    return
+		  end if
+		  
 		End Sub
 	#tag EndMethod
 
@@ -184,6 +189,10 @@ Inherits Xojo.Net.HTTPSocket
 		End Sub
 	#tag EndMethod
 
+
+	#tag Hook, Flags = &h0
+		Event CancelSend(ByRef url As Text, ByRef httpAction As Text, ByRef payload As Auto) As Boolean
+	#tag EndHook
 
 	#tag Hook, Flags = &h0
 		Event ContinueWaiting() As Boolean
