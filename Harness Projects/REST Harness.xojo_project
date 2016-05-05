@@ -10,6 +10,7 @@ Folder=REST Resources;../REST Resources;&hF907FFF;&h0;false
 Module=M_REST;../REST Resources/M_REST.xojo_code;&h608AF7FF;&hF907FFF;false
 Class=RESTException;../REST Resources/M_REST/RESTException.xojo_code;&h394E8FFF;&h608AF7FF;false
 Interface=TextProvider;../REST Resources/M_REST/TextProvider.xojo_code;&h1F1CC7FF;&h608AF7FF;false
+Class=ClassMeta;../REST Resources/M_REST/ClassMeta.xojo_code;&h5961FFF;&h608AF7FF;false
 Folder=Examples;Examples;&h51D0A7FF;&h0;false
 Class=GetCatsMessage;Examples/GetCatsMessage.xojo_code;&h5EC0D7FF;&h51D0A7FF;false
 DefaultWindow=Window1
