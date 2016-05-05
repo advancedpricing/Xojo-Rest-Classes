@@ -114,23 +114,11 @@ End
 
 #tag Events MsgGetCats
 	#tag Event
-		Sub ResponseReceived(url As Text, HTTPStatus As Integer, response As Auto)
-		  CatPic = nil
-		  
-		  if response isa Xojo.Core.MemoryBlock then
-		    
-		    dim mbResponse as Xojo.Core.MemoryBlock = response
-		    
-		    dim mbTemp as MemoryBlock = mbResponse.Data
-		    dim mb as new MemoryBlock( mbResponse.Size )
-		    mb.StringValue( 0, mb.Size ) = mbTemp.StringValue( 0, mb.Size )
-		    
-		    CatPic = Picture.FromData( mb )
-		    
-		  end if
-		  
+		Sub ResponseReceived(url As Text, HTTPStatus As Integer, payload As Auto)
+		  CatPic = if( payload isa Picture, payload, nil )
 		  cvsPic.Invalidate
 		  return
+		  
 		End Sub
 	#tag EndEvent
 #tag EndEvents

@@ -28,29 +28,13 @@ Inherits Xojo.Net.HTTPSocket
 		  mIsConnected = false
 		  ResponseReceivedMicroseconds = Microseconds
 		  
-		  dim response as Auto
-		  dim jsonText as text
-		  dim goodJSON as boolean = true
+		  dim payload as Auto = content
 		  
-		  #pragma BreakOnExceptions false
-		  try 
-		    jsonText = ExpectedTextEncoding.ConvertDataToText( Content )
-		  catch err as RuntimeException
-		    response = Content
-		    goodJSON = false
-		  end try
-		  #pragma BreakOnExceptions default
-		  
-		  if goodJSON then
-		    try
-		      response = Xojo.Data.ParseJSON( jsonText )
-		    catch err as Xojo.Data.InvalidJSONException
-		      response = jsonText
-		      goodJSON = false
-		    end try
+		  if not SkipPayloadProcessing( URL, HTTPStatus, payload ) then
+		    payload = ProcessPayload( payload )
 		  end if
 		  
-		  RaiseEvent ResponseReceived URL, HTTPStatus, response 
+		  RaiseEvent ResponseReceived URL, HTTPStatus, payload 
 		  
 		End Sub
 	#tag EndEvent
@@ -193,6 +177,170 @@ Inherits Xojo.Net.HTTPSocket
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Function ProcessImagePayload(payload As Xojo.Core.MemoryBlock, subType As Text) As Auto
+		  dim result as Auto
+		  
+		  #if TargetiOS then
+		    #pragma error "Finish this!"
+		    
+		  #else
+		    
+		    //
+		    // Have to use the classic MemoryBlock
+		    //
+		    dim mbTemp as MemoryBlock = payload.Data
+		    dim mb as MemoryBlock = mbTemp.StringValue( 0, payload.Size )
+		    
+		    dim p as Picture = Picture.FromData( mb )
+		    result = p
+		    
+		  #endif
+		  
+		  return result
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function ProcessPayload(payload As Xojo.Core.MemoryBlock) As Auto
+		  dim result as Auto
+		  
+		  dim indicatedContentType as text = self.ResponseHeader( "Content-Type" )
+		  
+		  dim parts() as text = indicatedContentType.Split( "/" )
+		  dim indicatedType as text = if( parts.Ubound <> -1, parts( 0 ), "" )
+		  dim indicatedSubtype as text = if( parts.Ubound > 0, indicatedContentType.Mid( indicatedContentType.IndexOf( "/" ) + 1 ), "" )
+		  
+		  if indicatedType = "image" then
+		    try
+		      result = ProcessImagePayload( payload, indicatedSubtype )
+		    catch err as RuntimeException
+		      if err isa EndException or err isa ThreadEndException then
+		        raise err
+		      end if
+		      indicatedType = ""
+		      indicatedSubtype = ""
+		    end try
+		  end if
+		  
+		  if indicatedType = "text" or _
+		    ( indicatedSubtype.Length >= 4 and indicatedSubtype.BeginsWith( "json" ) ) or _
+		    ( indicatedSubtype.Length >= 3 and indicatedSubtype.BeginsWith( "xml" ) ) or _
+		    indicatedType = "" then
+		    try
+		      result = ProcessTextPayload( payload, indicatedSubtype )
+		    catch err as RuntimeException
+		      if err isa EndException or err isa ThreadEndException then
+		        raise err
+		      end if
+		      indicatedType = ""
+		      indicatedSubtype = ""
+		    end try
+		  end if
+		  
+		  if result = nil then
+		    //
+		    // The indicated type was wrong or couldn't be handled properly.
+		    // In either case, just pass it on.
+		    //
+		    result = payload
+		  end if
+		  
+		  return result
+		  
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function ProcessTextPayload(payload As Xojo.Core.MemoryBlock, subtype As Text) As Auto
+		  dim result as Auto
+		  
+		  dim encoding as Xojo.Core.TextEncoding = ExpectedTextEncoding
+		  if encoding is nil then
+		    encoding = Xojo.Core.TextEncoding.UTF8
+		  end if
+		  
+		  //
+		  // See if an encoding is indicated
+		  //
+		  if subtype <> "" then
+		    dim parts() as text = subtype.Split( ";" )
+		    if parts.Ubound > 0 then
+		      
+		      dim pairs as new Xojo.Core.Dictionary
+		      for each part as text in parts
+		        dim subparts() as text = part.Split( "=" )
+		        if subparts.Ubound = 1 then
+		          pairs.Value( subparts( 0 ).Trim ) = subparts( 1 ).Trim
+		        end if
+		      next
+		      
+		      if pairs.HasKey( "charset" ) then
+		        try
+		          encoding = Xojo.Core.TextEncoding.FromIANAName( pairs.Value( "charset" ) )
+		        catch err as RuntimeException
+		          if err isa EndException or err isa ThreadEndException then
+		            raise err
+		          end if
+		        end try
+		      end if
+		      
+		    end if
+		  end if
+		  
+		  dim textValue as text = encoding.ConvertDataToText( payload )
+		  //
+		  // If that crashes, the caller will handle it
+		  //
+		  
+		  //
+		  // Try to figure it out
+		  //
+		  
+		  //
+		  // JSON?
+		  //
+		  dim json as Xojo.Core.Dictionary
+		  if subtype = "" or subtype = "json" then
+		    try
+		      json = Xojo.Data.ParseJSON( textValue )
+		      subtype = "json"
+		      result = json
+		    catch err as RuntimeException
+		      if err isa EndException or err isa ThreadEndException then
+		        raise err
+		      end if
+		    end try
+		  end if
+		  
+		  #if not TargetiOS then
+		    //
+		    // XML?
+		    //
+		    dim xml as XMLDocument
+		    if subtype = "" or subtype = "xml" then
+		      try
+		        xml = new XmlDocument( textValue )
+		        result = xml
+		        subtype = "xml"
+		      catch err as XmlException
+		        //
+		        // Do nothing
+		        //
+		      end try
+		    end if
+		  #endif
+		  
+		  if result = nil then
+		    result = textValue
+		  end if
+		  
+		  return result
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Shared Function PublicPropertiesToDictionary(ti As Xojo.Introspection.TypeInfo) As Xojo.Core.Dictionary
 		  dim dict as new Xojo.Core.Dictionary
 		  
@@ -322,7 +470,7 @@ Inherits Xojo.Net.HTTPSocket
 		    return
 		  end if
 		  
-		  self.Send httpAction, url
+		  Send action, url
 		End Sub
 	#tag EndMethod
 
@@ -392,7 +540,11 @@ Inherits Xojo.Net.HTTPSocket
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event ResponseReceived(url As Text, HTTPStatus As Integer, response As Auto)
+		Event ResponseReceived(url As Text, HTTPStatus As Integer, payload As Auto)
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event SkipPayloadProcessing(url As Text, httpStatus As Integer, ByRef payload As Auto) As Boolean
 	#tag EndHook
 
 
@@ -536,15 +688,6 @@ Inherits Xojo.Net.HTTPSocket
 		  POST
 		PUT
 	#tag EndEnum
-
-	#tag Using, Name = Xojo.Core
-	#tag EndUsing
-
-	#tag Using, Name = Xojo.IO
-	#tag EndUsing
-
-	#tag Using, Name = Xojo.Net
-	#tag EndUsing
 
 
 	#tag ViewBehavior
