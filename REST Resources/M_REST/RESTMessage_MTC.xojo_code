@@ -32,12 +32,14 @@ Inherits Xojo.Net.HTTPSocket
 		  dim jsonText as text
 		  dim goodJSON as boolean = true
 		  
+		  #pragma BreakOnExceptions false
 		  try 
 		    jsonText = ExpectedTextEncoding.ConvertDataToText( Content )
 		  catch err as RuntimeException
 		    response = Content
 		    goodJSON = false
 		  end try
+		  #pragma BreakOnExceptions default
 		  
 		  if goodJSON then
 		    try
@@ -59,12 +61,98 @@ Inherits Xojo.Net.HTTPSocket
 		  // Calling the overridden superclass constructor.
 		  Super.Constructor
 		  
+		  CreateMeta
+		  
 		  TimeoutTimer = new Xojo.Core.Timer
 		  TimeoutTimer.Mode = Xojo.Core.Timer.Modes.Off
 		  
 		  AddHandler TimeoutTimer.Action, WeakAddressOf TimeoutTimer_Action
 		  
 		  ExpectedTextEncoding = Xojo.Core.TextEncoding.UTF8
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub CreateMeta()
+		  if ClassMetaDict is nil then
+		    ClassMetaDict = new Xojo.Core.Dictionary
+		  end if
+		  
+		  dim tiSelf as Xojo.Introspection.TypeInfo = Xojo.Introspection.GetType( self )
+		  ClassName = tiSelf.FullName
+		  dim classMeta as M_REST.ClassMeta = ClassMetaDict.Lookup( className, nil )
+		  if classMeta isa object then
+		    //
+		    // Already done
+		    //
+		    return
+		  end if
+		  classMeta = new M_REST.ClassMeta
+		  
+		  dim tiBase as Xojo.Introspection.TypeInfo = tiSelf.BaseType
+		  while tiBase.BaseType isa Object and tiBase.BaseType.FullName <> "Xojo.Net.HTTPSocket"
+		    tiBase = tiBase.BaseType
+		  wend
+		  
+		  //
+		  // Get or create the meta for the base class
+		  //
+		  dim baseName as text = tiBase.FullName
+		  dim baseMeta as M_REST.ClassMeta = ClassMetaDict.Lookup( baseName, nil )
+		  if baseMeta is nil then
+		    baseMeta = new M_REST.ClassMeta
+		    dim dict as Xojo.Core.Dictionary = baseMeta.SendPropertiesDict
+		    
+		    dim props() as Xojo.Introspection.PropertyInfo = tiBase.Properties
+		    for each prop as Xojo.Introspection.PropertyInfo in props
+		      dim propName as text = prop.Name
+		      if prop.CanRead and prop.IsPublic and not prop.IsShared then
+		        dict.Value( propName ) = prop
+		      end if
+		    next
+		  end if
+		  
+		  //
+		  // Fill out the class meta
+		  //
+		  for each prop as Xojo.Introspection.PropertyInfo in tiSelf.Properties
+		    dim propName as text = prop.Name
+		    
+		    if prop.IsShared or not prop.IsPublic then
+		      //
+		      // Doesn't qualify
+		      //
+		      continue for prop
+		    end if
+		    
+		    if baseMeta.SendPropertiesDict.HasKey( propName ) or baseMeta.ReturnPropertiesDict.HasKey( propName ) then
+		      //
+		      // Part of the base so we ignore it
+		      //
+		      continue for prop
+		    end if
+		    
+		    if propName = "Index" then
+		      //
+		      // Something that comes up in a window, so ignore it
+		      //
+		      continue for prop
+		    end if
+		    
+		    static prefixLength as integer = kPrefixReturnProperty.Length
+		    if propName.Length > prefixLength and propName.Left( prefixLength ) = kPrefixReturnProperty then // Return property 
+		      if prop.CanWrite then 
+		        classMeta.ReturnPropertiesDict.Value( propName ) = prop
+		      end if
+		    else // Send property
+		      if prop.CanRead then
+		        classMeta.SendPropertiesDict.Value( propName ) = prop
+		      end if
+		    end if
+		  next prop
+		  
+		  classMetaDict.Value( className ) = classMeta
+		  
 		End Sub
 	#tag EndMethod
 
@@ -98,7 +186,25 @@ Inherits Xojo.Net.HTTPSocket
 		  
 		  TimeoutTimer.Period = TimeOutSeconds * 1000
 		  TimeoutTimer.Mode = Xojo.Core.Timer.Modes.Multiple
+		  
+		  CreateMeta
+		  
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Shared Function PublicPropertiesToDictionary(ti As Xojo.Introspection.TypeInfo) As Xojo.Core.Dictionary
+		  dim dict as new Xojo.Core.Dictionary
+		  
+		  dim props() as Xojo.Introspection.PropertyInfo = ti.Properties
+		  for each prop as Xojo.Introspection.PropertyInfo in props
+		    if prop.CanRead and prop.IsPublic and not prop.IsShared then
+		      dict.Value( prop.Name ) = prop
+		    end if
+		  next
+		  
+		  return dict
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -130,22 +236,93 @@ Inherits Xojo.Net.HTTPSocket
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Send(type As RESTTypes)
+		Sub Send()
 		  dim action as text = HTTPAction
 		  if action = kActionUnknown then
 		    raise new M_REST.RESTException( "REST type was not specified" )
 		  end if
 		  
+		  CreateMeta // Just in case
+		  dim classMeta as M_REST.ClassMeta = ClassMetaDict.Value( ClassName )
+		  
 		  dim url as text = RaiseEvent GetURLPattern
 		  url = url.Trim
+		  
+		  //
+		  // Parse the URL
+		  //
+		  dim urlPropNames() as text
+		  dim payloadPropNames() as text
+		  
+		  for each entry as Xojo.Core.DictionaryEntry in classMeta.SendPropertiesDict
+		    dim prop as Xojo.Introspection.PropertyInfo = entry.Value
+		    dim propName as text = prop.Name
+		    
+		    dim marker as text = ":" + prop.Name
+		    if url.IndexOf( marker ) = -1 then
+		      payloadPropNames.Append propName
+		    else
+		      
+		      urlPropNames.Append propName
+		      dim value as auto = prop.Value( self )
+		      
+		      //
+		      // Get the text version of the value
+		      //
+		      dim tiValue as Xojo.Introspection.TypeInfo = Xojo.Introspection.GetType( value )
+		      dim textValue as text
+		      
+		      select case tiValue.Name
+		      case "Text"
+		        //
+		        // Already good
+		        //
+		        textValue = value
+		        
+		      case "Integer", "Int8", "Int16", "Int32", "Int64"
+		        dim i as Int64 = value
+		        textValue = i.ToText
+		        
+		      case "UInt8", "UInt16", "UInt32", "UInt64", "Byte"
+		        dim i as UInt64 = value
+		        textValue = i.ToText
+		        
+		      case "Double", "Single", "Currency"
+		        dim d as double = value
+		        textValue = d.ToText
+		        
+		        #if not TargetiOS then
+		      case "String"
+		        dim s as string = value
+		        textValue = s.ToText
+		        #endif
+		        
+		      case "Boolean"
+		        const kTrueValue as text = "true"
+		        const kFalseValue as text = "false"
+		        
+		        dim b as boolean = value
+		        textValue = if( b, kTrueValue, kFalseValue )
+		        
+		      case else
+		        if value isa M_REST.TextProvider then
+		          textValue = M_REST.TextProvider( value ).ConvertToText
+		        end if
+		      end select
+		      
+		      url = url.ReplaceAll( marker, textValue )
+		    end if
+		  next
 		  
 		  #pragma warning "Finish this!!"
 		  
 		  dim payload as Xojo.Core.Dictionary
-		  if RaiseEvent CancelSend( url, action, payload ) then
+		  dim payloadAuto as Auto = payload
+		  if RaiseEvent CancelSend( url, action, payloadAuto ) then
 		    return
 		  end if
 		  
+		  self.Send httpAction, url
 		End Sub
 	#tag EndMethod
 
@@ -175,7 +352,7 @@ Inherits Xojo.Net.HTTPSocket
 	#tag Method, Flags = &h21
 		Private Sub TimeoutTimer_Action(sender As Xojo.Core.Timer)
 		  if IsConnected then
-		    if not RaiseEvent TimedOut then
+		    if not RaiseEvent ContinueWaiting then
 		      self.Disconnect
 		      mIsConnected = false
 		    end if
@@ -219,6 +396,13 @@ Inherits Xojo.Net.HTTPSocket
 	#tag EndHook
 
 
+	#tag Property, Flags = &h21
+		Private Shared ClassMetaDict As Xojo.Core.Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private ClassName As Text
+	#tag EndProperty
 
 	#tag Property, Flags = &h0
 		DefaultRESTType As RESTTypes = RESTTypes.Unknown
@@ -271,7 +455,7 @@ Inherits Xojo.Net.HTTPSocket
 			  
 			  FlagGetRESTType = true
 			  dim type as RESTTypes = RaiseEvent GetRESTType
-			  if type <> RESTTypes.Unknown then
+			  if type = RESTTypes.Unknown then
 			    type = DefaultRESTType
 			  end if
 			  FlagGetRESTType = false
@@ -333,6 +517,9 @@ Inherits Xojo.Net.HTTPSocket
 	#tag Constant, Name = kActionUnknown, Type = Text, Dynamic = False, Default = \"Unknown", Scope = Protected
 	#tag EndConstant
 
+	#tag Constant, Name = kPrefixReturnProperty, Type = Text, Dynamic = False, Default = \"Return", Scope = Private
+	#tag EndConstant
+
 
 	#tag Enum, Name = RESTTypes, Type = Integer, Flags = &h0
 		Unknown
@@ -369,7 +556,7 @@ Inherits Xojo.Net.HTTPSocket
 			Type="RESTTypes"
 			EditorType="Enum"
 			#tag EnumValues
-				"0 - Unspecified"
+				"0 - Unknown"
 				"1 - Create"
 				"2 - Read"
 				"3 - UpdateReplace"
@@ -377,10 +564,11 @@ Inherits Xojo.Net.HTTPSocket
 				"5 - Authenticate"
 				"6 - DELETE"
 				"7 - GET"
-				"8 - OPTIONS"
-				"9 - PATCH"
-				"10 - POST"
-				"11 - PUT"
+				"8 - HEAD"
+				"9 - OPTIONS"
+				"10 - PATCH"
+				"11 - POST"
+				"12 - PUT"
 			#tag EndEnumValues
 		#tag EndViewProperty
 		#tag ViewProperty
@@ -409,17 +597,12 @@ Inherits Xojo.Net.HTTPSocket
 			Type="String"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="RequestSentMs"
-			Group="Behavior"
-			Type="Double"
-		#tag EndViewProperty
-		#tag ViewProperty
 			Name="RESTType"
 			Group="Behavior"
 			Type="RESTTypes"
 			EditorType="Enum"
 			#tag EnumValues
-				"0 - Unspecified"
+				"0 - Unknown"
 				"1 - Create"
 				"2 - Read"
 				"3 - UpdateReplace"
@@ -427,11 +610,17 @@ Inherits Xojo.Net.HTTPSocket
 				"5 - Authenticate"
 				"6 - DELETE"
 				"7 - GET"
-				"8 - OPTIONS"
-				"9 - PATCH"
-				"10 - POST"
-				"11 - PUT"
+				"8 - HEAD"
+				"9 - OPTIONS"
+				"10 - PATCH"
+				"11 - POST"
+				"12 - PUT"
 			#tag EndEnumValues
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="RoundTripMs"
+			Group="Behavior"
+			Type="Double"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
