@@ -693,7 +693,7 @@ Inherits Xojo.Net.HTTPSocket
 
 	#tag Method, Flags = &h21
 		Private Function SerializeArray(value As Auto, ti As Xojo.Introspection.TypeInfo) As Auto
-		  
+		  #pragma warning "Finish this!!"
 		End Function
 	#tag EndMethod
 
@@ -734,6 +734,13 @@ Inherits Xojo.Net.HTTPSocket
 
 	#tag Method, Flags = &h21
 		Private Function SerializeDictionary(dict As Xojo.Core.Dictionary) As Xojo.Core.Dictionary
+		  dim result as new Xojo.Core.Dictionary
+		  
+		  for each entry as Xojo.Core.DictionaryEntry in dict
+		    result.Value( entry.Key ) = Serialize( entry.Value )
+		  next
+		  
+		  return result
 		  
 		End Function
 	#tag EndMethod
@@ -746,7 +753,7 @@ Inherits Xojo.Net.HTTPSocket
 		  if true then // Scope
 		    dim autoResult as Auto = RaiseEvent ObjectToJSON( o, ti )
 		    if autoResult <> nil then
-		      return autoResult
+		      return autoResult // *** EARLY EXIT
 		    end if
 		  end if
 		  
