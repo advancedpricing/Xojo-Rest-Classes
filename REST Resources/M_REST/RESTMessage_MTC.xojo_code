@@ -30,7 +30,7 @@ Inherits Xojo.Net.HTTPSocket
 		  
 		  dim payload as Auto = content
 		  
-		  if not SkipPayloadProcessing( URL, HTTPStatus, payload ) then
+		  if not SkipIncomingPayloadProcessing( URL, HTTPStatus, payload ) then
 		    payload = ProcessPayload( payload )
 		  end if
 		  
@@ -253,7 +253,7 @@ Inherits Xojo.Net.HTTPSocket
 		    
 		    if not RaiseEvent ExcludeFromPayload( prop, propName, propValue ) then
 		      dim value as auto = prop.Value( self )
-		      json.Value( propName ) = M_REST.Serialize( propValue )
+		      json.Value( propName ) = Serialize( propValue )
 		    end if
 		  next
 		  
@@ -653,6 +653,147 @@ Inherits Xojo.Net.HTTPSocket
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function Serialize(value As Auto) As Auto
+		  dim ti as Xojo.Introspection.TypeInfo = Xojo.Introspection.GetType( value )
+		  if ti is nil then
+		    return nil
+		  end if
+		  
+		  dim type as text = ti.Name
+		  if type.Length > 2 and type.EndsWith( "()" ) then
+		    return SerializeArray( value, ti )
+		    
+		  elseif type = "Boolean" or type = "Text" then
+		    return value
+		    
+		  elseif type = "String" then
+		    #if not TargetiOS then
+		      dim s as string = value
+		      dim t as text = s.ToText
+		      return t
+		    #endif
+		    
+		  elseif type.Length > 3 and type.BeginsWith( "Int" ) then
+		    return value
+		    
+		  elseif type.Length > 4 and type.BeginsWith( "UInt" ) then
+		    return value
+		    
+		  elseif type = "Double" or type = "Single" or type = "Currency" then
+		    return value
+		    
+		  else
+		    return SerializeObject( value, ti )
+		    
+		  end if
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function SerializeArray(value As Auto, ti As Xojo.Introspection.TypeInfo) As Auto
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function SerializeDate(d As Xojo.Core.Date) As Text
+		  dim locale as Xojo.Core.Locale = Xojo.Core.Locale.Current
+		  
+		  dim result as text
+		  
+		  dim tz as Xojo.Core.TimeZone = d.TimeZone
+		  dim interval as new Xojo.Core.DateInterval( 0, 0, 0, 0, 0, tz.SecondsFromGMT )
+		  
+		  d = d - interval
+		  
+		  result = d.Year.ToText( locale, "0000" ) + "-" + d.Month.ToText( locale, "00" ) + "-" + d.Day.ToText( locale, "00" )
+		  result = result + "T" + d.Hour.ToText( locale, "00" ) + ":" + d.Minute.ToText( locale, "00" ) + ":" + _
+		  d.Second.ToText( locale, "00" ) + "Z" 
+		  
+		  
+		  'if d.Hour + d.Minute + d.Second > 0 then
+		  'dim minsFromGMT as double = tz.SecondsFromGMT / 60.0
+		  'dim hrsFromGMT as double = tz.SecondsFromGMT / 3600.0
+		  '
+		  'dim offHr as integer = if( hrsFromGMT > 0.0, Xojo.Math.Floor( hrsFromGMT ), Xojo.Math.Ceil( hrsFromGMT ) )
+		  'dim offMin as integer = Xojo.Math.Abs( minsFromGMT ) mod 60
+		  '
+		  'result = result + "T" + d.Hour.ToText( locale, "00" ) + ":" + d.Minute.ToText( locale, "00" ) + ":" + _
+		  'd.Second.ToText( locale, "00" ) + "Z" 
+		  'if minsFromGMT <> 0.0 then
+		  'result = result + offHr.ToText( locale, "+00;" + kMinus + "00" ) + ":" + offMin.ToText( locale, "00" )
+		  'end if
+		  'end if
+		  
+		  return result
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function SerializeDictionary(dict As Xojo.Core.Dictionary) As Xojo.Core.Dictionary
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function SerializeObject(o As Object, ti As Xojo.Introspection.TypeInfo) As Auto
+		  //
+		  // See if the subclass wants to tackle this
+		  //
+		  if true then // Scope
+		    dim autoResult as Auto = RaiseEvent ObjectToJSON( o, ti )
+		    if autoResult <> nil then
+		      return autoResult
+		    end if
+		  end if
+		  
+		  
+		  #if not TargetiOS then
+		    if o isa Dictionary then
+		      //
+		      // We are going to do this here
+		      //
+		      dim result as new Xojo.Core.Dictionary
+		      
+		      dim d as Dictionary = Dictionary( o )
+		      dim keys() as variant = d.Keys
+		      dim values() as variant = d.Values
+		      for i as integer = 0 to keys.Ubound
+		        result.Value( keys( i ) ) = Serialize( values( i ) )
+		      next
+		      return result // *** EARLY EXIT
+		    end if
+		    
+		    if o isa Date then
+		      //
+		      // Convert it to a new Date
+		      //
+		      dim d as Date = Date( o )
+		      dim tz as new Xojo.Core.TimeZone( d.GMTOffset * 60 * 60 )
+		      o = new Xojo.Core.Date( d.Year, d.Month, d.Day, d.Hour, d.Minute, d.Second, 0, tz )
+		    end if
+		  #endif
+		  
+		  if o isa Xojo.Core.Date then
+		    return SerializeDate( Xojo.Core.Date( o ) ) // *** EARLY EXIT
+		  else
+		    dim result as new Xojo.Core.Dictionary
+		    
+		    for each prop as Xojo.Introspection.PropertyInfo in ti.Properties
+		      if prop.IsPublic and prop.CanRead and not prop.IsShared then
+		        result.Value( prop.Name ) = Serialize( prop.Value( o ) )
+		      end if
+		    next
+		    
+		    return result
+		  end if
+		  
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Sub TimeoutTimer_Action(sender As Xojo.Core.Timer)
 		  if IsConnected then
@@ -700,11 +841,15 @@ Inherits Xojo.Net.HTTPSocket
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
+		Event ObjectToJSON(o As Object, typeInfo As Xojo.Introspection.TypeInfo) As Auto
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
 		Event ResponseReceived(url As Text, HTTPStatus As Integer, payload As Auto)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event SkipPayloadProcessing(url As Text, httpStatus As Integer, ByRef payload As Auto) As Boolean
+		Event SkipIncomingPayloadProcessing(url As Text, httpStatus As Integer, ByRef payload As Auto) As Boolean
 	#tag EndHook
 
 
