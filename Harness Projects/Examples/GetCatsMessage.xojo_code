@@ -18,6 +18,10 @@ Inherits RESTMessage_MTC
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
+		ReturnPicture As Picture
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
 		Size As Text = "full"
 	#tag EndProperty
 

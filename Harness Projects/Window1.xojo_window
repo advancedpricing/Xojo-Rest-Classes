@@ -115,7 +115,6 @@ End
 #tag Events MsgGetCats
 	#tag Event
 		Sub ResponseReceived(url As Text, HTTPStatus As Integer, payload As Auto)
-		  CatPic = if( payload isa Picture, payload, nil )
 		  cvsPic.Invalidate
 		  return
 		  
@@ -134,13 +133,15 @@ End
 		Sub Paint(g As Graphics, areas() As REALbasic.Rect)
 		  #pragma unused areas
 		  
-		  if CatPic is nil then
+		  dim catPic as Picture = MsgGetCats.ReturnPicture
+		  
+		  if catPic is nil then
 		    
 		    g.ClearRect 0, 0, g.Width, g.Height
 		    
 		  else
 		    
-		    g.DrawPicture CatPic, 0, 0, g.Width, g.Height, 0, 0, CatPic.Width, CatPic.Height
+		    g.DrawPicture catPic, 0, 0, g.Width, g.Height, 0, 0, CatPic.Width, CatPic.Height
 		    
 		  end if
 		End Sub
