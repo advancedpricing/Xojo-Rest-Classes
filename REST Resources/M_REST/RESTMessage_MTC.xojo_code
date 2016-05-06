@@ -27,6 +27,7 @@ Inherits Xojo.Net.HTTPSocket
 		Sub PageReceived(URL as Text, HTTPStatus as Integer, Content as xojo.Core.MemoryBlock)
 		  mIsConnected = false
 		  ResponseReceivedMicroseconds = Microseconds
+		  ClearReturnProperties
 		  
 		  dim payload as Auto = content
 		  
@@ -242,7 +243,7 @@ Inherits Xojo.Net.HTTPSocket
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function CreatePayload(props() As Xojo.Introspection.PropertyInfo) As Xojo.Core.MemoryBlock
+		Private Function CreateOutgoingPayload(props() As Xojo.Introspection.PropertyInfo) As Xojo.Core.MemoryBlock
 		  dim result as Xojo.Core.MemoryBlock
 		  
 		  dim json as new Xojo.Core.Dictionary
@@ -251,8 +252,7 @@ Inherits Xojo.Net.HTTPSocket
 		    dim propName as text = prop.Name
 		    dim propValue as auto = prop.Value( self )
 		    
-		    if not RaiseEvent ExcludeFromPayload( prop, propName, propValue ) then
-		      dim value as auto = prop.Value( self )
+		    if not RaiseEvent ExcludeFromOutgoingPayload( prop, propName, propValue ) then
 		      json.Value( propName ) = Serialize( propValue )
 		    end if
 		  next
@@ -290,6 +290,33 @@ Inherits Xojo.Net.HTTPSocket
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Shared Function IsIntrinsicType(propType As Text) As Boolean
+		  static types() as text
+		  
+		  if types.Ubound = -1 then
+		    types = array( _
+		    "Int8", "Int16", "Int32", "Int64", _
+		    "Byte", "UInt8", "UInt16", "UInt32", "UInt64", _
+		    "Single", "Double", "Currency", _
+		    "String", "Text", _
+		    "Boolean" _
+		    )
+		    
+		    //
+		    // Add the array versions
+		    //
+		    dim lastIndex as integer = types.Ubound
+		    for i as integer = 0 to lastIndex
+		      types.Append types( i ) + "()"
+		    next
+		  end if
+		  
+		  return types.IndexOf( propType ) <> -1
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Sub PrepareToSend()
 		  mIsConnected = true
 		  RequestSentMicroseconds = Microseconds
@@ -298,7 +325,6 @@ Inherits Xojo.Net.HTTPSocket
 		  TimeoutTimer.Period = Options.TimeOutSeconds * 1000
 		  TimeoutTimer.Mode = Xojo.Core.Timer.Modes.Multiple
 		  
-		  ClearReturnProperties
 		End Sub
 	#tag EndMethod
 
@@ -550,7 +576,7 @@ Inherits Xojo.Net.HTTPSocket
 		  // Parse the URL
 		  //
 		  dim urlPropNames() as text
-		  dim payloadPropNames() as text
+		  dim payloadProps() as Xojo.Introspection.PropertyInfo
 		  
 		  for each entry as Xojo.Core.DictionaryEntry in meta.SendPropertiesDict
 		    dim prop as Xojo.Introspection.PropertyInfo = entry.Value
@@ -558,7 +584,7 @@ Inherits Xojo.Net.HTTPSocket
 		    
 		    dim marker as text = ":" + prop.Name
 		    if url.IndexOf( marker ) = -1 then
-		      payloadPropNames.Append propName
+		      payloadProps.Append prop
 		    else
 		      
 		      urlPropNames.Append propName
@@ -614,16 +640,22 @@ Inherits Xojo.Net.HTTPSocket
 		    end if
 		  next
 		  
-		  dim payload as Xojo.Core.Dictionary
-		  if action <> kActionGet and payloadPropNames.Ubound <> -1 and Options.SendWithPayloadIfAvailable then
-		    
-		  else // No payload
-		    'self.SetRequestContent
+		  dim payload as Xojo.Core.MemoryBlock
+		  if action <> kActionGet and payloadProps.Ubound <> -1 and Options.SendWithPayloadIfAvailable then
+		    payload = CreateOutgoingPayload( payloadProps )
 		  end if
 		  
-		  dim payloadAuto as Auto = payload
-		  if RaiseEvent CancelSend( url, action, payloadAuto ) then
+		  dim mimeType as text = "application/json"
+		  if RaiseEvent CancelSend( url, action, payload, mimeType ) then
 		    return
+		  end if
+		  
+		  if payload isa object then
+		    if mimeType = "" then
+		      Raise new M_REST.RESTException( "No MIME type specified" )
+		    end if
+		    
+		    SetRequestContent payload, mimeType
 		  end if
 		  
 		  Send action, url
@@ -664,9 +696,6 @@ Inherits Xojo.Net.HTTPSocket
 		  if type.Length > 2 and type.EndsWith( "()" ) then
 		    return SerializeArray( value, ti )
 		    
-		  elseif type = "Boolean" or type = "Text" then
-		    return value
-		    
 		  elseif type = "String" then
 		    #if not TargetiOS then
 		      dim s as string = value
@@ -674,13 +703,12 @@ Inherits Xojo.Net.HTTPSocket
 		      return t
 		    #endif
 		    
-		  elseif type.Length > 3 and type.BeginsWith( "Int" ) then
-		    return value
+		  elseif type = "Currency" then
+		    dim c as currency = value 
+		    dim d as double = c
+		    return d
 		    
-		  elseif type.Length > 4 and type.BeginsWith( "UInt" ) then
-		    return value
-		    
-		  elseif type = "Double" or type = "Single" or type = "Currency" then
+		  elseif IsIntrinsicType( type ) then
 		    return value
 		    
 		  else
@@ -693,7 +721,49 @@ Inherits Xojo.Net.HTTPSocket
 
 	#tag Method, Flags = &h21
 		Private Function SerializeArray(value As Auto, ti As Xojo.Introspection.TypeInfo) As Auto
-		  #pragma warning "Finish this!!"
+		  if ti.Name = "String()" then
+		    //
+		    // Convert the string to text to make sure JSON can handle it
+		    //
+		    #if not TargetiOS then
+		      dim arr() as string = value
+		      dim result() as text
+		      redim result( arr.Ubound )
+		      for i as integer = 0 to arr.Ubound
+		        result( i ) = arr( i ).ToText
+		      next i
+		      return result
+		    #endif
+		    
+		  elseif ti.Name = "Currency()" then
+		    //
+		    // JSON can't handle currency so convert to a double
+		    //
+		    dim arr() as currency = value
+		    dim result() as double
+		    redim result( arr.Ubound )
+		    for i as integer = 0 to arr.Ubound
+		      result( i ) = arr( i )
+		    next
+		    return result
+		    
+		  elseif IsIntrinsicType( ti.Name ) then
+		    //
+		    // It's another basic type so just return it
+		    //
+		    return value
+		    
+		  else // It's some object array
+		    dim arr() as object = value
+		    dim result() as auto
+		    redim result( arr.Ubound )
+		    for i as integer = 0 to arr.Ubound
+		      result( i ) = Serialize( arr( i ) )
+		    next
+		    return result
+		    
+		  end if
+		  
 		End Function
 	#tag EndMethod
 
@@ -704,28 +774,15 @@ Inherits Xojo.Net.HTTPSocket
 		  dim result as text
 		  
 		  dim tz as Xojo.Core.TimeZone = d.TimeZone
-		  dim interval as new Xojo.Core.DateInterval( 0, 0, 0, 0, 0, tz.SecondsFromGMT )
 		  
-		  d = d - interval
+		  if Options.AdjustDatesForTimeZome then
+		    dim interval as new Xojo.Core.DateInterval( 0, 0, 0, 0, 0, tz.SecondsFromGMT )
+		    d = d - interval
+		  end if
 		  
 		  result = d.Year.ToText( locale, "0000" ) + "-" + d.Month.ToText( locale, "00" ) + "-" + d.Day.ToText( locale, "00" )
 		  result = result + "T" + d.Hour.ToText( locale, "00" ) + ":" + d.Minute.ToText( locale, "00" ) + ":" + _
 		  d.Second.ToText( locale, "00" ) + "Z" 
-		  
-		  
-		  'if d.Hour + d.Minute + d.Second > 0 then
-		  'dim minsFromGMT as double = tz.SecondsFromGMT / 60.0
-		  'dim hrsFromGMT as double = tz.SecondsFromGMT / 3600.0
-		  '
-		  'dim offHr as integer = if( hrsFromGMT > 0.0, Xojo.Math.Floor( hrsFromGMT ), Xojo.Math.Ceil( hrsFromGMT ) )
-		  'dim offMin as integer = Xojo.Math.Abs( minsFromGMT ) mod 60
-		  '
-		  'result = result + "T" + d.Hour.ToText( locale, "00" ) + ":" + d.Minute.ToText( locale, "00" ) + ":" + _
-		  'd.Second.ToText( locale, "00" ) + "Z" 
-		  'if minsFromGMT <> 0.0 then
-		  'result = result + offHr.ToText( locale, "+00;" + kMinus + "00" ) + ":" + offMin.ToText( locale, "00" )
-		  'end if
-		  'end if
 		  
 		  return result
 		  
@@ -820,7 +877,7 @@ Inherits Xojo.Net.HTTPSocket
 
 
 	#tag Hook, Flags = &h0
-		Event CancelSend(ByRef url As Text, ByRef httpAction As Text, ByRef payload As Auto) As Boolean
+		Event CancelSend(ByRef url As Text, ByRef httpAction As Text, ByRef payload As Xojo.Core.MemoryBlock, ByRef payloadMIMEType As Text) As Boolean
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
@@ -836,7 +893,7 @@ Inherits Xojo.Net.HTTPSocket
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event ExcludeFromPayload(prop As Xojo.Introspection.PropertyInfo, ByRef propName As Text, ByRef propValue As Auto) As Boolean
+		Event ExcludeFromOutgoingPayload(prop As Xojo.Introspection.PropertyInfo, ByRef propName As Text, ByRef propValue As Auto) As Boolean
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
