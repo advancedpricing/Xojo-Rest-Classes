@@ -153,7 +153,7 @@ Inherits Xojo.Net.HTTPSocket
 		  
 		  AddHandler TimeoutTimer.Action, WeakAddressOf TimeoutTimer_Action
 		  
-		  ExpectedTextEncoding = Xojo.Core.TextEncoding.UTF8
+		  
 		End Sub
 	#tag EndMethod
 
@@ -295,7 +295,7 @@ Inherits Xojo.Net.HTTPSocket
 		  RequestSentMicroseconds = Microseconds
 		  ResponseReceivedMicroseconds = -1.0
 		  
-		  TimeoutTimer.Period = TimeOutSeconds * 1000
+		  TimeoutTimer.Period = Options.TimeOutSeconds * 1000
 		  TimeoutTimer.Mode = Xojo.Core.Timer.Modes.Multiple
 		  
 		  ClearReturnProperties
@@ -405,7 +405,7 @@ Inherits Xojo.Net.HTTPSocket
 		Private Function ProcessTextPayload(payload As Xojo.Core.MemoryBlock, subtype As Text) As Auto
 		  dim result as Auto
 		  
-		  dim encoding as Xojo.Core.TextEncoding = ExpectedTextEncoding
+		  dim encoding as Xojo.Core.TextEncoding = Options.ExpectedTextEncoding
 		  if encoding is nil then
 		    encoding = Xojo.Core.TextEncoding.UTF8
 		  end if
@@ -615,7 +615,7 @@ Inherits Xojo.Net.HTTPSocket
 		  next
 		  
 		  dim payload as Xojo.Core.Dictionary
-		  if action <> kActionGet and payloadPropNames.Ubound <> -1 and SendWithPayloadIfAvailable then
+		  if action <> kActionGet and payloadPropNames.Ubound <> -1 and Options.SendWithPayloadIfAvailable then
 		    
 		  else // No payload
 		    'self.SetRequestContent
@@ -716,14 +716,6 @@ Inherits Xojo.Net.HTTPSocket
 		Private ClassName As Text
 	#tag EndProperty
 
-	#tag Property, Flags = &h0
-		DefaultRESTType As RESTTypes = RESTTypes.Unknown
-	#tag EndProperty
-
-	#tag Property, Flags = &h0
-		ExpectedTextEncoding As Xojo.Core.TextEncoding
-	#tag EndProperty
-
 	#tag Property, Flags = &h21
 		Private FlagGetRESTType As Boolean
 	#tag EndProperty
@@ -750,6 +742,10 @@ Inherits Xojo.Net.HTTPSocket
 		Private mIsConnected As Boolean
 	#tag EndProperty
 
+	#tag Property, Flags = &h21
+		Private mOptions As M_REST.Options
+	#tag EndProperty
+
 	#tag ComputedProperty, Flags = &h21
 		#tag Getter
 			Get
@@ -767,6 +763,24 @@ Inherits Xojo.Net.HTTPSocket
 		Private MyMeta As M_REST.ClassMeta
 	#tag EndComputedProperty
 
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  if mOptions is nil then
+			    mOptions = new M_REST.Options
+			  end if
+			  
+			  return mOptions
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  mOptions = value
+			End Set
+		#tag EndSetter
+		Options As M_REST.Options
+	#tag EndComputedProperty
+
 	#tag Property, Flags = &h21
 		Private RequestSentMicroseconds As Double = -1.0
 	#tag EndProperty
@@ -779,13 +793,13 @@ Inherits Xojo.Net.HTTPSocket
 		#tag Getter
 			Get
 			  if FlagGetRESTType then
-			    return DefaultRESTType
+			    return Options.DefaultRESTType
 			  end if
 			  
 			  FlagGetRESTType = true
 			  dim type as RESTTypes = RaiseEvent GetRESTType
 			  if type = RESTTypes.Unknown then
-			    type = DefaultRESTType
+			    type = Options.DefaultRESTType
 			  end if
 			  FlagGetRESTType = false
 			  
@@ -815,14 +829,6 @@ Inherits Xojo.Net.HTTPSocket
 		#tag EndGetter
 		RoundTripMs As Double
 	#tag EndComputedProperty
-
-	#tag Property, Flags = &h0
-		SendWithPayloadIfAvailable As Boolean = True
-	#tag EndProperty
-
-	#tag Property, Flags = &h0
-		TimeoutSeconds As Integer = 5
-	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private TimeoutTimer As Xojo.Core.Timer
