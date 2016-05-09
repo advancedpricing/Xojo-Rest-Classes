@@ -1,8 +1,19 @@
 #tag Class
 Protected Class Options
+Implements PrivateOptions
 	#tag Method, Flags = &h0
 		Sub Constructor()
 		  ExpectedTextEncoding = Xojo.Core.TextEncoding.UTF8
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub SetParentMessage(msg As M_REST.RESTMessage_MTC)
+		  if msg <> ParentMessage then
+		    ParentMessage = msg
+		    PrivateMessage( msg ).ClearClassMeta
+		  end if
+		  
 		End Sub
 	#tag EndMethod
 
