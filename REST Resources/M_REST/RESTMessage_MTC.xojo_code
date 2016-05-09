@@ -346,7 +346,7 @@ Implements PrivateMessage
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function ProcessImagePayload(payload As Xojo.Core.MemoryBlock, subType As Text) As Auto
+		Private Function ProcessImagePayload(payload As Xojo.Core.MemoryBlock) As Auto
 		  dim result as Auto
 		  
 		  #if TargetiOS then
@@ -405,7 +405,7 @@ Implements PrivateMessage
 		  
 		  if indicatedType = "image" then
 		    try
-		      result = ProcessImagePayload( payload, indicatedSubtype )
+		      result = ProcessImagePayload( payload )
 		    catch err as RuntimeException
 		      if err isa EndException or err isa ThreadEndException then
 		        raise err
