@@ -23,12 +23,69 @@ Implements PrivateOptions
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		DefaultRESTType As RESTMessage_MTC.RESTTypes = RESTMessage_MTC.RESTTypes.Unknown
-	#tag EndProperty
-
-	#tag Property, Flags = &h0
 		ExpectedTextEncoding As Xojo.Core.TextEncoding
 	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mParentMessageWR As WeakRef
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Attributes( hidden ) Private mReturnPropertyPrefix As Text = "Return"
+	#tag EndProperty
+
+	#tag ComputedProperty, Flags = &h21
+		#tag Getter
+			Get
+			  if mParentMessageWR is nil then
+			    return nil
+			  else
+			    return M_REST.RESTMessage_MTC( mParentMessageWR.Value )
+			  end if
+			  
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  if value is nil then
+			    mParentMessageWR = nil
+			  else
+			    mParentMessageWR = new WeakRef( value )
+			  end if
+			  
+			End Set
+		#tag EndSetter
+		Private ParentMessage As M_REST.RESTMessage_MTC
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  return mReturnPropertyPrefix
+			  
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  value = value.Trim
+			  
+			  //
+			  // If the prefix has changed, the parent has to regenerate its 
+			  // meta
+			  //
+			  
+			  if value <> mReturnPropertyPrefix then
+			    mReturnPropertyPrefix = value
+			    dim parent as RESTMessage_MTC = ParentMessage
+			    if parent isa object then
+			      PrivateMessage( parent ).ClearClassMeta
+			    end if
+			  end if
+			  
+			End Set
+		#tag EndSetter
+		ReturnPropertyPrefix As Text
+	#tag EndComputedProperty
 
 	#tag Property, Flags = &h0
 		SendWithPayloadIfAvailable As Boolean = True
@@ -40,6 +97,11 @@ Implements PrivateOptions
 
 
 	#tag ViewBehavior
+		#tag ViewProperty
+			Name="AdjustDatesForTimeZome"
+			Group="Behavior"
+			Type="Boolean"
+		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
 			Visible=true
@@ -61,10 +123,22 @@ Implements PrivateOptions
 			Type="String"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="SendWithPayloadIfAvailable"
+			Group="Behavior"
+			InitialValue="True"
+			Type="Boolean"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="TimeoutSeconds"
+			Group="Behavior"
+			InitialValue="5"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"

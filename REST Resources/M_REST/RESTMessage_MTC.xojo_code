@@ -235,12 +235,19 @@ Implements PrivateMessage
 		      continue for prop
 		    end if
 		    
-		    static prefixLength as integer = kPrefixReturnProperty.Length
-		    if propName.Length > prefixLength and propName.Left( prefixLength ) = kPrefixReturnProperty then // Return property 
+		    dim isReturnProp as boolean
+		    
+		    dim returnPropPrefix as text = Options.ReturnPropertyPrefix
+		    dim prefixLength as integer = returnPropPrefix.Length
+		    if returnPropPrefix = "" or _ // Can be empty
+		      ( propName.Length > prefixLength and propName.Left( prefixLength ) = returnPropPrefix ) then // Return property 
 		      if prop.CanWrite then 
 		        classMeta.ReturnPropertiesDict.Value( propName ) = prop
+		        isReturnProp = true
 		      end if
-		    else // Send property
+		    end if
+		    
+		    if not isReturnProp or returnPropPrefix = "" then // Send property
 		      if prop.CanRead then
 		        classMeta.SendPropertiesDict.Value( propName ) = prop
 		      end if
@@ -990,7 +997,7 @@ Implements PrivateMessage
 		#tag Getter
 			Get
 			  if mOptions is nil then
-			    mOptions = new M_REST.Options
+			    Options = new M_REST.Options
 			  end if
 			  
 			  return mOptions
@@ -998,7 +1005,25 @@ Implements PrivateMessage
 		#tag EndGetter
 		#tag Setter
 			Set
+			  if value = mOptions then
+			    //
+			    // Nothing to do
+			    //
+			    return
+			  end if
+			  
+			  if mOptions isa Object then
+			    //
+			    // Clear the parent
+			    //
+			    PrivateOptions( mOptions ).SetParentMessage nil
+			  end if
+			  
 			  mOptions = value
+			  if mOptions isa Object then
+			    PrivateOptions( mOptions ).SetParentMessage self
+			  end if
+			  
 			End Set
 		#tag EndSetter
 		Options As M_REST.Options
@@ -1080,9 +1105,6 @@ Implements PrivateMessage
 	#tag EndConstant
 
 	#tag Constant, Name = kContentType, Type = Text, Dynamic = False, Default = \"application/json", Scope = Private
-	#tag EndConstant
-
-	#tag Constant, Name = kPrefixReturnProperty, Type = Text, Dynamic = False, Default = \"Return", Scope = Private
 	#tag EndConstant
 
 
@@ -1183,13 +1205,6 @@ Implements PrivateMessage
 			Visible=true
 			Group="ID"
 			Type="String"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="TimeoutSeconds"
-			Visible=true
-			Group="Behavior"
-			InitialValue="5"
-			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
