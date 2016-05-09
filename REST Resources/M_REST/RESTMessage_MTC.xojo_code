@@ -935,6 +935,10 @@ Implements PrivateMessage
 		Private ClassName As Text
 	#tag EndProperty
 
+	#tag Property, Flags = &h0
+		DefaultRESTType As RESTTypes = RESTTypes.Unknown
+	#tag EndProperty
+
 	#tag Property, Flags = &h21
 		Private FlagGetRESTType As Boolean
 	#tag EndProperty
@@ -1012,13 +1016,13 @@ Implements PrivateMessage
 		#tag Getter
 			Get
 			  if FlagGetRESTType then
-			    return Options.DefaultRESTType
+			    return DefaultRESTType
 			  end if
 			  
 			  FlagGetRESTType = true
 			  dim type as RESTTypes = RaiseEvent GetRESTType
 			  if type = RESTTypes.Unknown then
-			    type = Options.DefaultRESTType
+			    type = DefaultRESTType
 			  end if
 			  FlagGetRESTType = false
 			  
@@ -1104,7 +1108,7 @@ Implements PrivateMessage
 			Name="DefaultRESTType"
 			Visible=true
 			Group="Behavior"
-			InitialValue="RESTTypes.Unspecified"
+			InitialValue="RESTTypes.Unknown"
 			Type="RESTTypes"
 			EditorType="Enum"
 			#tag EnumValues
