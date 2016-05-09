@@ -2,6 +2,12 @@
 Protected Class GetCatsMessage
 Inherits RESTMessage_MTC
 	#tag Event
+		Function GetRESTType() As RESTTypes
+		  return RESTTypes.GET
+		End Function
+	#tag EndEvent
+
+	#tag Event
 		Function GetURLPattern() As Text
 		  return "http://thecatapi.com/api/images/get?format=:Format&results_per_page=:ResultsPerPage&size=:Size&type=:Type"
 		  
@@ -31,29 +37,6 @@ Inherits RESTMessage_MTC
 
 
 	#tag ViewBehavior
-		#tag ViewProperty
-			Name="DefaultRESTType"
-			Visible=true
-			Group="Behavior"
-			InitialValue="RESTTypes.Unspecified"
-			Type="RESTTypes"
-			EditorType="Enum"
-			#tag EnumValues
-				"0 - Unknown"
-				"1 - Create"
-				"2 - Read"
-				"3 - UpdateReplace"
-				"4 - UpdateModify"
-				"5 - Authenticate"
-				"6 - DELETE"
-				"7 - GET"
-				"8 - HEAD"
-				"9 - OPTIONS"
-				"10 - PATCH"
-				"11 - POST"
-				"12 - PUT"
-			#tag EndEnumValues
-		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Format"
 			Visible=true
@@ -115,6 +98,11 @@ Inherits RESTMessage_MTC
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="ReturnPicture"
+			Group="Behavior"
+			Type="Picture"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="RoundTripMs"
 			Group="Behavior"
 			Type="Double"
@@ -131,13 +119,6 @@ Inherits RESTMessage_MTC
 			Visible=true
 			Group="ID"
 			Type="String"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="TimeoutSeconds"
-			Visible=true
-			Group="Behavior"
-			InitialValue="5"
-			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
