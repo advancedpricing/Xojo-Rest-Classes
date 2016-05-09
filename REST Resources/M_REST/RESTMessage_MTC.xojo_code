@@ -1,6 +1,7 @@
 #tag Class
 Class RESTMessage_MTC
 Inherits Xojo.Net.HTTPSocket
+Implements PrivateMessage
 	#tag Event
 		Sub Error(err as RuntimeException)
 		  mIsConnected = false
@@ -40,6 +41,15 @@ Inherits Xojo.Net.HTTPSocket
 		End Sub
 	#tag EndEvent
 
+
+	#tag Method, Flags = &h21
+		Private Sub ClearClassMeta()
+		  if ClassName <> "" and ClassMetaDict isa object and ClassMetaDict.HasKey( ClassName ) then
+		    ClassMetaDict.Remove ClassName
+		  end if
+		  
+		End Sub
+	#tag EndMethod
 
 	#tag Method, Flags = &h21
 		Private Sub ClearReturnProperties()
