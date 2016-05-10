@@ -10,7 +10,7 @@ Begin Window WndCats
    FullScreenButton=   False
    HasBackColor    =   False
    Height          =   400
-   ImplicitInstance=   True
+   ImplicitInstance=   False
    LiveResize      =   True
    MacProcID       =   0
    MaxHeight       =   32000
@@ -18,12 +18,12 @@ Begin Window WndCats
    MaxWidth        =   32000
    MenuBar         =   1610141695
    MenuBarVisible  =   True
-   MinHeight       =   64
+   MinHeight       =   400
    MinimizeButton  =   True
-   MinWidth        =   64
+   MinWidth        =   600
    Placement       =   0
    Resizeable      =   True
-   Title           =   "Untitled"
+   Title           =   "Cats"
    Visible         =   True
    Width           =   600
    Begin GetCatsMessage MsgGetCats
@@ -81,15 +81,15 @@ Begin Window WndCats
       DoubleBuffer    =   False
       Enabled         =   True
       EraseBackground =   True
-      Height          =   216
+      Height          =   328
       HelpTag         =   ""
       Index           =   -2147483648
       InitialParent   =   ""
-      Left            =   224
-      LockBottom      =   False
+      Left            =   20
+      LockBottom      =   True
       LockedInPosition=   False
       LockLeft        =   True
-      LockRight       =   False
+      LockRight       =   True
       LockTop         =   True
       Scope           =   2
       TabIndex        =   1
@@ -99,7 +99,7 @@ Begin Window WndCats
       Transparent     =   True
       UseFocusRing    =   True
       Visible         =   True
-      Width           =   254
+      Width           =   560
    End
 End
 #tag EndWindow
