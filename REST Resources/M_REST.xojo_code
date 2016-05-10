@@ -9,7 +9,8 @@ Protected Module M_REST
 		  //
 		  for i as integer = constructors.Ubound downto 0
 		    dim c as Xojo.Introspection.ConstructorInfo = constructors( i )
-		    if c.Parameters.Ubound = 0 then
+		    dim params() as Xojo.Introspection.ParameterInfo = c.Parameters
+		    if params.Ubound = -1 then
 		      return c
 		    end if
 		  next i
