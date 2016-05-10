@@ -1,5 +1,25 @@
 #tag Module
 Protected Module M_REST
+	#tag Method, Flags = &h21
+		Private Function GetZeroParamConstructor(ti As Xojo.Introspection.TypeInfo) As Xojo.Introspection.ConstructorInfo
+		  dim constructors() as Xojo.Introspection.ConstructorInfo = ti.Constructors
+		  
+		  //
+		  // Works backwords in the hope that that subclass Constructor if any, is later in the array
+		  //
+		  for i as integer = constructors.Ubound downto 0
+		    dim c as Xojo.Introspection.ConstructorInfo = constructors( i )
+		    if c.Parameters.Ubound = 0 then
+		      return c
+		    end if
+		  next i
+		  
+		  return nil
+		  
+		End Function
+	#tag EndMethod
+
+
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="Index"
