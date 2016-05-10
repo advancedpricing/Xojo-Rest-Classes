@@ -56,7 +56,7 @@ Implements PrivateMessage
 		  CreateMeta
 		  
 		  dim meta as M_REST.ClassMeta = MyMeta
-		  if meta is nil then
+		  if meta is nil or Options.ReturnPropertyPrefix = "" then
 		    return
 		  end if
 		  
@@ -765,9 +765,11 @@ Implements PrivateMessage
 		    
 		    dim value as Auto = entry.Value
 		    
-		    if not RaiseEvent IncomingPayloadValueToProperty( value, prop, self ) then
+		    if not RaiseEvent IncomingPayloadValueToProperty( value, prop, hostObject ) then
 		      try
-		        prop.Value( self ) = Deserialize( value, prop, prop.Value( hostObject ) )
+		        value = Deserialize( value, prop, prop.Value( hostObject ) )
+		        prop.Value( hostObject ) = value
+		        
 		      catch err as TypeMismatchException
 		        //
 		        // Didn't work, move on
@@ -985,7 +987,10 @@ Implements PrivateMessage
 		  // JSON?
 		  //
 		  dim json as Xojo.Core.Dictionary
-		  if subtype = "" or subtype = "json" then
+		  if subtype <> "xml" then
+		    //
+		    // We are going to try anything since the header could be wrong
+		    //
 		    try
 		      json = Xojo.Data.ParseJSON( textValue )
 		      subtype = "json"
