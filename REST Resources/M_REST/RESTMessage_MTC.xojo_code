@@ -792,7 +792,7 @@ Implements PrivateMessage
 		  
 		  dim tz as Xojo.Core.TimeZone = d.TimeZone
 		  
-		  if Options.AdjustDatesForTimeZome then
+		  if Options.AdjustDatesForTimeZone then
 		    dim interval as new Xojo.Core.DateInterval( 0, 0, 0, 0, 0, tz.SecondsFromGMT )
 		    d = d - interval
 		  end if

@@ -19,7 +19,7 @@ Implements PrivateOptions
 
 
 	#tag Property, Flags = &h0
-		AdjustDatesForTimeZome As Boolean
+		AdjustDatesForTimeZone As Boolean
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
