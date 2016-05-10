@@ -1,6 +1,31 @@
 #tag Class
 Protected Class App
 Inherits Application
+	#tag MenuHandler
+		Function ExamplesCats() As Boolean Handles ExamplesCats.Action
+			WndCats.Show
+			Return True
+			
+		End Function
+	#tag EndMenuHandler
+
+	#tag MenuHandler
+		Function ExamplesEddies() As Boolean Handles ExamplesEddies.Action
+			WndEddies.Show
+			Return True
+			
+		End Function
+	#tag EndMenuHandler
+
+	#tag MenuHandler
+		Function ExamplesSQLFormatter() As Boolean Handles ExamplesSQLFormatter.Action
+			WndSQLFormatter.Show
+			Return True
+			
+		End Function
+	#tag EndMenuHandler
+
+
 	#tag Constant, Name = kEditClear, Type = String, Dynamic = False, Default = \"&Delete", Scope = Public
 		#Tag Instance, Platform = Windows, Language = Default, Definition  = \"&Delete"
 		#Tag Instance, Platform = Linux, Language = Default, Definition  = \"&Delete"

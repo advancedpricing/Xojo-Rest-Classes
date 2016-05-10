@@ -1,5 +1,5 @@
 #tag Window
-Begin Window WndCats
+Begin Window WndMain
    BackColor       =   &cFFFFFF00
    Backdrop        =   0
    CloseButton     =   True
@@ -9,46 +9,28 @@ Begin Window WndCats
    FullScreen      =   False
    FullScreenButton=   False
    HasBackColor    =   False
-   Height          =   400
+   Height          =   82
    ImplicitInstance=   True
    LiveResize      =   True
    MacProcID       =   0
-   MaxHeight       =   32000
-   MaximizeButton  =   True
-   MaxWidth        =   32000
-   MenuBar         =   1610141695
+   MaxHeight       =   82
+   MaximizeButton  =   False
+   MaxWidth        =   600
+   MenuBar         =   0
    MenuBarVisible  =   True
-   MinHeight       =   400
+   MinHeight       =   82
    MinimizeButton  =   True
    MinWidth        =   600
    Placement       =   0
-   Resizeable      =   True
-   Title           =   "Cats"
+   Resizeable      =   False
+   Title           =   "Main"
    Visible         =   True
    Width           =   600
-   Begin GetCatsMessage msgGetCats
-      DefaultRESTType =   "7"
-      Format          =   "src"
-      Index           =   -2147483648
-      IsConnected     =   False
-      LockedInPosition=   False
-      RESTType        =   "7"
-      ResultsPerPage  =   1
-      ReturnPicture   =   0
-      RoundTripMs     =   0.0
-      Scope           =   2
-      Size            =   "full"
-      TabPanelIndex   =   0
-      Type            =   "png"
-      ValidateCertificates=   False
-   End
-   Begin PushButton btnGetCat
+   Begin Label Label1
       AutoDeactivate  =   True
       Bold            =   False
-      ButtonStyle     =   "0"
-      Cancel          =   False
-      Caption         =   "Get Cat"
-      Default         =   False
+      DataField       =   ""
+      DataSource      =   ""
       Enabled         =   True
       Height          =   20
       HelpTag         =   ""
@@ -61,43 +43,20 @@ Begin Window WndCats
       LockLeft        =   True
       LockRight       =   False
       LockTop         =   True
-      Scope           =   2
+      Multiline       =   True
+      Scope           =   0
+      Selectable      =   False
       TabIndex        =   0
       TabPanelIndex   =   0
-      TabStop         =   True
+      Text            =   "Use the Examples menu above to choose an example."
+      TextAlign       =   1
+      TextColor       =   &c00000000
       TextFont        =   "System"
       TextSize        =   0.0
       TextUnit        =   0
       Top             =   20
-      Underline       =   False
-      Visible         =   True
-      Width           =   80
-   End
-   Begin Canvas cvsPic
-      AcceptFocus     =   False
-      AcceptTabs      =   False
-      AutoDeactivate  =   True
-      Backdrop        =   0
-      DoubleBuffer    =   False
-      Enabled         =   True
-      EraseBackground =   True
-      Height          =   328
-      HelpTag         =   ""
-      Index           =   -2147483648
-      InitialParent   =   ""
-      Left            =   20
-      LockBottom      =   True
-      LockedInPosition=   False
-      LockLeft        =   True
-      LockRight       =   True
-      LockTop         =   True
-      Scope           =   2
-      TabIndex        =   1
-      TabPanelIndex   =   0
-      TabStop         =   True
-      Top             =   52
       Transparent     =   True
-      UseFocusRing    =   True
+      Underline       =   False
       Visible         =   True
       Width           =   560
    End
@@ -105,52 +64,8 @@ End
 #tag EndWindow
 
 #tag WindowCode
-	#tag Property, Flags = &h21
-		Private CatPic As Picture
-	#tag EndProperty
-
-
 #tag EndWindowCode
 
-#tag Events msgGetCats
-	#tag Event
-		Sub ResponseReceived(url As Text, HTTPStatus As Integer, payload As Auto)
-		  #pragma unused url
-		  #pragma unused HTTPStatus
-		  #pragma unused payload
-		  
-		  cvsPic.Invalidate
-		  return
-		  
-		End Sub
-	#tag EndEvent
-#tag EndEvents
-#tag Events btnGetCat
-	#tag Event
-		Sub Action()
-		  msgGetCats.Send
-		End Sub
-	#tag EndEvent
-#tag EndEvents
-#tag Events cvsPic
-	#tag Event
-		Sub Paint(g As Graphics, areas() As REALbasic.Rect)
-		  #pragma unused areas
-		  
-		  dim catPic as Picture = msgGetCats.ReturnPicture
-		  
-		  if catPic is nil then
-		    
-		    g.ClearRect 0, 0, g.Width, g.Height
-		    
-		  else
-		    
-		    g.DrawPicture catPic, 0, 0, g.Width, g.Height, 0, 0, CatPic.Width, CatPic.Height
-		    
-		  end if
-		End Sub
-	#tag EndEvent
-#tag EndEvents
 #tag ViewBehavior
 	#tag ViewProperty
 		Name="BackColor"

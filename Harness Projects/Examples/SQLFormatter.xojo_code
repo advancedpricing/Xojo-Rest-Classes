@@ -31,6 +31,8 @@ Inherits RESTMessage_MTC
 	#tag Event
 		Sub Setup()
 		  Options.SendWithPayloadIfAvailable = false // We'll handle it ourselves
+		  Options.ReturnPropertyPrefix = ""
+		  DBVendor = 1
 		  
 		End Sub
 	#tag EndEvent
@@ -44,8 +46,18 @@ Inherits RESTMessage_MTC
 		InputSQL As Text
 	#tag EndProperty
 
+	#tag Property, Flags = &h0
+		Rspn_Formatted_SQL As Text
+	#tag EndProperty
+
 
 	#tag ViewBehavior
+		#tag ViewProperty
+			Name="DBVendor"
+			Visible=true
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
 		#tag ViewProperty
 			Name="DefaultRESTType"
 			Visible=true
@@ -75,6 +87,11 @@ Inherits RESTMessage_MTC
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="InputSQL"
+			Group="Behavior"
+			Type="Text"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IsConnected"
@@ -119,6 +136,11 @@ Inherits RESTMessage_MTC
 			Name="RoundTripMs"
 			Group="Behavior"
 			Type="Double"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Rspn_Formatted_SQL"
+			Group="Behavior"
+			Type="Text"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
