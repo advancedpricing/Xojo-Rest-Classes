@@ -1,12 +1,5 @@
 #tag Class
 Protected Class Customer
-	#tag Method, Flags = &h0
-		Sub Constructor()
-		  // We need this for Xojo.Introspection
-		End Sub
-	#tag EndMethod
-
-
 	#tag Property, Flags = &h0
 		City As Text
 	#tag EndProperty
