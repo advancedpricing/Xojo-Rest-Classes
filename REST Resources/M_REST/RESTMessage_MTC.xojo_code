@@ -164,6 +164,7 @@ Implements PrivateMessage
 		  
 		  AddHandler TimeoutTimer.Action, WeakAddressOf TimeoutTimer_Action
 		  
+		  RaiseEvent Setup
 		  
 		End Sub
 	#tag EndMethod
@@ -1433,6 +1434,10 @@ Implements PrivateMessage
 
 	#tag Hook, Flags = &h0
 		Event ResponseReceived(url As Text, HTTPStatus As Integer, payload As Auto)
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event Setup()
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
