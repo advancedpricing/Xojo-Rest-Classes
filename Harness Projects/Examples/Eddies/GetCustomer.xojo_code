@@ -15,20 +15,23 @@ Inherits RESTMessage_MTC
 
 	#tag Event
 		Function IncomingPayloadValueToProperty(value As Auto, prop As Xojo.Introspection.PropertyInfo, hostObject As Object) As Boolean
-		  if prop.Name = "Photo" then
-		    dim textData as text = value
-		    dim binaryData as MemoryBlock = DecodeBase64( textData )
-		    dim p as Picture = Picture.FromData( binaryData )
-		    prop.Value( hostObject ) = p
-		    return true
+		  if hostObject isa Customer then
 		    
-		  elseif prop.Name = "Taxable" then
-		    dim b as boolean = value = "1"
-		    prop.Value( hostObject ) = b
-		    return true
+		    if prop.Name = "Photo" then
+		      dim textData as text = value
+		      dim binaryData as MemoryBlock = DecodeBase64( textData )
+		      dim p as Picture = Picture.FromData( binaryData )
+		      prop.Value( hostObject ) = p
+		      return true
+		      
+		    elseif prop.Name = "Taxable" then
+		      dim b as boolean = value = "1"
+		      prop.Value( hostObject ) = b
+		      return true
+		      
+		    end if
 		    
 		  end if
-		  
 		End Function
 	#tag EndEvent
 
