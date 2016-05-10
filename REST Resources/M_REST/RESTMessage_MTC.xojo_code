@@ -285,6 +285,425 @@ Implements PrivateMessage
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Function Deserialize(value As Auto, intoProp As Xojo.Introspection.PropertyInfo, currentValue As Auto) As Auto
+		  dim tiDestination as Xojo.Introspection.TypeInfo = intoProp.PropertyType
+		  dim typeName as text = tiDestination.Name
+		  
+		  if typeName.Length > 2 and typeName.EndsWith( "()" ) then
+		    return DeserializeArray( value, intoProp, currentValue )
+		    
+		  elseif IsIntrinsicType( typeName ) then
+		    return value
+		    
+		  else 
+		    dim objectDict as Xojo.Core.Dictionary = value
+		    return DeserializeObject( objectDict, intoProp )
+		    
+		  end if
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function DeserializeArray(value As Auto, intoProp As Xojo.Introspection.PropertyInfo, existingArray As Auto) As Auto
+		  dim tiDestination as Xojo.Introspection.TypeInfo = intoProp.PropertyType
+		  dim typeName as text = tiDestination.Name
+		  
+		  dim sourceArr() as auto = value
+		  
+		  select case typeName
+		  case "Text()"
+		    dim arr() as text
+		    try
+		      redim arr( sourceArr.Ubound )
+		      for i as integer = 0 to sourceArr.Ubound
+		        arr( i ) = sourceArr( i )
+		      next
+		    catch err as TypeMismatchException
+		      redim arr( -1 )
+		    end try
+		    return arr
+		    
+		  case "String()"
+		    #if not TargetiOS then
+		      dim arr() as string
+		      try
+		        redim arr( sourceArr.Ubound )
+		        for i as integer = 0 to sourceArr.Ubound
+		          arr( i ) = sourceArr( i )
+		        next
+		      catch err as TypeMismatchException
+		        redim arr( -1 )
+		      end try
+		      return arr
+		    #endif
+		    
+		  case "Boolean()"
+		    dim arr() as boolean
+		    try
+		      redim arr( sourceArr.Ubound )
+		      for i as integer = 0 to sourceArr.Ubound
+		        arr( i ) = sourceArr( i )
+		      next
+		    catch err as TypeMismatchException
+		      redim arr( -1 )
+		    end try
+		    return arr
+		    
+		  case "Currency()"
+		    dim arr() as currency
+		    try
+		      redim arr( sourceArr.Ubound )
+		      for i as integer = 0 to sourceArr.Ubound
+		        arr( i ) = sourceArr( i )
+		      next
+		    catch err as TypeMismatchException
+		      redim arr( -1 )
+		    end try
+		    return arr
+		    
+		  case "Double()"
+		    dim arr() as double
+		    try
+		      redim arr( sourceArr.Ubound )
+		      for i as integer = 0 to sourceArr.Ubound
+		        arr( i ) = sourceArr( i )
+		      next
+		    catch err as TypeMismatchException
+		      redim arr( -1 )
+		    end try
+		    return arr
+		    
+		  case "Single()"
+		    dim arr() as single
+		    try
+		      redim arr( sourceArr.Ubound )
+		      for i as integer = 0 to sourceArr.Ubound
+		        arr( i ) = sourceArr( i )
+		      next
+		    catch err as TypeMismatchException
+		      redim arr( -1 )
+		    end try
+		    return arr
+		    
+		  case "Int8()"
+		    dim arr() as Int8
+		    try
+		      redim arr( sourceArr.Ubound )
+		      for i as integer = 0 to sourceArr.Ubound
+		        arr( i ) = sourceArr( i )
+		      next
+		    catch err as TypeMismatchException
+		      redim arr( -1 )
+		    end try
+		    return arr
+		    
+		  case "Int16()"
+		    dim arr() as Int16
+		    try
+		      redim arr( sourceArr.Ubound )
+		      for i as integer = 0 to sourceArr.Ubound
+		        arr( i ) = sourceArr( i )
+		      next
+		    catch err as TypeMismatchException
+		      redim arr( -1 )
+		    end try
+		    return arr
+		    
+		  case "Int32()"
+		    dim arr() as Int32
+		    try
+		      redim arr( sourceArr.Ubound )
+		      for i as integer = 0 to sourceArr.Ubound
+		        arr( i ) = sourceArr( i )
+		      next
+		    catch err as TypeMismatchException
+		      redim arr( -1 )
+		    end try
+		    return arr
+		    
+		  case "Int64()"
+		    dim arr() as Int64
+		    try
+		      redim arr( sourceArr.Ubound )
+		      for i as integer = 0 to sourceArr.Ubound
+		        arr( i ) = sourceArr( i )
+		      next
+		    catch err as TypeMismatchException
+		      redim arr( -1 )
+		    end try
+		    return arr
+		    
+		  case "Byte()"
+		    dim arr() as byte
+		    try
+		      redim arr( sourceArr.Ubound )
+		      for i as integer = 0 to sourceArr.Ubound
+		        arr( i ) = sourceArr( i )
+		      next
+		    catch err as TypeMismatchException
+		      redim arr( -1 )
+		    end try
+		    return arr
+		    
+		  case "UInt8()"
+		    dim arr() as UInt8
+		    try
+		      redim arr( sourceArr.Ubound )
+		      for i as integer = 0 to sourceArr.Ubound
+		        arr( i ) = sourceArr( i )
+		      next
+		    catch err as TypeMismatchException
+		      redim arr( -1 )
+		    end try
+		    return arr
+		    
+		  case "UInt16()"
+		    dim arr() as UInt16
+		    try
+		      redim arr( sourceArr.Ubound )
+		      for i as integer = 0 to sourceArr.Ubound
+		        arr( i ) = sourceArr( i )
+		      next
+		    catch err as TypeMismatchException
+		      redim arr( -1 )
+		    end try
+		    return arr
+		    
+		  case "UInt32()"
+		    dim arr() as UInt32
+		    try
+		      redim arr( sourceArr.Ubound )
+		      for i as integer = 0 to sourceArr.Ubound
+		        arr( i ) = sourceArr( i )
+		      next
+		    catch err as TypeMismatchException
+		      redim arr( -1 )
+		    end try
+		    return arr
+		    
+		  case "UInt64()"
+		    dim arr() as UInt64
+		    try
+		      redim arr( sourceArr.Ubound )
+		      for i as integer = 0 to sourceArr.Ubound
+		        arr( i ) = sourceArr( i )
+		      next
+		    catch err as TypeMismatchException
+		      redim arr( -1 )
+		    end try
+		    return arr
+		    
+		  case "Integer()"
+		    dim arr() as integer
+		    try
+		      redim arr( sourceArr.Ubound )
+		      for i as integer = 0 to sourceArr.Ubound
+		        arr( i ) = sourceArr( i )
+		      next
+		    catch err as TypeMismatchException
+		      redim arr( -1 )
+		    end try
+		    return arr
+		    
+		  case "Auto()"
+		    return value
+		    
+		  case "Variant()"
+		    #if not TargetiOS then
+		      dim arr() as variant 
+		      redim arr( sourceArr.Ubound )
+		      for i as integer = 0 to sourceArr.Ubound
+		        arr( i ) = sourceArr( i )
+		      next
+		      return arr
+		    #endif
+		    
+		  case else
+		    //
+		    // Must be an object
+		    //
+		    dim arr() as object
+		    try
+		      arr = existingArray
+		      redim arr( sourceArr.Ubound )
+		      
+		      for i as integer = 0 to sourceArr.Ubound
+		        arr( i ) = Deserialize( sourceArr( i ), intoProp, existingArray )
+		      next
+		    catch err as TypeMismatchException
+		      redim arr( -1 )
+		    end try
+		    return arr
+		    
+		  end select
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function DeserializeDate(value As Text, intoProp As Xojo.Introspection.PropertyInfo) As Auto
+		  //
+		  // We are expecting the ISO 8601 format
+		  // as a date or date and time.
+		  //
+		  // https://en.wikipedia.org/wiki/ISO_8601
+		  //
+		  
+		  dim parts() as text = value.Split( "T" )
+		  if parts.Ubound = -1 or parts.Ubound > 1 then
+		    //
+		    // We don't recognize this format
+		    //
+		    return nil
+		  end if
+		  
+		  dim datePart as text = parts( 0 )
+		  dim dateParts() as text = datePart.Split( "-" )
+		  if dateParts.Ubound <> 2 then
+		    return nil
+		  end if
+		  
+		  dim year as integer = Integer.FromText( dateParts( 0 ) )
+		  dim month as integer = Integer.FromText( dateParts( 1 ) )
+		  dim day as integer = Integer.FromText( dateParts( 2 ) )
+		  
+		  //
+		  // See if there is a time
+		  //
+		  dim hour as integer
+		  dim minute as integer
+		  dim second as integer
+		  
+		  dim tz as Xojo.Core.TimeZone = Xojo.Core.TimeZone.Current
+		  dim tzHours as double = tz.SecondsFromGMT / 3600.0
+		  
+		  if parts.Ubound = 1 then
+		    dim timePart as text = parts( 1 )
+		    dim timeParts() as text 
+		    dim tzPart as text
+		    
+		    select case true
+		    case timePart.IndexOf( "Z" ) <> -1
+		      timeParts = timePart.Split( "Z" )
+		      timePart = timeParts( 0 )
+		      tzPart = "0"
+		      
+		    case timePart.IndexOf( "-" ) <> -1 
+		      timeParts = timePart.Split( "-" )
+		      timePart = timeParts( 0 )
+		      tzPart = "-" + timeParts( 1 )
+		      
+		    case timePart.IndexOf( "+" ) <> -1 
+		      timeParts = timePart.Split( "+" )
+		      timePart = timeParts( 0 )
+		      tzPart = timeParts( 1 )
+		      
+		    end select
+		    
+		    //
+		    // The time will either be in HH:MM:SS format or HHMMSS format
+		    //
+		    timePart = timePart.ReplaceAll( ":", "" )
+		    if timePart.Length = 6 then
+		      hour = Integer.FromText( timePart.Left( 2 ) )
+		      minute = Integer.FromText( timePart.Mid( 2, 2 ) )
+		      second = Integer.FromText( timePart.Right( 2 ) )
+		      
+		      //
+		      // Process the timezone, maybe
+		      //
+		      if Options.AdjustDatesForTimeZone then
+		        dim tzParts() as text = tzPart.Split( ":" )
+		        if tzParts.Ubound = 1 then
+		          tzHours = Integer.FromText( tzParts( 0 ) ) + ( Integer.FromText( tzParts( 1 ) ) / 60.0 )
+		          tz = new Xojo.Core.TimeZone( tzHours * 3600.0 )
+		        end if
+		      end if
+		      
+		    end if
+		  end if
+		  
+		  //
+		  // Create the object
+		  //
+		  select case intoProp.PropertyType.FullName
+		  case "Xojo.Core.Date"
+		    dim d as new Xojo.Core.Date( year, month, day, hour, minute, second, 0, tz )
+		    return d
+		    
+		  case else
+		    #if not TargetiOS then
+		      dim d as new Date( year, month, day, hour, minute, second, tzHours )
+		      return d
+		    #endif
+		    
+		  end select
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function DeserializeDictionary(value As Xojo.Core.Dictionary, intoProp As Xojo.Introspection.PropertyInfo) As Auto
+		  select case intoProp.PropertyType.FullName
+		  case "Xojo.Core.Dictionary"
+		    dim dict as new Xojo.Core.Dictionary
+		    for each entry as Xojo.Core.DictionaryEntry in value
+		      dict.Value( entry.Key ) = entry.Value
+		    next
+		    return dict
+		    
+		  case "Dictionary"
+		    #if not TargetiOS then
+		      dim dict as new Dictionary
+		      for each entry as Xojo.Core.DictionaryEntry in value
+		        dict.Value( entry.Key ) = entry.Value
+		      next
+		      return dict
+		    #endif
+		    
+		  end select
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function DeserializeObject(value As Auto, intoProp As Xojo.Introspection.PropertyInfo) As Object
+		  dim tiObject as Xojo.Introspection.TypeInfo = intoProp.PropertyType
+		  dim typeName as text = tiObject.Name
+		  
+		  select case typeName
+		  case "Dictionary", "Xojo.Core.Dictionary"
+		    return DeserializeDictionary( value, intoProp )
+		    
+		  case "Date", "Xojo.Core.Date"
+		    return DeserializeDate( value, intoProp )
+		    
+		  case else
+		    //
+		    // Have to create a new object to return
+		    //
+		    dim c as Xojo.Introspection.ConstructorInfo = GetZeroParamConstructor( intoProp.PropertyType )
+		    if c isa object then
+		      dim o as object = c.Invoke
+		      
+		      //
+		      // Create a dictionary of the object's properties
+		      //
+		      dim propsDict as new Xojo.Core.Dictionary
+		      for each prop as Xojo.Introspection.PropertyInfo in tiObject.Properties
+		        if prop.CanWrite and prop.IsPublic and not prop.IsShared then
+		          propsDict.Value( prop.Name ) = prop
+		        end if
+		      next prop
+		      
+		      if propsDict.Count <> 0 then
+		        JSONObjectToProps( value, propsDict, "", o )
+		      end if
+		      
+		      return o
+		    end if
+		  end select
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Sub Destructor()
 		  if TimeoutTimer isa Object then
 		    TimeoutTimer.Mode = Xojo.Core.Timer.Modes.Off
@@ -331,6 +750,33 @@ Implements PrivateMessage
 		  return types.IndexOf( propType ) <> -1
 		  
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub JSONObjectToProps(json As Xojo.Core.Dictionary, propsDict As Xojo.Core.Dictionary, propPrefix As Text, hostObject As Object)
+		  for each entry as Xojo.Core.DictionaryEntry in json
+		    dim returnPropName as text = propPrefix + entry.Key
+		    if not propsDict.HasKey( returnPropName ) then
+		      continue for entry
+		    end if
+		    
+		    dim prop as Xojo.Introspection.PropertyInfo = propsDict.Value( returnPropName )
+		    
+		    dim value as Auto = entry.Value
+		    
+		    if not RaiseEvent IncomingPayloadValueToProperty( value, prop, self ) then
+		      try
+		        prop.Value( self ) = Deserialize( value, prop, prop.Value( hostObject ) )
+		      catch err as TypeMismatchException
+		        //
+		        // Didn't work, move on
+		        //
+		      end try
+		      
+		    end if
+		  next
+		  
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
@@ -391,6 +837,50 @@ Implements PrivateMessage
 		  return result
 		  
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub ProcessJSONPayload(payload As Auto)
+		  CreateMeta // REALLY shouldn't be needed, but let's make sure
+		  
+		  dim returnProps as Xojo.Core.Dictionary = MyMeta.ReturnPropertiesDict
+		  
+		  //
+		  // If the JSON is just an array, see if there is only one return property
+		  // and it's an array. If so, copy the items into that.
+		  //
+		  
+		  dim tiPayload as Xojo.Introspection.TypeInfo = Xojo.Introspection.GetType( payload )
+		  if tiPayload.Name.Length > 2 and tiPayload.Name.EndsWith( "()" ) then
+		    
+		    if returnProps.Count = 1 then
+		      dim prop as Xojo.Introspection.PropertyInfo
+		      for each entry as Xojo.Core.DictionaryEntry in returnProps
+		        prop = entry.Value
+		      next
+		      
+		      try
+		        prop.Value( self ) = DeserializeArray( payload, prop, prop.Value( self ) )
+		      catch err as TypeMismatchException
+		        //
+		        // Oh well, we tried
+		        //
+		      end try
+		    end if
+		    
+		  else
+		    //
+		    // It's an object, so it will be case-sensitive.
+		    // Cycle through the object and match it against the returnProps
+		    // dictionary that is not case-sensitive
+		    //
+		    
+		    dim json as Xojo.Core.Dictionary = payload
+		    dim returnPropPrefix as text = Options.ReturnPropertyPrefix
+		    JSONObjectToProps( json, returnProps, returnPropPrefix, self )
+		    
+		  end if
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
@@ -526,6 +1016,12 @@ Implements PrivateMessage
 		  
 		  if result = nil then
 		    result = textValue
+		  elseif json isa Xojo.Core.Dictionary then
+		    //
+		    // It's JSON, so let's try to parse it into the return
+		    // properties
+		    //
+		    ProcessJSONPayload( json )
 		  end if
 		  
 		  return result
@@ -786,16 +1282,22 @@ Implements PrivateMessage
 
 	#tag Method, Flags = &h21
 		Private Function SerializeDate(d As Xojo.Core.Date) As Text
-		  dim locale as Xojo.Core.Locale = Xojo.Core.Locale.Current
+		  //
+		  // Returns ISO 8601 format
+		  //
+		  // https://en.wikipedia.org/wiki/ISO_8601
+		  //
+		  
 		  
 		  dim result as text
 		  
-		  dim tz as Xojo.Core.TimeZone = d.TimeZone
-		  
 		  if Options.AdjustDatesForTimeZone then
+		    dim tz as Xojo.Core.TimeZone = d.TimeZone
 		    dim interval as new Xojo.Core.DateInterval( 0, 0, 0, 0, 0, tz.SecondsFromGMT )
 		    d = d - interval
 		  end if
+		  
+		  dim locale as Xojo.Core.Locale = Xojo.Core.Locale.Current
 		  
 		  result = d.Year.ToText( locale, "0000" ) + "-" + d.Month.ToText( locale, "00" ) + "-" + d.Day.ToText( locale, "00" )
 		  result = result + "T" + d.Hour.ToText( locale, "00" ) + ":" + d.Minute.ToText( locale, "00" ) + ":" + _
@@ -919,6 +1421,10 @@ Implements PrivateMessage
 
 	#tag Hook, Flags = &h0
 		Event GetURLPattern() As Text
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event IncomingPayloadValueToProperty(value As Auto, prop As Xojo.Introspection.PropertyInfo, hostObject As Object) As Boolean
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
