@@ -585,7 +585,7 @@ End
 		  end if
 		  
 		  cvsPhoto.Invalidate
-		  lblRoundtrip.Text = format( me.RoundTripMs / 1000.0, "#,0.0" ) + " ms"
+		  lblRoundtrip.Text = format( me.RoundTripMs / 1000.0, "#,0.0" ) + " s"
 		End Sub
 	#tag EndEvent
 #tag EndEvents
