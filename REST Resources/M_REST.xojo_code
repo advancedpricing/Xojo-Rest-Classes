@@ -9,10 +9,23 @@ Protected Module M_REST
 		  //
 		  for i as integer = constructors.Ubound downto 0
 		    dim c as Xojo.Introspection.ConstructorInfo = constructors( i )
-		    dim params() as Xojo.Introspection.ParameterInfo = c.Parameters
-		    if params.Ubound = -1 then
+		    try
+		      #pragma BreakOnExceptions false
+		      dim params() as Xojo.Introspection.ParameterInfo = c.Parameters
+		      #pragma BreakOnExceptions default 
+		      if params.Ubound = -1 then
+		        return c
+		      end if
+		      
+		    catch err as OutOfBoundsException
+		      //
+		      // A bug in Xojo as of 2016r11 when there is no
+		      // specific Constructor created for the class
+		      // If this exception is raised, we've found the only 
+		      // Constructor
 		      return c
-		    end if
+		      
+		    end try
 		  next i
 		  
 		  return nil
