@@ -16,6 +16,7 @@ Folder=Examples;Examples;&h51D0A7FF;&h0;false
 Class=GetCatsMessage;Examples/GetCatsMessage.xojo_code;&h5EC0D7FF;&h51D0A7FF;false
 Interface=PrivateMessage;../REST Resources/M_REST/PrivateMessage.xojo_code;&h6F4757FF;&h608AF7FF;false
 Interface=PrivateOptions;../REST Resources/M_REST/PrivateOptions.xojo_code;&h7E44C7FF;&h608AF7FF;false
+Class=SQLFormatter;Examples/SQLFormatter.xojo_code;&h64EFFFF;&h51D0A7FF;false
 DefaultWindow=Window1
 AppMenuBar=MainMenuBar
 MajorVersion=1
