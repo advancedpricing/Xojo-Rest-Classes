@@ -38,6 +38,29 @@ Inherits RESTMessage_MTC
 
 	#tag ViewBehavior
 		#tag ViewProperty
+			Name="DefaultRESTType"
+			Visible=true
+			Group="Behavior"
+			InitialValue="RESTTypes.Unknown"
+			Type="RESTTypes"
+			EditorType="Enum"
+			#tag EnumValues
+				"0 - Unknown"
+				"1 - Create"
+				"2 - Read"
+				"3 - UpdateReplace"
+				"4 - UpdateModify"
+				"5 - Authenticate"
+				"6 - DELETE"
+				"7 - GET"
+				"8 - HEAD"
+				"9 - OPTIONS"
+				"10 - PATCH"
+				"11 - POST"
+				"12 - PUT"
+			#tag EndEnumValues
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Format"
 			Visible=true
 			Group="Behavior"

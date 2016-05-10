@@ -70,7 +70,7 @@ Implements PrivateOptions
 			  value = value.Trim
 			  
 			  //
-			  // If the prefix has changed, the parent has to regenerate its 
+			  // If the prefix has changed, the parent has to regenerate its
 			  // meta
 			  //
 			  
@@ -121,6 +121,11 @@ Implements PrivateOptions
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="ReturnPropertyPrefix"
+			Group="Behavior"
+			Type="Text"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SendWithPayloadIfAvailable"

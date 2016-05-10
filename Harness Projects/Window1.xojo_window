@@ -32,13 +32,13 @@ Begin Window Window1
       Index           =   -2147483648
       IsConnected     =   False
       LockedInPosition=   False
-      RESTType        =   ""
+      RESTType        =   "7"
       ResultsPerPage  =   1
+      ReturnPicture   =   0
       RoundTripMs     =   0.0
       Scope           =   2
       Size            =   "full"
       TabPanelIndex   =   0
-      TimeoutSeconds  =   5
       Type            =   "png"
       ValidateCertificates=   False
    End
