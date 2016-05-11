@@ -37,7 +37,7 @@ Inherits RESTMessage_MTC
 
 
 	#tag Property, Flags = &h0
-		ID As Integer
+		ID As Text
 	#tag EndProperty
 
 	#tag Property, Flags = &h0

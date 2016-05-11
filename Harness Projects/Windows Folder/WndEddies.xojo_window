@@ -598,7 +598,7 @@ End
 		    if me.ListIndex <> -1 then
 		      msgGetCustomer.Disconnect
 		      dim id as text = me.RowTag( me.ListIndex )
-		      msgGetCustomer.ID = Integer.FromText( id )
+		      msgGetCustomer.ID = id
 		      msgGetCustomer.Send
 		    end if
 		    
