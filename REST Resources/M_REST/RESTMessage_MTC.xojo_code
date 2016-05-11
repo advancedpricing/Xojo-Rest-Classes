@@ -1623,6 +1623,9 @@ Implements PrivateMessage
 	#tag Constant, Name = kContentType, Type = Text, Dynamic = False, Default = \"application/json", Scope = Private
 	#tag EndConstant
 
+	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.0", Scope = Public
+	#tag EndConstant
+
 
 	#tag Enum, Name = RESTTypes, Type = Integer, Flags = &h0
 		Unknown
