@@ -175,6 +175,10 @@ End
 #tag Events msgSQLFormatter
 	#tag Event
 		Sub ResponseReceived(url As Text, HTTPStatus As Integer, payload As Auto)
+		  #pragma unused url
+		  #pragma unused HTTPStatus
+		  #pragma unused payload
+		  
 		  fldSQLFormatted.Text = me.Rspn_Formatted_SQL
 		  return
 		End Sub
