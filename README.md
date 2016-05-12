@@ -83,21 +83,21 @@ __Note__: Properties that are part of the URL pattern will never be included in 
 
 RESTMessage_MTC defines a _RESTTypes_ enum whose values either include or correspond to HTTP actions. Return the type appropriate for the message. As of v.1.0, these are:
 
-| Name |
+| Type      |
 | --------- |
-| `Unknown` |
-| `Create` |
-| `Read` |
-| `UpdateReplace` |
-| `UpdateModify` |
-| `Authenticate` |
-| `DELETE` |
-| `GET` |
-| `HEAD` |
-| `OPTIONS` |
-| `PATCH` |
-| `POST` |
-| `PUT` |
+| Unknown |
+| Create |
+| Read |
+| UpdateReplace |
+| UpdateModify |
+| Authenticate |
+| DELETE |
+| GET |
+| HEAD |
+| OPTIONS |
+| PATCH |
+| POST |
+| PUT |
 
 The uppercase types correspond directly to an HTTP action. The lowercase types are for convenience and will choose the proper action. For example, `Read` corresponds to the `GET` action.
 
