@@ -277,7 +277,8 @@ Implements PrivateMessage
 		  
 		  if json.Count <> 0 then
 		    dim t as text = Xojo.Data.GenerateJSON( json )
-		    result = Xojo.Core.TextEncoding.UTF8.ConvertTextToData( t )
+		    dim encoding as Xojo.Core.TextEncoding = Options.ExpectedTextEncoding
+		    result = encoding.ConvertTextToData( t )
 		  end if
 		  
 		  return result
