@@ -40,7 +40,7 @@ Finally, the `ResponseReceived` event will let you know when the server has resp
 
 This is a more detailed description of the RESTMessage_MTC class.
 
-### Events [eventssection]
+###Events
 
 | Event | Parameters | Return Value | Description |
 | ----- | ---------- | :----------: | ----------- |
@@ -50,14 +50,14 @@ This is a more detailed description of the RESTMessage_MTC class.
 | Error | msg As Text |  | Some error has occurred during the connection. |
 | ExcludeFromOutgoingPayload | prop As Xojo.Introspection.PropertyInfo,<BR />ByRef propName As Text,<BR />ByRef propValue As Auto | Boolean | A message property is about to be included in the outgoing payload. If it shouldn't be, return `True`. You can also change the property name that will be used as the JSON object key or the value. |
 | GetRESTType |  | RESTTypes | See [The `GetRESTType` Event][getresttypeeventsection] below. |
-| GetURLPattern |  | Text | See [The `GetURLPattern` Event][geturlpatterneventsection] below. |
+| GetURLPattern |  | Text | See [<a href='#geturlpatterneventsection'>The `GetURLPattern` Event</a> below. |
 | IncomingPayloadValueToProperty | value As Auto,<BR />prop As Xojo.Introspection.PropertyInfo,<BR />hostObject As Object | Boolean | The incoming payload has a value that has been matched to a property of the message or one of the objects in its properties. Return `True` to prevent this value from being processed automatically, i.e., you will process it yourself. |
 | ObjectToJSON | o As Object,<BR />typeInfo As Xojo.Introspection.TypeInfo | Auto | An object in one of the message's properties is about to be serialized, but you may prefer to do it yourself. If so, return a `Xojo.Core.Dictionary` or an `Auto()` array. If you do not implement this event or return nil, automatic processing will proceed. |
 | ResponseReceived | url As Text,<BR />HTTPStatus As Integer,<BR />payload As Auto |  | The server has responded. The _url_ contains the server's URL, `HTTPStatus` the raw code returned by the server, and `payload` as the best form that RESTMesstage_MTC could convert it into, i.e., `Xojo.Core.MemoryBlock`, `Auto()`, or `Xojo.Core.Dictionary`. |
 | Setup |  |  | The message object has been constructed. This is a good place to set the initial values of properties or [_Options_][optionssection]. |
 | SkipIncomingPayloadProcessing | url As Text,<BR />httpStatus As Integer,<BR/>ByRef payload As Auto | Boolean | The server has responded with a payload. If you prefer the class not try to automatically parse it, return `True`. |
 
-### The `GetURLPattern` Event [geturlpatterneventsection]
+### <a name='geturlpatterneventsection'>The `GetURLPattern` Event</a>
 
 This event will let you specify the URL that will be used to connect to the server. It is raised each time you call `Send`.
 
