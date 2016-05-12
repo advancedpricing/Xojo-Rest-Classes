@@ -83,6 +83,7 @@ __Note__: Properties that are part of the URL pattern will never be included in 
 
 RESTMessage_MTC defines a _RESTTypes_ enum whose values either include or correspond to HTTP actions. Return the type appropriate for the message. As of v.1.0, these are:
 
+| Name |
 | --------- |
 | `Unknown` |
 | `Create` |
@@ -126,7 +127,7 @@ The _Options_ will let you set certain parameters for the message. For example, 
 | AdjustDatesFromTimeZone | Boolean | False | When encoded dates are sent or received, this determines if the time zone should be honored. If so, the date will be adjusted according to the local time zone. |
 | ExpectedTextEncoding | Xojo.Core.TextEncoding | Xojo.Core.TextEncoding.UTF8 | When the payload is received, it is usually as UTF-8. If the server expects or delivers something different, specify that here. |
 | ReturnPropertyPrefix | Text | "Return" | Any property in your subclass that starts with this prefix will never be included in the outgoing payload and will be cleared and, if possible, populated by the incoming payload. These properties may be a basic type like String, Text, or Integer, a Dictionary, Auto() array, or an object whose public properties correspond to the incoming JSON object. |
-| SendWithPayloadIfAvailable | Boolean | True | For any HTTP action _other_ than GET, the class will attempt to construct and attach a payload using the properties of the message that (1) are not "Return" properties and (2) have not been included in the <a href='geturlpatterneventsection'>URL pattern</a>. Set this to `True` to avoid that processing in all cases. |
+| SendWithPayloadIfAvailable | Boolean | True | For any HTTP action _other_ than GET, the class will attempt to construct and attach a payload using the properties of the message that (1) are not "Return" properties and (2) have not been included in the <a href='#geturlpatterneventsection'>URL pattern</a>. Set this to `True` to avoid that processing in all cases. |
 | TimeoutSeconds | Integer | 5 | Sets how long a message can wait before the `ContinueWaiting` event is raised. |
 
 ## Contributions
