@@ -40,21 +40,21 @@ Finally, the `ResponseReceived` event will let you know when the server has resp
 
 This is a more detailed description of the RESTMessage_MTC class.
 
-###Events
+### Events
 
 | Event | Parameters | Return Value | Description |
 | ----- | ---------- | :----------: | ----------- |
 | CancelSend | ByRef url As Text,<BR />ByRef httpAction As Text,<BR />ByRef payload As Xojo.Core.MemoryBlock,<BR />ByRef payloadMIMEType As Text | Boolean | The last chance to cancel sending the message, or change the URL, HTTP action, payload, or MIME type for the send. Set the payload to nil to avoid any payload. |
-| ContinueWaiting |  | Boolean | The message has exceeded the time specified in _Options.TimeoutSeconds_. Return `True` to let it continue waiting for another period. (See [_Options_][optionssection] below.) |
+| ContinueWaiting |  | Boolean | The message has exceeded the time specified in _Options.TimeoutSeconds_. Return `True` to let it continue waiting for another period. (See [_Options_][#options] below.) |
 | Disconnected |  |  | The socket has disconnected. |
 | Error | msg As Text |  | Some error has occurred during the connection. |
 | ExcludeFromOutgoingPayload | prop As Xojo.Introspection.PropertyInfo,<BR />ByRef propName As Text,<BR />ByRef propValue As Auto | Boolean | A message property is about to be included in the outgoing payload. If it shouldn't be, return `True`. You can also change the property name that will be used as the JSON object key or the value. |
-| GetRESTType |  | RESTTypes | See [The `GetRESTType` Event][getresttypeeventsection] below. |
-| GetURLPattern |  | Text | See [<a href='#geturlpatterneventsection'>The `GetURLPattern` Event</a> below. |
+| GetRESTType |  | RESTTypes | See <a href='#getresttypeeventsection'>The `GetRESTType` Event</a> below. |
+| GetURLPattern |  | Text | See <a href='#geturlpatterneventsection'>The `GetURLPattern` Event</a> below. |
 | IncomingPayloadValueToProperty | value As Auto,<BR />prop As Xojo.Introspection.PropertyInfo,<BR />hostObject As Object | Boolean | The incoming payload has a value that has been matched to a property of the message or one of the objects in its properties. Return `True` to prevent this value from being processed automatically, i.e., you will process it yourself. |
 | ObjectToJSON | o As Object,<BR />typeInfo As Xojo.Introspection.TypeInfo | Auto | An object in one of the message's properties is about to be serialized, but you may prefer to do it yourself. If so, return a `Xojo.Core.Dictionary` or an `Auto()` array. If you do not implement this event or return nil, automatic processing will proceed. |
 | ResponseReceived | url As Text,<BR />HTTPStatus As Integer,<BR />payload As Auto |  | The server has responded. The _url_ contains the server's URL, `HTTPStatus` the raw code returned by the server, and `payload` as the best form that RESTMesstage_MTC could convert it into, i.e., `Xojo.Core.MemoryBlock`, `Auto()`, or `Xojo.Core.Dictionary`. |
-| Setup |  |  | The message object has been constructed. This is a good place to set the initial values of properties or [_Options_][optionssection]. |
+| Setup |  |  | The message object has been constructed. This is a good place to set the initial values of properties or [_Options_][#options]. |
 | SkipIncomingPayloadProcessing | url As Text,<BR />httpStatus As Integer,<BR/>ByRef payload As Auto | Boolean | The server has responded with a payload. If you prefer the class not try to automatically parse it, return `True`. |
 
 ### <a name='geturlpatterneventsection'>The `GetURLPattern` Event</a>
@@ -79,7 +79,7 @@ RESTMessage_MTC will do the appropriate substitution. To send the message, you m
 
 __Note__: Properties that are part of the URL pattern will never be included in the outgoing payload.
 
-### The `GetRESTType` Event [getresttypeeventsection]
+### <a name='getresttypeeventsection'>The `GetRESTType` Event</a>
 
 RESTMessage_MTC defines a _RESTTypes_ enum whose values either include or correspond to HTTP actions. Return the type appropriate for the message. As of v.1.0, these are:
 
@@ -104,7 +104,7 @@ The uppercase types correspond directly to an HTTP action. The lowercase types a
 
 | Property | Type | Read Only |  Description |
 | -------- | ---- | :------: | ------------ |
-| DefaultRESTType | RESTTypes | no | The default REST type that will be used of [the `GetRestType` event][getresttypeeventsection] is not implemented. |
+| DefaultRESTType | RESTTypes | no | The default REST type that will be used of <a href='getresttypeeventsection'>the `GetRestType` event</a> is not implemented. |
 | IsConnected | Boolean | __YES__ | Returns `True` if the socket is currently connected. |
 | Options | M_REST.Options | no | Set the options for the message. See [_Options_][optionssection] below. |
 | RESTType | RESTTypes | __YES__ | The REST type that is ultimately used for the message. |
@@ -115,9 +115,9 @@ The uppercase types correspond directly to an HTTP action. The lowercase types a
 | Method | Parameters | Description |
 | ------ | ---------- | ----------- |
 | Disconnect | | Disconnect from the server immediately. If not connected, will do nothing. |
-| Send | | Fill in the properties first, make sure the [required events][events section] are implemented, then use this to send the message. __Note__: If the socket is already connected to the server, you will get an error. Check the _IsConnected_ property or just call `Disconnect` first. |
+| Send | | Fill in the properties first, make sure the [required events][#events] are implemented, then use this to send the message. __Note__: If the socket is already connected to the server, you will get an error. Check the _IsConnected_ property or just call `Disconnect` first. |
 
-### Options [optionssection]
+### Options
 
 The _Options_ will let you set certain parameters for the message. For example, if a message is expected to take longer to send or receive or you want to make sure the payload is never sent.
 
@@ -126,7 +126,7 @@ The _Options_ will let you set certain parameters for the message. For example, 
 | AdjustDatesFromTimeZone | Boolean | False | When encoded dates are sent or received, this determines if the time zone should be honored. If so, the date will be adjusted according to the local time zone. |
 | ExpectedTextEncoding | Xojo.Core.TextEncoding | Xojo.Core.TextEncoding.UTF8 | When the payload is received, it is usually as UTF-8. If the server expects or delivers something different, specify that here. |
 | ReturnPropertyPrefix | Text | "Return" | Any property in your subclass that starts with this prefix will never be included in the outgoing payload and will be cleared and, if possible, populated by the incoming payload. These properties may be a basic type like String, Text, or Integer, a Dictionary, Auto() array, or an object whose public properties correspond to the incoming JSON object. |
-| SendWithPayloadIfAvailable | Boolean | True | For any HTTP action _other_ than GET, the class will attempt to construct and attach a payload using the properties of the message that (1) are not "Return" properties and (2) have not been included in the [URL pattern][geturlpatterneventsection]. Set this to `True` to avoid that processing in all cases. |
+| SendWithPayloadIfAvailable | Boolean | True | For any HTTP action _other_ than GET, the class will attempt to construct and attach a payload using the properties of the message that (1) are not "Return" properties and (2) have not been included in the <a href='geturlpatterneventsection'>URL pattern</a>. Set this to `True` to avoid that processing in all cases. |
 | TimeoutSeconds | Integer | 5 | Sets how long a message can wait before the `ContinueWaiting` event is raised. |
 
 ## Contributions
