@@ -1,0 +1,149 @@
+# Xojo REST Classes
+
+A REST client framework for Xojo.
+
+## General Information
+
+There is no standard for RESTful servers. As such, creating classes that work with a variety can be tricky and time-consuming, and tend to make you to work directly with JSON or other raw data. This framework attempts to make the job a bit easier by allowing you to create "messages" by subclassing the main class and implementing various events. 
+
+### Installation
+
+Open the enclosed harness project and copy-and-paste the REST Resources folder into your own project.
+
+**Important**: _Do not drag the REST Resources folder directly from the folder into your project._ Xojo won't like it and  will probably show all sorts of odd errors.
+
+### Basic Use
+
+At its most basic, you need to create a "message" for each type of interaction with your RESTful server by subclassing RESTMessage\_MTC. You might create one message that will login, another that will get a list of information, another to save some data. Each message must implement the `GetURLPattern` event <a href='#geturlpatterneventsection'>(see below)</a> and _should_ implement <a href='#getresttypeeventsection'>the `GetRESTType` event</a>.
+
+If the REST server communicates with JSON, you can create properties in the message that correspond to the object keys. You can also use the `ExcludeFromOutgoingPayload` event to exclude a property or modify the key or value that will be included. In the `CancelSend` event you can cancel the send or change the URL, payload, or MIME type.
+
+If you expect information back from the server in the form of JSON, you can create properties with the prefix of "Return", e.g., _ReturnSuccess_, _ReturnFirstName_, etc., and the return payload will be parsed into those properties. You can adjust the prefix through the `Options` <a href='#optionssection'>(see below)</a>. You can also use the `IncomingPayloadValueToProperty` event to "massage" a value or store it elsewhere. For example, if you expect an image to be returned as Base64-encoded, you can use that event to decode it, store the resulting image in a _ReturnImage_ property, then return `True` to prevent RESTMessage_MTC from processing the value further.
+
+RESTMessage_MTC will attempt to deserialize a JSON object into a class. For example, suppose you expect JSON from the server that looks like this:
+
+```json
+{
+	"user" : {
+		"FirstName" : "John",
+		"LastName" : "Doe",
+		"Age" : 33
+	}
+}
+```
+
+You can create a User class with properties _FirstName As Text_, _LastName As Text_, and _Age As Integer_, then create a property in the message _ReturnUser As User_. The class will automatically create an instance and fill in the properties for you.
+
+Finally, the `ResponseReceived` event will let you know when the server has responded and, if you choose, let you deal with the payload directly.
+
+## Details
+
+This is a more detailed description of the RESTMessage_MTC class.
+
+### Events  <a name='eventssection'></a>
+
+| Event | Parameters | Return Value | Description |
+| ----- | ---------- | :----------: | ----------- |
+| CancelSend | ByRef url As Text,<BR />ByRef httpAction As Text,<BR />ByRef payload As Xojo.Core.MemoryBlock,<BR />ByRef payloadMIMEType As Text | Boolean | The last chance to cancel sending the message, or change the URL, HTTP action, payload, or MIME type for the send. Set the payload to nil to avoid any payload. |
+| ContinueWaiting |  | Boolean | The message has exceeded the time specified in _Options.TimeoutSeconds_. Return `True` to let it continue waiting for another period. (See <a href='#optionssection'>_Options_</a> below.) |
+| Disconnected |  |  | The socket has disconnected. |
+| Error | msg As Text |  | Some error has occurred during the connection. |
+| ExcludeFromOutgoingPayload | prop As Xojo.Introspection.PropertyInfo,<BR />ByRef propName As Text,<BR />ByRef propValue As Auto | Boolean | A message property is about to be included in the outgoing payload. If it shouldn't be, return `True`. You can also change the property name that will be used as the JSON object key or the value. |
+| GetRESTType |  | RESTTypes | See <a href='#getresttypeeventsection'>The `GetRESTType` Event</a> below. |
+| GetURLPattern |  | Text | See <a href='#geturlpatterneventsection'>The `GetURLPattern` Event</a> below. |
+| IncomingPayloadValueToProperty | value As Auto,<BR />prop As Xojo.Introspection.PropertyInfo,<BR />hostObject As Object | Boolean | The incoming payload has a value that has been matched to a property of the message or one of the objects in its properties. Return `True` to prevent this value from being processed automatically, i.e., you will process it yourself. |
+| ObjectToJSON | o As Object,<BR />typeInfo As Xojo.Introspection.TypeInfo | Auto | An object in one of the message's properties is about to be serialized, but you may prefer to do it yourself. If so, return a `Xojo.Core.Dictionary` or an `Auto()` array. If you do not implement this event or return nil, automatic processing will proceed. |
+| ResponseReceived | url As Text,<BR />HTTPStatus As Integer,<BR />payload As Auto |  | The server has responded. The _url_ contains the server's URL, `HTTPStatus` the raw code returned by the server, and `payload` as the best form that RESTMesstage\_MTC could convert it into, i.e., `Xojo.Core.MemoryBlock`, `Auto()`, or `Xojo.Core.Dictionary`. |
+| Setup |  |  | The message object has been constructed. This is a good place to set the initial values of properties or <a href='#optionssection'>_Options_</a>. |
+| SkipIncomingPayloadProcessing | url As Text,<BR />httpStatus As Integer,<BR/>ByRef payload As Auto | Boolean | The server has responded with a payload. If you prefer the class not try to automatically parse it, return `True`. |
+
+### <a name='geturlpatterneventsection'></a>The `GetURLPattern` Event
+
+This event will let you specify the URL that will be used to connect to the server. It is raised each time you call `Send`.
+
+You must return some value here.
+
+The URL can be complete or may contain placeholders that represent properties within the message. For example, you need to get the weather in the zip code 99911 and the RESTful server requires the URL in the form:
+
+```
+http://www.someweathersite.com/api/get/zip/99911
+```
+
+You can create a property in your message subclass, _ZipCode_, and return the URL pattern like this:
+
+```
+http://www.someweathersite.com/api/get/zip/:ZipCode
+```
+
+RESTMessage_MTC will do the appropriate substitution. To send the message, you merely have to fill in the property and call `Send`.
+
+__Note__: Properties that are part of the URL pattern will never be included in the outgoing payload.
+
+### <a name='getresttypeeventsection'></a>The `GetRESTType` Event
+
+RESTMessage\_MTC defines a _RESTTypes_ enum whose values either include or correspond to HTTP actions. Return the type appropriate for the message. As of v.1.0, these are:
+
+| Type      |
+| --------- |
+| Unknown |
+| Create |
+| Read |
+| UpdateReplace |
+| UpdateModify |
+| Authenticate |
+| DELETE |
+| GET |
+| HEAD |
+| OPTIONS |
+| PATCH |
+| POST |
+| PUT |
+
+The uppercase types correspond directly to an HTTP action. The lowercase types are for convenience and will choose the proper action. For example, `Read` corresponds to the `GET` action.
+
+### Properties
+
+| Property | Type | Read Only |  Description |
+| -------- | ---- | :------: | ------------ |
+| DefaultRESTType | RESTTypes | no | The default REST type that will be used of <a href='#getresttypeeventsection'>the `GetRestType` event</a> is not implemented. |
+| IsConnected | Boolean | __YES__ | Returns `True` if the socket is currently connected. |
+| Options | M\_REST.Options | no | Set the options for the message. See <a href='#optionssection'>_Options_</a> below. |
+| RESTType | RESTTypes | __YES__ | The REST type that is ultimately used for the message. |
+| RoundTripMs | Double | __YES__ | The round-trip time, in milliseconds, from wehn `Send` was invoked until a response received. |
+
+### Methods
+
+| Method | Parameters | Description |
+| ------ | ---------- | ----------- |
+| Disconnect | | Disconnect from the server immediately. If not connected, will do nothing. |
+| Send | | Fill in the properties first, make sure the <a href='#eventssection'>required events</a> are implemented, then use this to send the message. __Note__: If the socket is already connected to the server, you will get an error. Check the _IsConnected_ property or just call `Disconnect` first. |
+
+### <a name='optionssection'></a>Options
+
+The _Options_ will let you set certain parameters for the message. For example, if a message is expected to take longer to send or receive or you want to make sure the payload is never sent.
+
+| Property | Type | Default | Description |
+| -------- | :--: | :-----: | ----------- |
+| AdjustDatesFromTimeZone | Boolean | False | When encoded dates are sent or received, this determines if the time zone should be honored. If so, the date will be adjusted according to the local time zone. |
+| ExpectedTextEncoding | Xojo.Core.TextEncoding | Xojo.Core.TextEncoding.UTF8 | When the payload is received, it is usually as UTF-8. If the server expects or delivers something different, specify that here. |
+| ReturnPropertyPrefix | Text | "Return" | Any property in your subclass that starts with this prefix will never be included in the outgoing payload and will be cleared and, if possible, populated by the incoming payload. These properties may be a basic type like String, Text, or Integer, a Dictionary, Auto() array, or an object whose public properties correspond to the incoming JSON object. |
+| SendWithPayloadIfAvailable | Boolean | True | For any HTTP action _other_ than GET, the class will attempt to construct and attach a payload using the properties of the message that (1) are not "Return" properties and (2) have not been included in the <a href='#geturlpatterneventsection'>URL pattern</a>. Set this to `True` to avoid that processing in all cases. |
+| TimeoutSeconds | Integer | 5 | Sets how long a message can wait before the `ContinueWaiting` event is raised. |
+
+## Contributions
+
+Contributions to this project are welcome. Fork it to your own repo, then submit changes. However, be forewarned that only those changes that we deem universally useful will be included.
+
+## Who Did This?
+
+This project was designed and implemented by:
+
+* Kem Tekinay (ktekinay at mactechnologies.com)
+
+With special thanks to [Advanced Medical Pricing Solutions, Inc.](http://www.advancedpricing.com) for making this possible.
+
+## Release Notes
+
+1.0 (May 12, 2016)
+
+- Initial release.

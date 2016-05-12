@@ -94,5 +94,33 @@ Begin Menu MainMenuBar
          Visible = True
       End
    End
+   Begin MenuItem ExamplesMenu
+      SpecialMenu = 0
+      Text = "Examples"
+      Index = -2147483648
+      AutoEnable = True
+      Visible = True
+      Begin MenuItem ExamplesCats
+         SpecialMenu = 0
+         Text = "Cats"
+         Index = -2147483648
+         AutoEnable = True
+         Visible = True
+      End
+      Begin MenuItem ExamplesEddies
+         SpecialMenu = 0
+         Text = "Eddie's Electronics"
+         Index = -2147483648
+         AutoEnable = True
+         Visible = True
+      End
+      Begin MenuItem ExamplesSQLFormatter
+         SpecialMenu = 0
+         Text = "SQL Formatter"
+         Index = -2147483648
+         AutoEnable = True
+         Visible = True
+      End
+   End
 End
 #tag EndMenu
