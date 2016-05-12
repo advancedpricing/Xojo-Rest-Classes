@@ -144,6 +144,6 @@ With special thanks to [Advanced Medical Pricing Solutions, Inc.](http://www.adv
 
 ## Release Notes
 
-1.0 (__ 2016)
+1.0 (May 12, 2016)
 
 - Initial release.
