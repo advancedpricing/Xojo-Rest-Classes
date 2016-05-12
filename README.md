@@ -40,7 +40,7 @@ Finally, the `ResponseReceived` event will let you know when the server has resp
 
 This is a more detailed description of the RESTMessage_MTC class.
 
-### <a name='eventssection' />Events
+### Events  <a name='eventssection'></a>
 
 | Event | Parameters | Return Value | Description |
 | ----- | ---------- | :----------: | ----------- |
@@ -57,7 +57,7 @@ This is a more detailed description of the RESTMessage_MTC class.
 | Setup |  |  | The message object has been constructed. This is a good place to set the initial values of properties or <a href='#optionssection'>_Options_</a>. |
 | SkipIncomingPayloadProcessing | url As Text,<BR />httpStatus As Integer,<BR/>ByRef payload As Auto | Boolean | The server has responded with a payload. If you prefer the class not try to automatically parse it, return `True`. |
 
-### <a name='geturlpatterneventsection' />The `GetURLPattern` Event
+### <a name='geturlpatterneventsection'></a>The `GetURLPattern` Event
 
 This event will let you specify the URL that will be used to connect to the server. It is raised each time you call `Send`.
 
@@ -79,7 +79,7 @@ RESTMessage_MTC will do the appropriate substitution. To send the message, you m
 
 __Note__: Properties that are part of the URL pattern will never be included in the outgoing payload.
 
-### <a name='getresttypeeventsection' />The `GetRESTType` Event
+### <a name='getresttypeeventsection'></a>The `GetRESTType` Event
 
 RESTMessage_MTC defines a _RESTTypes_ enum whose values either include or correspond to HTTP actions. Return the type appropriate for the message. As of v.1.0, these are:
 
@@ -118,7 +118,7 @@ The uppercase types correspond directly to an HTTP action. The lowercase types a
 | Disconnect | | Disconnect from the server immediately. If not connected, will do nothing. |
 | Send | | Fill in the properties first, make sure the <a href='#eventssection'>required events</a> are implemented, then use this to send the message. __Note__: If the socket is already connected to the server, you will get an error. Check the _IsConnected_ property or just call `Disconnect` first. |
 
-### <a name='optionssection' />Options
+### <a name='optionssection'></a>Options
 
 The _Options_ will let you set certain parameters for the message. For example, if a message is expected to take longer to send or receive or you want to make sure the payload is never sent.
 
