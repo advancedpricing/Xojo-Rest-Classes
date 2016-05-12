@@ -14,11 +14,11 @@ Open the enclosed harness project and copy-and-paste the REST Resources folder i
 
 ### Basic Use
 
-At its most basic, you need to create a "message" for each type of interaction with your RESTful server by subclassing RESTMessage_MTC. You might create one message that will login, another that will get a list of information, another to save some data. Each message must implement the `GetURLPattern` event (see below) and _should_ implement the `GetRESTType` event.
+At its most basic, you need to create a "message" for each type of interaction with your RESTful server by subclassing RESTMessage_MTC. You might create one message that will login, another that will get a list of information, another to save some data. Each message must implement the `GetURLPattern` event <a href='#geturlpatterneventsection'>(see below)</a> and _should_ implement <a href='#getresttypeeventsection'>the `GetRESTType` event</a>.
 
 If the REST server communicates with JSON, you can create properties in the message that correspond to the object keys. You can also use the `ExcludeFromOutgoingPayload` event to exclude a property or modify the key or value that will be included. In the `CancelSend` event you can cancel the send or change the URL, payload, or MIME type.
 
-If you expect information back from the server in the form of JSON, you can create properties with the prefix of "Return", e.g., _ReturnSuccess_, _ReturnFirstName_, etc., and the return payload will be parsed into those properties. You can adjust the prefix through the `Options` (see below). You can also use the `IncomingPayloadValueToProperty` event to "massage" a value or store it elsewhere. For example, if you expect an image to be returned as Base64-encoded, you can use that event to decode it, store the resulting image in a _ReturnImage_ property, then return `True` to prevent RESTMessage_MTC from processing the value further.
+If you expect information back from the server in the form of JSON, you can create properties with the prefix of "Return", e.g., _ReturnSuccess_, _ReturnFirstName_, etc., and the return payload will be parsed into those properties. You can adjust the prefix through the `Options` <a href='#optionssection'>(see below)</a>. You can also use the `IncomingPayloadValueToProperty` event to "massage" a value or store it elsewhere. For example, if you expect an image to be returned as Base64-encoded, you can use that event to decode it, store the resulting image in a _ReturnImage_ property, then return `True` to prevent RESTMessage_MTC from processing the value further.
 
 RESTMessage_MTC will attempt to deserialize a JSON object into a class. For example, suppose you expect JSON from the server that looks like this:
 
@@ -40,12 +40,12 @@ Finally, the `ResponseReceived` event will let you know when the server has resp
 
 This is a more detailed description of the RESTMessage_MTC class.
 
-### Events
+### <a name='eventssection' />Events
 
 | Event | Parameters | Return Value | Description |
 | ----- | ---------- | :----------: | ----------- |
 | CancelSend | ByRef url As Text,<BR />ByRef httpAction As Text,<BR />ByRef payload As Xojo.Core.MemoryBlock,<BR />ByRef payloadMIMEType As Text | Boolean | The last chance to cancel sending the message, or change the URL, HTTP action, payload, or MIME type for the send. Set the payload to nil to avoid any payload. |
-| ContinueWaiting |  | Boolean | The message has exceeded the time specified in _Options.TimeoutSeconds_. Return `True` to let it continue waiting for another period. (See [_Options_][#options] below.) |
+| ContinueWaiting |  | Boolean | The message has exceeded the time specified in _Options.TimeoutSeconds_. Return `True` to let it continue waiting for another period. (See <a href='#optionssection'>_Options_</a> below.) |
 | Disconnected |  |  | The socket has disconnected. |
 | Error | msg As Text |  | Some error has occurred during the connection. |
 | ExcludeFromOutgoingPayload | prop As Xojo.Introspection.PropertyInfo,<BR />ByRef propName As Text,<BR />ByRef propValue As Auto | Boolean | A message property is about to be included in the outgoing payload. If it shouldn't be, return `True`. You can also change the property name that will be used as the JSON object key or the value. |
@@ -54,10 +54,10 @@ This is a more detailed description of the RESTMessage_MTC class.
 | IncomingPayloadValueToProperty | value As Auto,<BR />prop As Xojo.Introspection.PropertyInfo,<BR />hostObject As Object | Boolean | The incoming payload has a value that has been matched to a property of the message or one of the objects in its properties. Return `True` to prevent this value from being processed automatically, i.e., you will process it yourself. |
 | ObjectToJSON | o As Object,<BR />typeInfo As Xojo.Introspection.TypeInfo | Auto | An object in one of the message's properties is about to be serialized, but you may prefer to do it yourself. If so, return a `Xojo.Core.Dictionary` or an `Auto()` array. If you do not implement this event or return nil, automatic processing will proceed. |
 | ResponseReceived | url As Text,<BR />HTTPStatus As Integer,<BR />payload As Auto |  | The server has responded. The _url_ contains the server's URL, `HTTPStatus` the raw code returned by the server, and `payload` as the best form that RESTMesstage_MTC could convert it into, i.e., `Xojo.Core.MemoryBlock`, `Auto()`, or `Xojo.Core.Dictionary`. |
-| Setup |  |  | The message object has been constructed. This is a good place to set the initial values of properties or [_Options_][#options]. |
+| Setup |  |  | The message object has been constructed. This is a good place to set the initial values of properties or <a href='optionssection'>_Options_</a>. |
 | SkipIncomingPayloadProcessing | url As Text,<BR />httpStatus As Integer,<BR/>ByRef payload As Auto | Boolean | The server has responded with a payload. If you prefer the class not try to automatically parse it, return `True`. |
 
-### <a name='geturlpatterneventsection'>The `GetURLPattern` Event</a>
+### <a name='geturlpatterneventsection' />The `GetURLPattern` Event
 
 This event will let you specify the URL that will be used to connect to the server. It is raised each time you call `Send`.
 
@@ -79,7 +79,7 @@ RESTMessage_MTC will do the appropriate substitution. To send the message, you m
 
 __Note__: Properties that are part of the URL pattern will never be included in the outgoing payload.
 
-### <a name='getresttypeeventsection'>The `GetRESTType` Event</a>
+### <a name='getresttypeeventsection' />The `GetRESTType` Event
 
 RESTMessage_MTC defines a _RESTTypes_ enum whose values either include or correspond to HTTP actions. Return the type appropriate for the message. As of v.1.0, these are:
 
@@ -104,7 +104,7 @@ The uppercase types correspond directly to an HTTP action. The lowercase types a
 
 | Property | Type | Read Only |  Description |
 | -------- | ---- | :------: | ------------ |
-| DefaultRESTType | RESTTypes | no | The default REST type that will be used of <a href='getresttypeeventsection'>the `GetRestType` event</a> is not implemented. |
+| DefaultRESTType | RESTTypes | no | The default REST type that will be used of <a href='#getresttypeeventsection'>the `GetRestType` event</a> is not implemented. |
 | IsConnected | Boolean | __YES__ | Returns `True` if the socket is currently connected. |
 | Options | M_REST.Options | no | Set the options for the message. See [_Options_][optionssection] below. |
 | RESTType | RESTTypes | __YES__ | The REST type that is ultimately used for the message. |
@@ -115,9 +115,9 @@ The uppercase types correspond directly to an HTTP action. The lowercase types a
 | Method | Parameters | Description |
 | ------ | ---------- | ----------- |
 | Disconnect | | Disconnect from the server immediately. If not connected, will do nothing. |
-| Send | | Fill in the properties first, make sure the [required events][#events] are implemented, then use this to send the message. __Note__: If the socket is already connected to the server, you will get an error. Check the _IsConnected_ property or just call `Disconnect` first. |
+| Send | | Fill in the properties first, make sure the <a href='#eventssection'>required events</a> are implemented, then use this to send the message. __Note__: If the socket is already connected to the server, you will get an error. Check the _IsConnected_ property or just call `Disconnect` first. |
 
-### Options
+### <a name='optionssection' />Options
 
 The _Options_ will let you set certain parameters for the message. For example, if a message is expected to take longer to send or receive or you want to make sure the payload is never sent.
 
