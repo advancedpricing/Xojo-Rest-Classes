@@ -22,8 +22,27 @@ Implements PrivateOptions
 		AdjustDatesForTimeZone As Boolean
 	#tag EndProperty
 
-	#tag Property, Flags = &h0
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  dim result as Xojo.Core.TextEncoding = mExpectedTextEncoding
+			  if result is nil then
+			    result = Xojo.Core.TextEncoding.UTF8
+			  end if
+			  
+			  return result
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  mExpectedTextEncoding = value
+			End Set
+		#tag EndSetter
 		ExpectedTextEncoding As Xojo.Core.TextEncoding
+	#tag EndComputedProperty
+
+	#tag Property, Flags = &h21
+		Private mExpectedTextEncoding As Xojo.Core.TextEncoding
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -98,7 +117,7 @@ Implements PrivateOptions
 
 	#tag ViewBehavior
 		#tag ViewProperty
-			Name="AdjustDatesForTimeZome"
+			Name="AdjustDatesForTimeZone"
 			Group="Behavior"
 			Type="Boolean"
 		#tag EndViewProperty

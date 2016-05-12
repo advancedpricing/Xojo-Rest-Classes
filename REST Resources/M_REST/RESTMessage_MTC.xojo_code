@@ -942,9 +942,6 @@ Implements PrivateMessage
 		  dim result as Auto
 		  
 		  dim encoding as Xojo.Core.TextEncoding = Options.ExpectedTextEncoding
-		  if encoding is nil then
-		    encoding = Xojo.Core.TextEncoding.UTF8
-		  end if
 		  
 		  //
 		  // See if an encoding is indicated
