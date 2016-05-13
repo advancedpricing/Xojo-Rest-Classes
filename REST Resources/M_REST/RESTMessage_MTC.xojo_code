@@ -56,7 +56,7 @@ Implements PrivateMessage
 		  CreateMeta
 		  
 		  dim meta as M_REST.ClassMeta = MyMeta
-		  if meta is nil or Options.ReturnPropertyPrefix = "" then
+		  if meta is nil or MessageOptions.ReturnPropertyPrefix = "" then
 		    return
 		  end if
 		  
@@ -238,7 +238,7 @@ Implements PrivateMessage
 		    
 		    dim isReturnProp as boolean
 		    
-		    dim returnPropPrefix as text = Options.ReturnPropertyPrefix
+		    dim returnPropPrefix as text = MessageOptions.ReturnPropertyPrefix
 		    dim prefixLength as integer = returnPropPrefix.Length
 		    if returnPropPrefix = "" or _ // Can be empty
 		      ( propName.Length > prefixLength and propName.Left( prefixLength ) = returnPropPrefix ) then // Return property 
@@ -277,7 +277,7 @@ Implements PrivateMessage
 		  
 		  if json.Count <> 0 then
 		    dim t as text = Xojo.Data.GenerateJSON( json )
-		    dim encoding as Xojo.Core.TextEncoding = Options.ExpectedTextEncoding
+		    dim encoding as Xojo.Core.TextEncoding = MessageOptions.ExpectedTextEncoding
 		    result = encoding.ConvertTextToData( t )
 		  end if
 		  
@@ -613,7 +613,7 @@ Implements PrivateMessage
 		      //
 		      // Process the timezone, maybe
 		      //
-		      if Options.AdjustDatesForTimeZone then
+		      if MessageOptions.AdjustDatesForTimeZone then
 		        dim tzParts() as text = tzPart.Split( ":" )
 		        if tzParts.Ubound = 1 then
 		          tzHours = Integer.FromText( tzParts( 0 ) ) + ( Integer.FromText( tzParts( 1 ) ) / 60.0 )
@@ -789,7 +789,7 @@ Implements PrivateMessage
 		  RequestSentMicroseconds = Microseconds
 		  ResponseReceivedMicroseconds = -1.0
 		  
-		  TimeoutTimer.Period = Options.TimeOutSeconds * 1000
+		  TimeoutTimer.Period = MessageOptions.TimeOutSeconds * 1000
 		  TimeoutTimer.Mode = Xojo.Core.Timer.Modes.Multiple
 		  
 		End Sub
@@ -880,7 +880,7 @@ Implements PrivateMessage
 		    //
 		    
 		    dim json as Xojo.Core.Dictionary = payload
-		    dim returnPropPrefix as text = Options.ReturnPropertyPrefix
+		    dim returnPropPrefix as text = MessageOptions.ReturnPropertyPrefix
 		    JSONObjectToProps( json, returnProps, returnPropPrefix, self )
 		    
 		  end if
@@ -942,7 +942,7 @@ Implements PrivateMessage
 		Private Function ProcessTextPayload(payload As Xojo.Core.MemoryBlock, subtype As Text) As Auto
 		  dim result as Auto
 		  
-		  dim encoding as Xojo.Core.TextEncoding = Options.ExpectedTextEncoding
+		  dim encoding as Xojo.Core.TextEncoding = MessageOptions.ExpectedTextEncoding
 		  
 		  //
 		  // See if an encoding is indicated
@@ -1158,7 +1158,7 @@ Implements PrivateMessage
 		  next
 		  
 		  dim payload as Xojo.Core.MemoryBlock
-		  if action <> kActionGet and payloadProps.Ubound <> -1 and Options.SendWithPayloadIfAvailable then
+		  if action <> kActionGet and payloadProps.Ubound <> -1 and MessageOptions.SendWithPayloadIfAvailable then
 		    payload = CreateOutgoingPayload( payloadProps )
 		  end if
 		  
@@ -1295,7 +1295,7 @@ Implements PrivateMessage
 		  
 		  dim result as text
 		  
-		  if Options.AdjustDatesForTimeZone then
+		  if MessageOptions.AdjustDatesForTimeZone then
 		    dim tz as Xojo.Core.TimeZone = d.TimeZone
 		    dim interval as new Xojo.Core.DateInterval( 0, 0, 0, 0, 0, tz.SecondsFromGMT )
 		    d = d - interval
@@ -1482,12 +1482,48 @@ Implements PrivateMessage
 		IsConnected As Boolean
 	#tag EndComputedProperty
 
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  if mMessageOptions is nil then
+			    MessageOptions = new M_REST.Options
+			  end if
+			  
+			  return mMessageOptions
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  if value = mMessageOptions then
+			    //
+			    // Nothing to do
+			    //
+			    return
+			  end if
+			  
+			  if mMessageOptions isa Object then
+			    //
+			    // Clear the parent
+			    //
+			    PrivateOptions( mMessageOptions ).SetParentMessage nil
+			  end if
+			  
+			  mMessageOptions = value
+			  if mMessageOptions isa Object then
+			    PrivateOptions( mMessageOptions ).SetParentMessage self
+			  end if
+			  
+			End Set
+		#tag EndSetter
+		MessageOptions As M_REST.Options
+	#tag EndComputedProperty
+
 	#tag Property, Flags = &h21
-		Private mIsConnected As Boolean
+		Attributes( hidden ) Private mIsConnected As Boolean
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mOptions As M_REST.Options
+		Attributes( hidden ) Private mMessageOptions As M_REST.Options
 	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h21
@@ -1505,42 +1541,6 @@ Implements PrivateMessage
 			End Get
 		#tag EndGetter
 		Private MyMeta As M_REST.ClassMeta
-	#tag EndComputedProperty
-
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  if mOptions is nil then
-			    Options = new M_REST.Options
-			  end if
-			  
-			  return mOptions
-			End Get
-		#tag EndGetter
-		#tag Setter
-			Set
-			  if value = mOptions then
-			    //
-			    // Nothing to do
-			    //
-			    return
-			  end if
-			  
-			  if mOptions isa Object then
-			    //
-			    // Clear the parent
-			    //
-			    PrivateOptions( mOptions ).SetParentMessage nil
-			  end if
-			  
-			  mOptions = value
-			  if mOptions isa Object then
-			    PrivateOptions( mOptions ).SetParentMessage self
-			  end if
-			  
-			End Set
-		#tag EndSetter
-		Options As M_REST.Options
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
