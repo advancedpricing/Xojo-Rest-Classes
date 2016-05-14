@@ -55,7 +55,7 @@ This is a more detailed description of the RESTMessage_MTC class.
 | ObjectToJSON | o As Object,<BR />typeInfo As Xojo.Introspection.TypeInfo | Auto | An object in one of the message's properties is about to be serialized, but you may prefer to do it yourself. If so, return a `Xojo.Core.Dictionary` or an `Auto()` array. If you do not implement this event or return nil, automatic processing will proceed. |
 | ResponseReceived | url As Text,<BR />HTTPStatus As Integer,<BR />payload As Auto |  | The server has responded. The _url_ contains the server's URL, `HTTPStatus` the raw code returned by the server, and `payload` as the best form that RESTMesstage\_MTC could convert it into, i.e., `Xojo.Core.MemoryBlock`, `Auto()`, or `Xojo.Core.Dictionary`. |
 | Setup |  |  | The message object has been constructed. This is a good place to set the initial values of properties or <a href='#optionssection'>_MessageOptions_</a>. |
-| SkipIncomingPayloadProcessing | url As Text,<BR />httpStatus As Integer,<BR/>ByRef payload As Auto | Boolean | The server has responded with a payload. If you prefer the class not try to automatically parse it, return `True`. |
+| SkipIncomingPayloadProcessing | url As Text,<BR />httpStatus As Integer,<BR />ByRef payload As Auto | Boolean | The server has responded with a payload. If you prefer the class not try to automatically parse it, return `True`. |
 
 ### <a name='geturlpatterneventsection'></a>The `GetURLPattern` Event
 
@@ -108,8 +108,10 @@ The uppercase types correspond directly to an HTTP action. The lowercase types a
 | DefaultRESTType | RESTTypes | no | The default REST type that will be used of <a href='#getresttypeeventsection'>the `GetRestType` event</a> is not implemented. |
 | IsConnected | Boolean | __YES__ | Returns `True` if the socket is currently connected. |
 | MessageOptions | M\_REST.MessageOptions | no | Set the options for the message. See <a href='#optionssection'>_MessageOptions_</a> below. |
+| MessageSerialNumber | Int64 | __YES__ | A unique number (within the session) assigned to each new instance of a message. |
 | RESTType | RESTTypes | __YES__ | The REST type that is ultimately used for the message. |
-| RoundTripMs | Double | __YES__ | The round-trip time, in milliseconds, from wehn `Send` was invoked until a response received. |
+| RoundTripMs | Double | __YES__ | The round-trip time, in milliseconds, from when the connection was initiated until a response received. |
+| RoundTripWithProcessingMs | Double | __YES__ | The round-trip time, in milliseconds, from when `Send` was invoked until response processing was finished. |
 
 ### Methods
 
@@ -147,6 +149,8 @@ With special thanks to [Advanced Medical Pricing Solutions, Inc.](http://www.adv
 1.1 (___, 2016)
 
 - Changed _Options_ property to _MessageOptions_ to prevent possible conflicts in subclasses.
+- Added _MessageSerialNumber_ property.
+- Added _RoundTripWithProcessingMs_ property.
 
 1.0 (May 12, 2016)
 

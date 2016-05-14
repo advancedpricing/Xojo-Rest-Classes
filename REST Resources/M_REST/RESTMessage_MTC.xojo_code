@@ -36,6 +36,7 @@ Implements PrivateMessage
 		    payload = ProcessPayload( payload )
 		  end if
 		  
+		  ReceiveFinishedMicroseconds = microseconds
 		  RaiseEvent ResponseReceived URL, HTTPStatus, payload 
 		  
 		End Sub
@@ -1078,6 +1079,9 @@ Implements PrivateMessage
 
 	#tag Method, Flags = &h0
 		Sub Send()
+		  RequestStartedMicroseconds = microseconds
+		  ReceiveFinishedMicroseconds = -1.0
+		  
 		  dim action as text = HTTPAction
 		  if action = kActionUnknown then
 		    raise new M_REST.RESTException( "REST type was not specified" )
@@ -1518,12 +1522,39 @@ Implements PrivateMessage
 		MessageOptions As M_REST.Options
 	#tag EndComputedProperty
 
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  static nextSN as Int64
+			  static accessFlag as new Semaphore( 1 )
+			  
+			  if mMessageSerialNumber <= 0 then
+			    accessFlag.Signal
+			    
+			    const kOne as Int64 = 1
+			    nextSN = nextSN + kOne
+			    mMessageSerialNumber = nextSN
+			    
+			    accessFlag.Release
+			  end if
+			  
+			  return mMessageSerialNumber
+			  
+			End Get
+		#tag EndGetter
+		MessageSerialNumber As Int64
+	#tag EndComputedProperty
+
 	#tag Property, Flags = &h21
 		Attributes( hidden ) Private mIsConnected As Boolean
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Attributes( hidden ) Private mMessageOptions As M_REST.Options
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Attributes( hidden ) Private mMessageSerialNumber As Int64
 	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h21
@@ -1544,7 +1575,15 @@ Implements PrivateMessage
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
+		Private ReceiveFinishedMicroseconds As Double
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
 		Private RequestSentMicroseconds As Double = -1.0
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private RequestStartedMicroseconds As Double = -1.0
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -1590,6 +1629,27 @@ Implements PrivateMessage
 			End Get
 		#tag EndGetter
 		RoundTripMs As Double
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  dim roundTrip as double
+			  
+			  if ReceiveFinishedMicroseconds < 0.0 or RequestStartedMicroseconds < 0.0 then
+			    roundTrip = -1.0
+			  else
+			    roundTrip = ( ReceiveFinishedMicroseconds - RequestStartedMicroseconds ) / 1000.0
+			  end if
+			  
+			  if roundTrip < 0.0 then
+			    roundTrip = -1.0
+			  end if
+			  
+			  return roundTrip
+			End Get
+		#tag EndGetter
+		RoundTripWithProcessingMs As Double
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
