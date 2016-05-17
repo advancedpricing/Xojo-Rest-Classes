@@ -6,13 +6,23 @@ Implements PrivateMessage
 		Sub Error(err as RuntimeException)
 		  mIsConnected = false
 		  
+		  dim surrogate as M_REST.PrivateSurrogate = MessageSurrogate
+		  
 		  if err isa Xojo.Net.NetException then
 		    select case err.ErrorNumber
 		    case 102
 		      RaiseEvent Disconnected
 		      
+		      if surrogate isa object then
+		        surrogate.RaiseDisconnected( self )
+		      end if
+		      
 		    case else
 		      RaiseEvent Error( err.Reason )
+		      
+		      if surrogate isa object then
+		        surrogate.RaiseError( self, err.Reason )
+		      end if
 		      
 		    end select
 		    
@@ -45,6 +55,11 @@ Implements PrivateMessage
 		  //
 		  // NOTE: If the caller no longer exists, you will get a NilObjectException here
 		  //
+		  
+		  dim surrogate as M_REST.PrivateSurrogate = MessageSurrogate
+		  if surrogate isa object then
+		    surrogate.RaiseResponseReceived( self, url, httpStatus, payload )
+		  end if
 		  
 		End Sub
 	#tag EndEvent
@@ -1083,7 +1098,7 @@ Implements PrivateMessage
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Send()
+		Sub Send(surrogate As RESTMessageSurrogate_MTC = Nil)
 		  RequestStartedMicroseconds = microseconds
 		  ReceiveFinishedMicroseconds = -1.0
 		  
@@ -1184,6 +1199,7 @@ Implements PrivateMessage
 		    SetRequestContent payload, mimeType
 		  end if
 		  
+		  MessageSurrogate = surrogate
 		  Send action, url
 		End Sub
 	#tag EndMethod
@@ -1392,8 +1408,14 @@ Implements PrivateMessage
 
 	#tag Method, Flags = &h21
 		Private Sub TimeoutTimer_Action(sender As Xojo.Core.Timer)
+		  dim surrogate as M_REST.PrivateSurrogate = MessageSurrogate
+		  
 		  if IsConnected then
-		    if not RaiseEvent ContinueWaiting then
+		    if RaiseEvent ContinueWaiting or (surrogate isa object and surrogate.RaiseContinueWaiting( self ) ) then
+		      //
+		      // One of these wanted to continue waiting
+		      //
+		    else
 		      self.Disconnect
 		      mIsConnected = false
 		    end if
@@ -1550,6 +1572,30 @@ Implements PrivateMessage
 		MessageSerialNumber As Int64
 	#tag EndComputedProperty
 
+	#tag ComputedProperty, Flags = &h21
+		#tag Getter
+			Get
+			  if mMessageSurrogateWeakRef is nil then
+			    return nil
+			  else
+			    return PrivateSurrogate( mMessageSurrogateWeakRef.Value )
+			  end if
+			  
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  if value is nil then
+			    mMessageSurrogateWeakRef = nil
+			  else
+			    mMessageSurrogateWeakRef = new WeakRef( value )
+			  end if
+			  
+			End Set
+		#tag EndSetter
+		Private MessageSurrogate As PrivateSurrogate
+	#tag EndComputedProperty
+
 	#tag Property, Flags = &h21
 		Attributes( hidden ) Private mIsConnected As Boolean
 	#tag EndProperty
@@ -1560,6 +1606,10 @@ Implements PrivateMessage
 
 	#tag Property, Flags = &h21
 		Attributes( hidden ) Private mMessageSerialNumber As Int64
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mMessageSurrogateWeakRef As WeakRef
 	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h21
