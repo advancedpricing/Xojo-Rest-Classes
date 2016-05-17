@@ -32,10 +32,12 @@ Begin Window WndCats
       Index           =   -2147483648
       IsConnected     =   False
       LockedInPosition=   False
+      MessageSerialNumber=   ""
       RESTType        =   "7"
       ResultsPerPage  =   1
       ReturnPicture   =   0
       RoundTripMs     =   0.0
+      RoundTripWithProcessingMs=   0.0
       Scope           =   2
       Size            =   "full"
       TabPanelIndex   =   0
@@ -114,9 +116,9 @@ End
 
 #tag Events msgGetCats
 	#tag Event
-		Sub ResponseReceived(url As Text, HTTPStatus As Integer, payload As Auto)
+		Sub ResponseReceived(url As Text, httpStatus As Integer, payload As Auto)
 		  #pragma unused url
-		  #pragma unused HTTPStatus
+		  #pragma unused httpStatus
 		  #pragma unused payload
 		  
 		  cvsPic.Invalidate

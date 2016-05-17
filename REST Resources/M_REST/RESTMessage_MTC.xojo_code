@@ -37,7 +37,7 @@ Implements PrivateMessage
 	#tag EndEvent
 
 	#tag Event
-		Sub PageReceived(URL as Text, HTTPStatus as Integer, Content as xojo.Core.MemoryBlock)
+		Sub PageReceived(url as Text, httpStatus as Integer, Content as xojo.Core.MemoryBlock)
 		  mIsConnected = false
 		  
 		  ResponseReceivedMicroseconds = Microseconds
@@ -45,12 +45,12 @@ Implements PrivateMessage
 		  
 		  dim payload as Auto = content
 		  
-		  if not SkipIncomingPayloadProcessing( URL, HTTPStatus, payload ) then
+		  if not SkipIncomingPayloadProcessing( url, httpStatus, payload ) then
 		    payload = ProcessPayload( payload )
 		  end if
 		  
 		  ReceiveFinishedMicroseconds = microseconds
-		  RaiseEvent ResponseReceived URL, HTTPStatus, payload 
+		  RaiseEvent ResponseReceived url, httpStatus, payload 
 		  
 		  //
 		  // NOTE: If the caller no longer exists, you will get a NilObjectException here
@@ -1467,7 +1467,7 @@ Implements PrivateMessage
 	#tag EndHook
 
 	#tag Hook, Flags = &h0, Description = 546865205245535466756C20736572766572206861732072657475726E6564206120726573706F6E73652E
-		Event ResponseReceived(url As Text, HTTPStatus As Integer, payload As Auto)
+		Event ResponseReceived(url As Text, httpStatus As Integer, payload As Auto)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0, Description = 5365742075702070726F70657274696573206F722074616B65206F7468657220616374696F6E732061667465722074686520696E7374616E636520697320666972737420636F6E73747275637465642E
