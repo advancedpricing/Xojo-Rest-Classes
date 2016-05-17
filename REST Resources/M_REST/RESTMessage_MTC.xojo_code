@@ -5,7 +5,6 @@ Implements PrivateMessage
 	#tag Event
 		Sub Error(err as RuntimeException)
 		  mIsConnected = false
-		  RemoveInstance self
 		  
 		  if err isa Xojo.Net.NetException then
 		    select case err.ErrorNumber
@@ -30,7 +29,6 @@ Implements PrivateMessage
 	#tag Event
 		Sub PageReceived(URL as Text, HTTPStatus as Integer, Content as xojo.Core.MemoryBlock)
 		  mIsConnected = false
-		  RemoveInstance self
 		  
 		  ResponseReceivedMicroseconds = Microseconds
 		  ClearReturnProperties
@@ -723,7 +721,6 @@ Implements PrivateMessage
 		    TimeoutTimer = nil
 		  end if
 		  
-		  RemoveInstance self // Shouldn't be needed, but let's make sure
 		End Sub
 	#tag EndMethod
 
@@ -735,7 +732,6 @@ Implements PrivateMessage
 		    super.Disconnect
 		  end if
 		  
-		  RemoveInstance self
 		End Sub
 	#tag EndMethod
 
@@ -803,8 +799,6 @@ Implements PrivateMessage
 		  
 		  TimeoutTimer.Period = MessageOptions.TimeOutSeconds * 1000
 		  TimeoutTimer.Mode = Xojo.Core.Timer.Modes.Multiple
-		  
-		  InstancesDict.Value( self ) = nil
 		  
 		End Sub
 	#tag EndMethod
@@ -1058,25 +1052,6 @@ Implements PrivateMessage
 		  
 		  return dict
 		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Shared Sub RemoveInstance(instance As RESTMessage_MTC)
-		  //
-		  // Can be called multiple times safely
-		  //
-		  
-		  #pragma BreakOnExceptions false
-		  try
-		    InstancesDict.Remove instance
-		  catch err as KeyNotFoundException
-		    //
-		    // Already removed, move along
-		    //
-		  end try
-		  #pragma BreakOnExceptions default
-		  
-		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -1427,8 +1402,6 @@ Implements PrivateMessage
 		  sender.Mode = Xojo.Core.Timer.Modes.Off
 		  if IsConnected then
 		    sender.Mode = Xojo.Core.Timer.Modes.Multiple
-		  else
-		    RemoveInstance self
 		  end if
 		  
 		End Sub
@@ -1509,19 +1482,6 @@ Implements PrivateMessage
 		Protected HTTPAction As Text
 	#tag EndComputedProperty
 
-	#tag ComputedProperty, Flags = &h21
-		#tag Getter
-			Get
-			  if mInstancesDict is nil then
-			    mInstancesDict = new Xojo.Core.Dictionary
-			  end if
-			  
-			  return mInstancesDict
-			End Get
-		#tag EndGetter
-		Private Shared InstancesDict As Xojo.Core.Dictionary
-	#tag EndComputedProperty
-
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
@@ -1589,10 +1549,6 @@ Implements PrivateMessage
 		#tag EndGetter
 		MessageSerialNumber As Int64
 	#tag EndComputedProperty
-
-	#tag Property, Flags = &h21
-		Private Shared mInstancesDict As Xojo.Core.Dictionary
-	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Attributes( hidden ) Private mIsConnected As Boolean

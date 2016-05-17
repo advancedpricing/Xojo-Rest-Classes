@@ -151,7 +151,6 @@ With special thanks to [Advanced Medical Pricing Solutions, Inc.](http://www.adv
 - Changed _Options_ property to _MessageOptions_ to prevent possible conflicts in subclasses.
 - Added _MessageSerialNumber_ property.
 - Added _RoundTripWithProcessingMs_ property.
-- Messages will keep an instance of themselves so you can send a message that handles itself, or send a message and forget it.
 
 1.0 (May 12, 2016)
 
