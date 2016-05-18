@@ -105,7 +105,7 @@ Implements PrivateSurrogate
 	#tag EndMethod
 
 
-	#tag Hook, Flags = &h0
+	#tag Hook, Flags = &h0, Description = 546865206D6573736167652072657175697265732061757468656E7469636174696F6E2E2053657420746865206E616D6520616E642070617373776F72642C207468656E2072657475726E20547275652E
 		Event AuthenticationRequired(sender As RESTMessage_MTC, realm As Text, ByRef name As Text, ByRef password As Text) As Boolean
 	#tag EndHook
 
@@ -121,11 +121,11 @@ Implements PrivateSurrogate
 		Event Error(sender As RESTMessage_MTC, msg As Text)
 	#tag EndHook
 
-	#tag Hook, Flags = &h0
+	#tag Hook, Flags = &h0, Description = 54686520686561646572732063616D65206261636B2066726F6D20746865207365727665722E
 		Event HeadersReceived(sender As RESTMessage_MTC, url As Text, httpStatus As Integer)
 	#tag EndHook
 
-	#tag Hook, Flags = &h0
+	#tag Hook, Flags = &h0, Description = 546865207374617473206173206120726573706F6E73652069732072656365697665642E
 		Event ReceiveProgress(sender As RESTMessage_MTC, bytesReceived As Int64, totalBytes As Int64, newData As Xojo.Core.MemoryBlock)
 	#tag EndHook
 
@@ -133,7 +133,7 @@ Implements PrivateSurrogate
 		Event ResponseReceived(sender As RESTMessage_MTC, url As Text, httpStatus As Integer, payload As Auto)
 	#tag EndHook
 
-	#tag Hook, Flags = &h0
+	#tag Hook, Flags = &h0, Description = 546865207374617473206F662061206D657373616765206265696E672073656E742E
 		Event SendProgress(sender As RESTMessage_MTC, bytesSent As Int64, bytesLeft As Int64)
 	#tag EndHook
 
