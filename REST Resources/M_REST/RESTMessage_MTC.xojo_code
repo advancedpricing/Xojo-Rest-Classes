@@ -1664,7 +1664,7 @@ Implements PrivateMessage
 			  if value is nil then
 			    mMessageSurrogateWeakRef = nil
 			  else
-			    mMessageSurrogateWeakRef = new WeakRef( value )
+			    mMessageSurrogateWeakRef = Xojo.Core.WeakRef.Create( value )
 			  end if
 			  
 			End Set
@@ -1689,7 +1689,7 @@ Implements PrivateMessage
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mMessageSurrogateWeakRef As WeakRef
+		Private mMessageSurrogateWeakRef As Xojo.Core.WeakRef
 	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h21
