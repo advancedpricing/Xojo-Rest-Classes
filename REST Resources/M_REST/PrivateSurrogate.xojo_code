@@ -54,6 +54,12 @@ Private Interface PrivateSurrogate
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub RemoveMessage(msg As M_REST.RESTMessage_MTC)
+		  
+		End Sub
+	#tag EndMethod
+
 
 End Interface
 #tag EndInterface

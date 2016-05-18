@@ -8,32 +8,6 @@ Implements PrivateSurrogate
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Sub CleanOutstandingMessages()
-		  dim remove() as M_REST.RESTMessage_MTC
-		  
-		  for each entry as Xojo.Core.DictionaryEntry in OutstandingMessagesDict
-		    dim msg as M_REST.RESTMessage_MTC = M_REST.RESTMessage_MTC( entry.Key )
-		    if not msg.IsConnected then
-		      remove.Append msg
-		    end if
-		  next
-		  
-		  for each msg as M_REST.RESTMessage_MTC in remove
-		    #pragma BreakOnExceptions false
-		    try
-		      OutstandingMessagesDict.Remove msg
-		    catch err as KeyNotFoundException
-		      //
-		      // Already gone, so move along
-		      //
-		    end try
-		    #pragma BreakOnExceptions default
-		  next
-		  
-		End Sub
-	#tag EndMethod
-
 	#tag Method, Flags = &h0
 		Sub DisconnectAll()
 		  for each entry as Xojo.Core.DictionaryEntry in OutstandingMessagesDict
@@ -49,14 +23,12 @@ Implements PrivateSurrogate
 	#tag Method, Flags = &h0
 		Sub DisconnectMessage(msg As M_REST.RESTMessage_MTC)
 		  msg.Disconnect
-		  CleanOutstandingMessages
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function OutstandingMessages() As M_REST.RESTMessage_MTC()
-		  CleanOutstandingMessages
 		  dim msgs() as M_REST.RESTMessage_MTC
 		  for each entry as Xojo.Core.DictionaryEntry in OutstandingMessagesDict
 		    msgs.Append M_REST.RESTMessage_MTC( entry.Key )
@@ -81,21 +53,18 @@ Implements PrivateSurrogate
 
 	#tag Method, Flags = &h21
 		Private Sub RaiseDisconnected(sender As RESTMessage_MTC)
-		  CleanOutstandingMessages
 		  RaiseEvent Disconnected( sender )
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
 		Private Sub RaiseError(sender As RestMessage_MTC, msg As Text)
-		  CleanOutstandingMessages
 		  RaiseEvent Error( sender, msg )
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
 		Private Sub RaiseHeadersReceived(sender As RESTMessage_MTC, url As Text, httpStatus As Integer)
-		  CleanOutstandingMessages
 		  RaiseEvent HeadersReceived( sender, url, httpStatus )
 		End Sub
 	#tag EndMethod
@@ -109,7 +78,6 @@ Implements PrivateSurrogate
 
 	#tag Method, Flags = &h21
 		Private Sub RaiseResponseReceived(sender As RESTMessage_MTC, url As Text, httpStatus As Integer, payload As Auto)
-		  CleanOutstandingMessages
 		  RaiseEvent ResponseReceived( sender, url, httpStatus, payload )
 		End Sub
 	#tag EndMethod
@@ -117,6 +85,21 @@ Implements PrivateSurrogate
 	#tag Method, Flags = &h21
 		Private Sub RaiseSendProgress(sender As RESTMessage_MTC, bytesSent As Int64, bytesLeft As Int64)
 		  RaiseEvent SendProgress( sender, bytesSent, bytesLeft )
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub RemoveMessage(msg As M_REST.RESTMessage_MTC)
+		  #pragma BreakOnExceptions false
+		  try
+		    OutstandingMessagesDict.Remove msg
+		  catch err as KeyNotFoundException
+		    //
+		    // Already gone, so move on
+		    //
+		  end try
+		  #pragma BreakOnExceptions default
 		  
 		End Sub
 	#tag EndMethod
@@ -158,7 +141,6 @@ Implements PrivateSurrogate
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  CleanOutstandingMessages
 			  return OutstandingMessagesDict.Count <> 0
 			End Get
 		#tag EndGetter

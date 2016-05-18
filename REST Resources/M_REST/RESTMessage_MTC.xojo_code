@@ -22,6 +22,10 @@ Implements PrivateMessage
 		  
 		  dim surrogate as M_REST.PrivateSurrogate = MessageSurrogate
 		  
+		  if surrogate isa object then
+		    surrogate.RemoveMessage self
+		  end if
+		  
 		  if err isa Xojo.Net.NetException then
 		    select case err.ErrorNumber
 		    case 102
@@ -40,8 +44,11 @@ Implements PrivateMessage
 		      
 		    end select
 		    
+		    MessageSurrogate = nil
+		    
 		  else
 		    
+		    MessageSurrogate = nil
 		    raise err
 		    
 		  end if
@@ -75,6 +82,11 @@ Implements PrivateMessage
 	#tag Event
 		Sub PageReceived(URL as Text, HTTPStatus as Integer, Content as xojo.Core.MemoryBlock)
 		  mIsConnected = false
+		  dim surrogate as M_REST.PrivateSurrogate = MessageSurrogate
+		  
+		  if surrogate isa object then
+		    surrogate.RemoveMessage self
+		  end if
 		  
 		  ResponseReceivedMicroseconds = Microseconds
 		  ClearReturnProperties
@@ -92,9 +104,9 @@ Implements PrivateMessage
 		  // NOTE: If the caller no longer exists, you will get a NilObjectException here
 		  //
 		  
-		  dim surrogate as M_REST.PrivateSurrogate = MessageSurrogate
 		  if surrogate isa object then
 		    surrogate.RaiseResponseReceived( self, url, httpStatus, payload )
+		    MessageSurrogate = nil
 		  end if
 		  
 		End Sub
@@ -796,6 +808,11 @@ Implements PrivateMessage
 		    TimeoutTimer = nil
 		  end if
 		  
+		  //
+		  // We don't bother removing the message from the MessageSurrogate here.
+		  // Why? Well, if the surrogate still has the message, this
+		  // Destructor will never fire anyway.
+		  //
 		End Sub
 	#tag EndMethod
 
@@ -806,6 +823,13 @@ Implements PrivateMessage
 		    TimeoutTimer.Mode = Xojo.Core.Timer.Modes.Off
 		    super.Disconnect
 		  end if
+		  
+		  dim surrogate as M_REST.PrivateSurrogate = MessageSurrogate
+		  if surrogate isa object then
+		    surrogate.RemoveMessage self
+		    MessageSurrogate = nil
+		  end if
+		  
 		  
 		End Sub
 	#tag EndMethod
@@ -1477,7 +1501,6 @@ Implements PrivateMessage
 		      //
 		    else
 		      self.Disconnect
-		      mIsConnected = false
 		    end if
 		  end if
 		  
