@@ -156,6 +156,7 @@ The `RESTMessageSurrogate_MTC` has some additional properties and methods.
 | DisconnectAll | | | Disconnect all of the outstanding messages |
 | DisconnectMessage | msg As RESTMessage\_MTC | | Disconnect a single message |
 | OutstandingMessages | | RESTMessage\_MTC() | An array of outstanding messages | 
+
 #### Properties
 
 | Property | Type | Default | Description |
@@ -175,6 +176,12 @@ This project was designed and implemented by:
 With special thanks to [Advanced Medical Pricing Solutions, Inc.](http://www.advancedpricing.com) for making this possible.
 
 ## Release Notes
+
+1.2 (May 18, 2016)
+
+- Added `RESTMessageSurrogate_MTC.Sent` event.
+- Changed where _ResponseReceivedMicroseconds_ is recorded.
+- Changed the parameter _sender_ to _message_ in `RESTMessageSurrogate_MTC` events.
 
 1.1 (May 18, 2016)
 
