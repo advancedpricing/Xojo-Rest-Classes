@@ -827,7 +827,7 @@ End
 #tag EndEvents
 #tag Events smsgGetCustomerSurrogate
 	#tag Event , Description = 546865205245535466756C20736572766572206861732072657475726E6564206120726573706F6E73652E
-		Sub ResponseReceived(sender As RESTMessage_MTC, url As Text, httpStatus As Integer, payload As Auto)
+		Sub ResponseReceived(message As RESTMessage_MTC, url As Text, httpStatus As Integer, payload As Auto)
 		  #pragma unused url
 		  #pragma unused httpStatus
 		  #pragma unused payload
@@ -836,7 +836,7 @@ End
 		  // Store the customer if the store checkbox is checked
 		  //
 		  
-		  dim response as Eddies.GetCustomer = Eddies.GetCustomer( sender )
+		  dim response as Eddies.GetCustomer = Eddies.GetCustomer( message )
 		  dim cust as Eddies.Customer = response.ReturnGetCustomer
 		  
 		  dim row as integer = RowOfCustomerID( cust.ID )
