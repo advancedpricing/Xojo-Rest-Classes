@@ -28,6 +28,7 @@ Begin Window WndEddies
    Width           =   758
    Begin Eddies.GetCustomerList msgGetCustomerList
       DefaultRESTType =   "RESTTypes.Unknown"
+      Enabled         =   True
       Index           =   -2147483648
       IsConnected     =   False
       LockedInPosition=   False
@@ -41,7 +42,8 @@ Begin Window WndEddies
    End
    Begin Eddies.GetCustomer msgGetCustomer
       DefaultRESTType =   "RESTTypes.Unknown"
-      ID              =   "0"
+      Enabled         =   True
+      ID              =   0
       Index           =   -2147483648
       IsConnected     =   False
       LockedInPosition=   False
@@ -458,6 +460,7 @@ Begin Window WndEddies
       Width           =   100
    End
    Begin Timer tmrUpdateControls
+      Enabled         =   True
       Index           =   -2147483648
       LockedInPosition=   False
       Mode            =   2
@@ -487,6 +490,7 @@ Begin Window WndEddies
       Selectable      =   False
       TabIndex        =   10
       TabPanelIndex   =   0
+      TabStop         =   True
       Text            =   "RoundTrip"
       TextAlign       =   2
       TextColor       =   &c00000000
@@ -532,6 +536,7 @@ Begin Window WndEddies
       Width           =   129
    End
    Begin M_REST.RESTMessageSurrogate_MTC smsgGetCustomerSurrogate
+      Enabled         =   True
       Index           =   -2147483648
       IsBusy          =   False
       LockedInPosition=   False
@@ -827,7 +832,7 @@ End
 #tag EndEvents
 #tag Events smsgGetCustomerSurrogate
 	#tag Event , Description = 546865205245535466756C20736572766572206861732072657475726E6564206120726573706F6E73652E
-		Sub ResponseReceived(sender As RESTMessage_MTC, url As Text, httpStatus As Integer, payload As Auto)
+		Sub ResponseReceived(message As RESTMessage_MTC, url As Text, httpStatus As Integer, payload As Auto)
 		  #pragma unused url
 		  #pragma unused httpStatus
 		  #pragma unused payload
@@ -836,7 +841,7 @@ End
 		  // Store the customer if the store checkbox is checked
 		  //
 		  
-		  dim response as Eddies.GetCustomer = Eddies.GetCustomer( sender )
+		  dim response as Eddies.GetCustomer = Eddies.GetCustomer( message )
 		  dim cust as Eddies.Customer = response.ReturnGetCustomer
 		  
 		  dim row as integer = RowOfCustomerID( cust.ID )

@@ -1286,6 +1286,11 @@ Implements PrivateMessage
 		  
 		  MessageSurrogate = surrogate
 		  Send action, url
+		  
+		  if surrogate isa object then
+		    PrivateSurrogate(surrogate).RaiseSent self
+		  end if
+		  
 		End Sub
 	#tag EndMethod
 
@@ -1841,7 +1846,7 @@ Implements PrivateMessage
 	#tag Constant, Name = kContentType, Type = Text, Dynamic = False, Default = \"application/json", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = Text, Dynamic = False, Default = \"1.1", Scope = Public
+	#tag Constant, Name = kVersion, Type = Text, Dynamic = False, Default = \"1.2", Scope = Public
 	#tag EndConstant
 
 
