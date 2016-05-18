@@ -118,10 +118,10 @@ The uppercase types correspond directly to an HTTP action. The lowercase types a
 
 ### Methods
 
-| Method | Parameters | Description |
-| ------ | ---------- | ----------- |
-| Disconnect | | Disconnect from the server immediately. If not connected, will do nothing. |
-| Send | (opt) surrogate As RESTMessageSurrogate\_MTC | Fill in the properties first, make sure the <a href='#eventssection'>required events</a> are implemented, then use this to send the message. __Note__: If the socket is already connected to the server, you will get an error. Check the _IsConnected_ property or just call `Disconnect` first.<BR /><BR />If a surrogate is specified, incoming events will be raised for this message in it too <a href='#surrogatesection'>(see below)</a>. |
+| Method | Parameters | Returns | Description |
+| ------ | ---------- | ------- | ----------- |
+| Disconnect | | | Disconnect from the server immediately. If not connected, will do nothing. |
+| Send | (opt) surrogate As RESTMessageSurrogate\_MTC |  | Fill in the properties first, make sure the <a href='#eventssection'>required events</a> are implemented, then use this to send the message. __Note__: If the socket is already connected to the server, you will get an error. Check the _IsConnected_ property or just call `Disconnect` first.<BR /><BR />If a surrogate is specified, incoming events will be raised for this message in it too <a href='#surrogatesection'>(see below)</a>. |
 
 ### <a name='optionssection'></a>MessageOptions
 
@@ -146,6 +146,21 @@ Generally it doesn't make much sense to implement the same event in both the mes
 The parameters of each event match the parameters of the `RESTMessage_MTC` or `Xojo.Net.HTTPSocket` with the instance of the message as the first parameter in each case. This emulates using `AddHandler` to intercept the message's events.
 
 You can also use the _RESTMessage\_MTC.MessageTag_ property to further identify an instance of a message.
+
+The `RESTMessageSurrogate_MTC` has some additional properties and methods.
+
+#### Methods
+
+| Method | Parameters | Returns | Description |
+| ------ | ---------- | ------- | ----------- |
+| DisconnectAll | | | Disconnect all of the outstanding messages |
+| DisconnectMessage | msg As RESTMessage\_MTC | | Disconnect a single message |
+| OutstandingMessages | | RESTMessage\_MTC() | An array of outstanding messages | 
+#### Properties
+
+| Property | Type | Default | Description |
+| -------- | :--: | :-----: | ----------- |
+| IsBusy | Boolean | | Returns `True` if there are still outstanding messages |
 
 ## Contributions
 
