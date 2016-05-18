@@ -531,6 +531,23 @@ End
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Sub DisplayCustomer(cust As Eddies.Customer)
+		  if cust isa object then
+		    fldFirstName.Text = cust.FirstName
+		    fldLastName.Text = cust.LastName
+		    fldCity.Text = cust.City
+		    fldState.Text = cust.State
+		    fldZip.Text = cust.Zip
+		    fldPhone.Text = cust.Phone
+		    fldEmail.Text = cust.Email
+		  end if
+		  
+		  cvsPhoto.Invalidate
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Sub RefreshListbox()
 		  lbCustomers.DeleteAllRows
 		  
@@ -581,18 +598,7 @@ End
 		  #pragma unused httpStatus
 		  #pragma unused payload
 		  
-		  dim cust as Eddies.Customer = me.ReturnGetCustomer
-		  if cust isa Object then
-		    fldFirstName.Text = cust.FirstName
-		    fldLastName.Text = cust.LastName
-		    fldCity.Text = cust.City
-		    fldState.Text = cust.State
-		    fldZip.Text = cust.Zip
-		    fldPhone.Text = cust.Phone
-		    fldEmail.Text = cust.Email
-		  end if
-		  
-		  cvsPhoto.Invalidate
+		  DisplayCustomer me.ReturnGetCustomer
 		  lblRoundtrip.Text = format( me.RoundTripMs / 1000.0, "#,0.0" ) + " s"
 		End Sub
 	#tag EndEvent
