@@ -81,6 +81,8 @@ Implements PrivateMessage
 
 	#tag Event
 		Sub PageReceived(URL as Text, HTTPStatus as Integer, Content as xojo.Core.MemoryBlock)
+		  ResponseReceivedMicroseconds = Microseconds
+		  
 		  mIsConnected = false
 		  dim surrogate as M_REST.PrivateSurrogate = MessageSurrogate
 		  
@@ -88,7 +90,6 @@ Implements PrivateMessage
 		    surrogate.RemoveMessage self
 		  end if
 		  
-		  ResponseReceivedMicroseconds = Microseconds
 		  ClearReturnProperties
 		  
 		  dim payload as Auto = content
