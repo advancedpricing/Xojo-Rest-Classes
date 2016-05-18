@@ -533,6 +533,7 @@ Begin Window WndEddies
    End
    Begin M_REST.RESTMessageSurrogate_MTC smsgGetCustomerSurrogate
       Index           =   -2147483648
+      IsBusy          =   False
       LockedInPosition=   False
       Scope           =   2
       TabPanelIndex   =   0
