@@ -1672,6 +1672,10 @@ Implements PrivateMessage
 		Private MessageSurrogate As PrivateSurrogate
 	#tag EndComputedProperty
 
+	#tag Property, Flags = &h0
+		MessageTag As Auto
+	#tag EndProperty
+
 	#tag Property, Flags = &h21
 		Attributes( hidden ) Private mIsConnected As Boolean
 	#tag EndProperty
