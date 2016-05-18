@@ -1286,6 +1286,11 @@ Implements PrivateMessage
 		  
 		  MessageSurrogate = surrogate
 		  Send action, url
+		  
+		  if surrogate isa object then
+		    PrivateSurrogate(surrogate).RaiseSent self
+		  end if
+		  
 		End Sub
 	#tag EndMethod
 

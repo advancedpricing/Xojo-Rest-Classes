@@ -89,6 +89,12 @@ Implements PrivateSurrogate
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h21, Description = 546865206D65737361676520686173206265656E2073656E742E
+		Private Sub RaiseSent(message As RESTMessage_MTC)
+		  RaiseEvent Sent( message )
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Sub RemoveMessage(msg As M_REST.RESTMessage_MTC)
 		  #pragma BreakOnExceptions false
@@ -135,6 +141,10 @@ Implements PrivateSurrogate
 
 	#tag Hook, Flags = &h0, Description = 546865207374617473206F662061206D657373616765206265696E672073656E742E
 		Event SendProgress(message As RESTMessage_MTC, bytesSent As Int64, bytesLeft As Int64)
+	#tag EndHook
+
+	#tag Hook, Flags = &h0, Description = 546865206D65737361676520686173206265656E2073656E742E
+		Event Sent(message As RESTMessage_MTC)
 	#tag EndHook
 
 

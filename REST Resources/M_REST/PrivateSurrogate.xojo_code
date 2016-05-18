@@ -55,6 +55,12 @@ Private Interface PrivateSurrogate
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub RaiseSent(message As RESTMessage_MTC)
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub RemoveMessage(msg As M_REST.RESTMessage_MTC)
 		  
 		End Sub
