@@ -3,40 +3,135 @@ Class RESTMessage_MTC
 Inherits Xojo.Net.HTTPSocket
 Implements PrivateMessage
 	#tag Event
+		Function AuthenticationRequired(Realm as Text, ByRef Name as Text, ByRef Password as Text) As Boolean
+		  dim surrogate as M_REST.PrivateSurrogate = MessageSurrogate
+		  
+		  if RaiseEvent AuthenticationRequired( realm, name, password ) or _
+		    ( surrogate isa object and surrogate.RaiseAuthenticationRequired( self, realm, name, password ) ) then
+		    return true
+		  else
+		    return false
+		  end if
+		  
+		End Function
+	#tag EndEvent
+
+	#tag Event
 		Sub Error(err as RuntimeException)
 		  mIsConnected = false
+		  
+		  dim surrogate as M_REST.PrivateSurrogate = MessageSurrogate
+		  
+		  if surrogate isa object then
+		    surrogate.RemoveMessage self
+		  end if
 		  
 		  if err isa Xojo.Net.NetException then
 		    select case err.ErrorNumber
 		    case 102
 		      RaiseEvent Disconnected
 		      
+		      if surrogate isa object then
+		        surrogate.RaiseDisconnected( self )
+		      end if
+		      
 		    case else
 		      RaiseEvent Error( err.Reason )
 		      
+		      if surrogate isa object then
+		        surrogate.RaiseError( self, err.Reason )
+		      end if
+		      
 		    end select
+		    
+		    MessageSurrogate = nil
 		    
 		  else
 		    
+		    MessageSurrogate = nil
 		    raise err
 		    
 		  end if
+		  
+		  
+		End Sub
+	#tag EndEvent
+
+	#tag Event
+		Sub FileReceived(URL as Text, HTTPStatus as Integer, File as xojo.IO.FolderItem)
+		  #pragma unused url
+		  #pragma unused httpStatus
+		  #pragma unused file
+		  
+		  // Do nothing for now
+		End Sub
+	#tag EndEvent
+
+	#tag Event
+		Sub HeadersReceived(URL as Text, HTTPStatus as Integer)
+		  RaiseEvent HeadersReceived( url, httpStatus )
+		  
+		  dim surrogate as M_REST.PrivateSurrogate = MessageSurrogate
+		  if surrogate isa object then
+		    surrogate.RaiseHeadersReceived( self, url, httpStatus )
+		  end if
+		  
 		End Sub
 	#tag EndEvent
 
 	#tag Event
 		Sub PageReceived(URL as Text, HTTPStatus as Integer, Content as xojo.Core.MemoryBlock)
 		  mIsConnected = false
+		  dim surrogate as M_REST.PrivateSurrogate = MessageSurrogate
+		  
+		  if surrogate isa object then
+		    surrogate.RemoveMessage self
+		  end if
+		  
 		  ResponseReceivedMicroseconds = Microseconds
 		  ClearReturnProperties
 		  
 		  dim payload as Auto = content
 		  
-		  if not SkipIncomingPayloadProcessing( URL, HTTPStatus, payload ) then
+		  if not SkipIncomingPayloadProcessing( url, httpStatus, payload ) then
 		    payload = ProcessPayload( payload )
 		  end if
 		  
-		  RaiseEvent ResponseReceived URL, HTTPStatus, payload 
+		  ReceiveFinishedMicroseconds = microseconds
+		  RaiseEvent ResponseReceived url, httpStatus, payload 
+		  
+		  //
+		  // NOTE: If the caller no longer exists, you will get a NilObjectException here
+		  //
+		  
+		  if surrogate isa object then
+		    surrogate.RaiseResponseReceived( self, url, httpStatus, payload )
+		    MessageSurrogate = nil
+		  end if
+		  
+		End Sub
+	#tag EndEvent
+
+	#tag Event
+		Sub ReceiveProgress(BytesReceived as Int64, TotalBytes as Int64, NewData as xojo.Core.MemoryBlock)
+		  RaiseEvent ReceiveProgress( bytesReceived, totalBytes, newData )
+		  
+		  dim surrogate as M_REST.PrivateSurrogate = MessageSurrogate
+		  if surrogate isa object then
+		    surrogate.RaiseReceiveProgress( self, bytesReceived, totalBytes, newData )
+		  end if
+		  
+		End Sub
+	#tag EndEvent
+
+	#tag Event
+		Sub SendProgress(BytesSent as Int64, BytesLeft as Int64)
+		  RaiseEvent SendProgress( bytesSent, bytesLeft )
+		  
+		  dim surrogate as M_REST.PrivateSurrogate = MessageSurrogate
+		  if surrogate isa object then
+		    surrogate.RaiseSendProgress( self, bytesSent, bytesLeft )
+		  end if
 		  
 		End Sub
 	#tag EndEvent
@@ -56,7 +151,7 @@ Implements PrivateMessage
 		  CreateMeta
 		  
 		  dim meta as M_REST.ClassMeta = MyMeta
-		  if meta is nil or Options.ReturnPropertyPrefix = "" then
+		  if meta is nil or MessageOptions.ReturnPropertyPrefix = "" then
 		    return
 		  end if
 		  
@@ -238,7 +333,7 @@ Implements PrivateMessage
 		    
 		    dim isReturnProp as boolean
 		    
-		    dim returnPropPrefix as text = Options.ReturnPropertyPrefix
+		    dim returnPropPrefix as text = MessageOptions.ReturnPropertyPrefix
 		    dim prefixLength as integer = returnPropPrefix.Length
 		    if returnPropPrefix = "" or _ // Can be empty
 		      ( propName.Length > prefixLength and propName.Left( prefixLength ) = returnPropPrefix ) then // Return property 
@@ -277,7 +372,7 @@ Implements PrivateMessage
 		  
 		  if json.Count <> 0 then
 		    dim t as text = Xojo.Data.GenerateJSON( json )
-		    dim encoding as Xojo.Core.TextEncoding = Options.ExpectedTextEncoding
+		    dim encoding as Xojo.Core.TextEncoding = MessageOptions.ExpectedTextEncoding
 		    result = encoding.ConvertTextToData( t )
 		  end if
 		  
@@ -613,7 +708,7 @@ Implements PrivateMessage
 		      //
 		      // Process the timezone, maybe
 		      //
-		      if Options.AdjustDatesForTimeZone then
+		      if MessageOptions.AdjustDatesForTimeZone then
 		        dim tzParts() as text = tzPart.Split( ":" )
 		        if tzParts.Ubound = 1 then
 		          tzHours = Integer.FromText( tzParts( 0 ) ) + ( Integer.FromText( tzParts( 1 ) ) / 60.0 )
@@ -713,6 +808,11 @@ Implements PrivateMessage
 		    TimeoutTimer = nil
 		  end if
 		  
+		  //
+		  // We don't bother removing the message from the MessageSurrogate here.
+		  // Why? Well, if the surrogate still has the message, this
+		  // Destructor will never fire anyway.
+		  //
 		End Sub
 	#tag EndMethod
 
@@ -723,6 +823,13 @@ Implements PrivateMessage
 		    TimeoutTimer.Mode = Xojo.Core.Timer.Modes.Off
 		    super.Disconnect
 		  end if
+		  
+		  dim surrogate as M_REST.PrivateSurrogate = MessageSurrogate
+		  if surrogate isa object then
+		    surrogate.RemoveMessage self
+		    MessageSurrogate = nil
+		  end if
+		  
 		  
 		End Sub
 	#tag EndMethod
@@ -789,7 +896,7 @@ Implements PrivateMessage
 		  RequestSentMicroseconds = Microseconds
 		  ResponseReceivedMicroseconds = -1.0
 		  
-		  TimeoutTimer.Period = Options.TimeOutSeconds * 1000
+		  TimeoutTimer.Period = MessageOptions.TimeOutSeconds * 1000
 		  TimeoutTimer.Mode = Xojo.Core.Timer.Modes.Multiple
 		  
 		End Sub
@@ -808,9 +915,7 @@ Implements PrivateMessage
 		    // Have to use the classic MemoryBlock
 		    //
 		    dim mbTemp as MemoryBlock = payload.Data
-		    dim mb as MemoryBlock = mbTemp.StringValue( 0, payload.Size )
-		    
-		    dim p as Picture = Picture.FromData( mb )
+		    dim p as Picture = Picture.FromData( mbTemp.StringValue( 0, payload.Size ) )
 		    result = p
 		    
 		  #endif
@@ -880,7 +985,7 @@ Implements PrivateMessage
 		    //
 		    
 		    dim json as Xojo.Core.Dictionary = payload
-		    dim returnPropPrefix as text = Options.ReturnPropertyPrefix
+		    dim returnPropPrefix as text = MessageOptions.ReturnPropertyPrefix
 		    JSONObjectToProps( json, returnProps, returnPropPrefix, self )
 		    
 		  end if
@@ -942,7 +1047,7 @@ Implements PrivateMessage
 		Private Function ProcessTextPayload(payload As Xojo.Core.MemoryBlock, subtype As Text) As Auto
 		  dim result as Auto
 		  
-		  dim encoding as Xojo.Core.TextEncoding = Options.ExpectedTextEncoding
+		  dim encoding as Xojo.Core.TextEncoding = MessageOptions.ExpectedTextEncoding
 		  
 		  //
 		  // See if an encoding is indicated
@@ -1077,7 +1182,10 @@ Implements PrivateMessage
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Send()
+		Sub Send(surrogate As RESTMessageSurrogate_MTC = Nil)
+		  RequestStartedMicroseconds = microseconds
+		  ReceiveFinishedMicroseconds = -1.0
+		  
 		  dim action as text = HTTPAction
 		  if action = kActionUnknown then
 		    raise new M_REST.RESTException( "REST type was not specified" )
@@ -1158,7 +1266,7 @@ Implements PrivateMessage
 		  next
 		  
 		  dim payload as Xojo.Core.MemoryBlock
-		  if action <> kActionGet and payloadProps.Ubound <> -1 and Options.SendWithPayloadIfAvailable then
+		  if action <> kActionGet and payloadProps.Ubound <> -1 and MessageOptions.SendWithPayloadIfAvailable then
 		    payload = CreateOutgoingPayload( payloadProps )
 		  end if
 		  
@@ -1175,6 +1283,7 @@ Implements PrivateMessage
 		    SetRequestContent payload, mimeType
 		  end if
 		  
+		  MessageSurrogate = surrogate
 		  Send action, url
 		End Sub
 	#tag EndMethod
@@ -1295,7 +1404,7 @@ Implements PrivateMessage
 		  
 		  dim result as text
 		  
-		  if Options.AdjustDatesForTimeZone then
+		  if MessageOptions.AdjustDatesForTimeZone then
 		    dim tz as Xojo.Core.TimeZone = d.TimeZone
 		    dim interval as new Xojo.Core.DateInterval( 0, 0, 0, 0, 0, tz.SecondsFromGMT )
 		    d = d - interval
@@ -1383,10 +1492,15 @@ Implements PrivateMessage
 
 	#tag Method, Flags = &h21
 		Private Sub TimeoutTimer_Action(sender As Xojo.Core.Timer)
+		  dim surrogate as M_REST.PrivateSurrogate = MessageSurrogate
+		  
 		  if IsConnected then
-		    if not RaiseEvent ContinueWaiting then
+		    if RaiseEvent ContinueWaiting or (surrogate isa object and surrogate.RaiseContinueWaiting( self ) ) then
+		      //
+		      // One of these wanted to continue waiting
+		      //
+		    else
 		      self.Disconnect
-		      mIsConnected = false
 		    end if
 		  end if
 		  
@@ -1398,6 +1512,10 @@ Implements PrivateMessage
 		End Sub
 	#tag EndMethod
 
+
+	#tag Hook, Flags = &h0
+		Event AuthenticationRequired(realm As Text, ByRef username As Text, ByRef password As Text) As Boolean
+	#tag EndHook
 
 	#tag Hook, Flags = &h0, Description = 4C617374206368616E636520746F2063616E63656C20612073656E64206F72206D6F64696679207468652076616C7565732069742077696C6C207573652E
 		Event CancelSend(ByRef url As Text, ByRef httpAction As Text, ByRef payload As Xojo.Core.MemoryBlock, ByRef payloadMIMEType As Text) As Boolean
@@ -1427,6 +1545,10 @@ Implements PrivateMessage
 		Event GetURLPattern() As Text
 	#tag EndHook
 
+	#tag Hook, Flags = &h0
+		Event HeadersReceived(url As Text, httpStatus As Integer)
+	#tag EndHook
+
 	#tag Hook, Flags = &h0, Description = 4D616E75616C6C792073746F72652074686520696E636F6D696E67207061796C6F61642076616C756520617320646573697265642E2052657475726E205472756520746F2070726576656E7420667572746865722070726F63657373696E67206F6E20746861742076616C75652E
 		Event IncomingPayloadValueToProperty(value As Auto, prop As Xojo.Introspection.PropertyInfo, hostObject As Object) As Boolean
 	#tag EndHook
@@ -1435,8 +1557,16 @@ Implements PrivateMessage
 		Event ObjectToJSON(o As Object, typeInfo As Xojo.Introspection.TypeInfo) As Auto
 	#tag EndHook
 
+	#tag Hook, Flags = &h0
+		Event ReceiveProgress(bytesReceived As Int64, totalBytes As Int64, newData As Xojo.Core.MemoryBlock)
+	#tag EndHook
+
 	#tag Hook, Flags = &h0, Description = 546865205245535466756C20736572766572206861732072657475726E6564206120726573706F6E73652E
-		Event ResponseReceived(url As Text, HTTPStatus As Integer, payload As Auto)
+		Event ResponseReceived(url As Text, httpStatus As Integer, payload As Auto)
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event SendProgress(bytesSent As Int64, bytesLeft As Int64)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0, Description = 5365742075702070726F70657274696573206F722074616B65206F7468657220616374696F6E732061667465722074686520696E7374616E636520697320666972737420636F6E73747275637465642E
@@ -1482,12 +1612,108 @@ Implements PrivateMessage
 		IsConnected As Boolean
 	#tag EndComputedProperty
 
-	#tag Property, Flags = &h21
-		Private mIsConnected As Boolean
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  if mMessageOptions is nil then
+			    MessageOptions = new M_REST.Options
+			  end if
+			  
+			  return mMessageOptions
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  if value = mMessageOptions then
+			    //
+			    // Nothing to do
+			    //
+			    return
+			  end if
+			  
+			  if mMessageOptions isa Object then
+			    //
+			    // Clear the parent
+			    //
+			    PrivateOptions( mMessageOptions ).SetParentMessage nil
+			  end if
+			  
+			  mMessageOptions = value
+			  if mMessageOptions isa Object then
+			    PrivateOptions( mMessageOptions ).SetParentMessage self
+			  end if
+			  
+			End Set
+		#tag EndSetter
+		MessageOptions As M_REST.Options
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  static nextSN as Int64
+			  static accessFlag as new Semaphore( 1 )
+			  
+			  if mMessageSerialNumber <= 0 then
+			    accessFlag.Signal
+			    
+			    const kOne as Int64 = 1
+			    nextSN = nextSN + kOne
+			    mMessageSerialNumber = nextSN
+			    
+			    accessFlag.Release
+			  end if
+			  
+			  return mMessageSerialNumber
+			  
+			End Get
+		#tag EndGetter
+		MessageSerialNumber As Int64
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h21
+		#tag Getter
+			Get
+			  if mMessageSurrogateWeakRef is nil then
+			    return nil
+			  else
+			    return PrivateSurrogate( mMessageSurrogateWeakRef.Value )
+			  end if
+			  
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  if value is nil then
+			    mMessageSurrogateWeakRef = nil
+			  else
+			    mMessageSurrogateWeakRef = Xojo.Core.WeakRef.Create( value )
+			    value.AppendMessage self
+			  end if
+			  
+			End Set
+		#tag EndSetter
+		Private MessageSurrogate As PrivateSurrogate
+	#tag EndComputedProperty
+
+	#tag Property, Flags = &h0
+		MessageTag As Auto
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mOptions As M_REST.Options
+		Attributes( hidden ) Private mIsConnected As Boolean
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Attributes( hidden ) Private mMessageOptions As M_REST.Options
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Attributes( hidden ) Private mMessageSerialNumber As Int64
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mMessageSurrogateWeakRef As Xojo.Core.WeakRef
 	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h21
@@ -1507,44 +1733,16 @@ Implements PrivateMessage
 		Private MyMeta As M_REST.ClassMeta
 	#tag EndComputedProperty
 
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  if mOptions is nil then
-			    Options = new M_REST.Options
-			  end if
-			  
-			  return mOptions
-			End Get
-		#tag EndGetter
-		#tag Setter
-			Set
-			  if value = mOptions then
-			    //
-			    // Nothing to do
-			    //
-			    return
-			  end if
-			  
-			  if mOptions isa Object then
-			    //
-			    // Clear the parent
-			    //
-			    PrivateOptions( mOptions ).SetParentMessage nil
-			  end if
-			  
-			  mOptions = value
-			  if mOptions isa Object then
-			    PrivateOptions( mOptions ).SetParentMessage self
-			  end if
-			  
-			End Set
-		#tag EndSetter
-		Options As M_REST.Options
-	#tag EndComputedProperty
+	#tag Property, Flags = &h21
+		Private ReceiveFinishedMicroseconds As Double
+	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private RequestSentMicroseconds As Double = -1.0
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private RequestStartedMicroseconds As Double = -1.0
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -1592,6 +1790,27 @@ Implements PrivateMessage
 		RoundTripMs As Double
 	#tag EndComputedProperty
 
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  dim roundTrip as double
+			  
+			  if ReceiveFinishedMicroseconds < 0.0 or RequestStartedMicroseconds < 0.0 then
+			    roundTrip = -1.0
+			  else
+			    roundTrip = ( ReceiveFinishedMicroseconds - RequestStartedMicroseconds ) / 1000.0
+			  end if
+			  
+			  if roundTrip < 0.0 then
+			    roundTrip = -1.0
+			  end if
+			  
+			  return roundTrip
+			End Get
+		#tag EndGetter
+		RoundTripWithProcessingMs As Double
+	#tag EndComputedProperty
+
 	#tag Property, Flags = &h21
 		Private TimeoutTimer As Xojo.Core.Timer
 	#tag EndProperty
@@ -1621,7 +1840,7 @@ Implements PrivateMessage
 	#tag Constant, Name = kContentType, Type = Text, Dynamic = False, Default = \"application/json", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.0", Scope = Public
+	#tag Constant, Name = kVersion, Type = Text, Dynamic = False, Default = \"1.1", Scope = Public
 	#tag EndConstant
 
 
@@ -1686,6 +1905,11 @@ Implements PrivateMessage
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="MessageSerialNumber"
+			Group="Behavior"
+			Type="Int64"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
@@ -1714,6 +1938,11 @@ Implements PrivateMessage
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RoundTripMs"
+			Group="Behavior"
+			Type="Double"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="RoundTripWithProcessingMs"
 			Group="Behavior"
 			Type="Double"
 		#tag EndViewProperty

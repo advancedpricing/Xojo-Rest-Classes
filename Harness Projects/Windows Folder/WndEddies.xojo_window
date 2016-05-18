@@ -13,14 +13,14 @@ Begin Window WndEddies
    ImplicitInstance=   True
    LiveResize      =   True
    MacProcID       =   0
-   MaxHeight       =   32000
+   MaxHeight       =   508
    MaximizeButton  =   True
-   MaxWidth        =   32000
+   MaxWidth        =   758
    MenuBar         =   0
    MenuBarVisible  =   True
-   MinHeight       =   64
+   MinHeight       =   508
    MinimizeButton  =   True
-   MinWidth        =   64
+   MinWidth        =   758
    Placement       =   0
    Resizeable      =   True
    Title           =   "Eddies Electronics"
@@ -31,20 +31,24 @@ Begin Window WndEddies
       Index           =   -2147483648
       IsConnected     =   False
       LockedInPosition=   False
+      MessageSerialNumber=   ""
       RESTType        =   ""
       RoundTripMs     =   0.0
+      RoundTripWithProcessingMs=   0.0
       Scope           =   2
       TabPanelIndex   =   0
       ValidateCertificates=   False
    End
    Begin Eddies.GetCustomer msgGetCustomer
       DefaultRESTType =   "RESTTypes.Unknown"
-      ID              =   0
+      ID              =   "0"
       Index           =   -2147483648
       IsConnected     =   False
       LockedInPosition=   False
+      MessageSerialNumber=   ""
       RESTType        =   ""
       RoundTripMs     =   0.0
+      RoundTripWithProcessingMs=   0.0
       Scope           =   2
       TabPanelIndex   =   0
       ValidateCertificates=   False
@@ -495,6 +499,66 @@ Begin Window WndEddies
       Visible         =   True
       Width           =   177
    End
+   Begin CheckBox cbStore
+      AutoDeactivate  =   True
+      Bold            =   False
+      Caption         =   "Store Customers"
+      DataField       =   ""
+      DataSource      =   ""
+      Enabled         =   True
+      Height          =   20
+      HelpTag         =   ""
+      Index           =   -2147483648
+      InitialParent   =   ""
+      Italic          =   False
+      Left            =   601
+      LockBottom      =   False
+      LockedInPosition=   False
+      LockLeft        =   True
+      LockRight       =   False
+      LockTop         =   True
+      Scope           =   2
+      State           =   0
+      TabIndex        =   11
+      TabPanelIndex   =   0
+      TabStop         =   True
+      TextFont        =   "System"
+      TextSize        =   0.0
+      TextUnit        =   0
+      Top             =   20
+      Underline       =   False
+      Value           =   False
+      Visible         =   True
+      Width           =   129
+   End
+   Begin M_REST.RESTMessageSurrogate_MTC smsgGetCustomerSurrogate
+      Index           =   -2147483648
+      IsBusy          =   False
+      LockedInPosition=   False
+      Scope           =   2
+      TabPanelIndex   =   0
+   End
+   Begin ProgressWheel pwBusy
+      AutoDeactivate  =   True
+      Enabled         =   True
+      Height          =   16
+      HelpTag         =   ""
+      Index           =   -2147483648
+      InitialParent   =   ""
+      Left            =   344
+      LockBottom      =   False
+      LockedInPosition=   False
+      LockLeft        =   True
+      LockRight       =   False
+      LockTop         =   True
+      Scope           =   2
+      TabIndex        =   12
+      TabPanelIndex   =   0
+      TabStop         =   True
+      Top             =   468
+      Visible         =   True
+      Width           =   16
+   End
 End
 #tag EndWindow
 
@@ -502,7 +566,7 @@ End
 	#tag Event
 		Sub Open()
 		  msgGetCustomerList.Send
-		  
+		  pwBusy.Visible = true
 		End Sub
 	#tag EndEvent
 
@@ -516,6 +580,23 @@ End
 		  fldZip.Text = ""
 		  fldEmail.Text = ""
 		  fldPhone.Text = ""
+		  
+		  cvsPhoto.Invalidate
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub DisplayCustomer(cust As Eddies.Customer)
+		  if cust isa object then
+		    fldFirstName.Text = cust.FirstName
+		    fldLastName.Text = cust.LastName
+		    fldCity.Text = cust.City
+		    fldState.Text = cust.State
+		    fldZip.Text = cust.Zip
+		    fldPhone.Text = cust.Phone
+		    fldEmail.Text = cust.Email
+		  end if
 		  
 		  cvsPhoto.Invalidate
 		  
@@ -545,9 +626,54 @@ End
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Function RowOfCustomerID(id As Text) As Integer
+		  dim lastListIndex as integer = lbCustomers.ListCount - 1
+		  for row as integer = 0 to lastListIndex
+		    dim tag as variant = lbCustomers.RowTag( row )
+		    if ( tag isa Eddies.Customer and Eddies.Customer( tag ).ID = id ) or _
+		      (tag.Type = Variant.TypeText and tag.TextValue = id ) then
+		      return row
+		    end if
+		  next
+		  
+		  return -1
+		  
+		End Function
+	#tag EndMethod
+
+
+	#tag ComputedProperty, Flags = &h21
+		#tag Getter
+			Get
+			  if cbStore.Value then
+			    //
+			    // Using a surrogate
+			    //
+			    if lbCustomers.ListIndex <> -1 and lbCustomers.RowTag( lbCustomers.ListIndex ) isa Eddies.Customer then
+			      return Eddies.Customer( lbCustomers.RowTag( lbCustomers.ListIndex ) )
+			    else
+			      return nil
+			    end if
+			    
+			  else
+			    //
+			    // Using the direct method
+			    //
+			    if msgGetCustomer.IsConnected then
+			      return nil
+			    else
+			      return msgGetCustomer.ReturnGetCustomer
+			    end if
+			  end if
+			  
+			End Get
+		#tag EndGetter
+		Private CurrentCustomer As Eddies.Customer
+	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
-		Private LastListIndex As Integer = -1
+		Private PreviousListIndex As Integer = -1
 	#tag EndProperty
 
 
@@ -555,55 +681,77 @@ End
 
 #tag Events msgGetCustomerList
 	#tag Event
-		Sub ResponseReceived(url As Text, HTTPStatus As Integer, payload As Auto)
+		Sub ResponseReceived(url As Text, httpStatus As Integer, payload As Auto)
 		  #pragma unused url
-		  #pragma unused HTTPStatus
+		  #pragma unused httpStatus
 		  #pragma unused payload
 		  
 		  RefreshListbox
 		  
 		  lblRoundtrip.Text = format( me.RoundTripMs / 1000.0, "#,0.0" ) + " ms"
+		  pwBusy.Visible = msgGetCustomer.IsConnected or smsgGetCustomerSurrogate.IsBusy
 		End Sub
 	#tag EndEvent
 #tag EndEvents
 #tag Events msgGetCustomer
 	#tag Event
-		Sub ResponseReceived(url As Text, HTTPStatus As Integer, payload As Auto)
+		Sub ResponseReceived(url As Text, httpStatus As Integer, payload As Auto)
 		  #pragma unused url
-		  #pragma unused HTTPStatus
+		  #pragma unused httpStatus
 		  #pragma unused payload
 		  
-		  dim cust as Eddies.Customer = me.ReturnGetCustomer
-		  if cust isa Object then
-		    fldFirstName.Text = cust.FirstName
-		    fldLastName.Text = cust.LastName
-		    fldCity.Text = cust.City
-		    fldState.Text = cust.State
-		    fldZip.Text = cust.Zip
-		    fldPhone.Text = cust.Phone
-		    fldEmail.Text = cust.Email
-		  end if
+		  //
+		  // If we were only using this one message, we could implment the code
+		  // below and be done with it. For this example project, though, since the
+		  // surrogate is there to show off handling of multiple, simultaneous
+		  // messages, we might as well use it for everything.
+		  //
 		  
-		  cvsPhoto.Invalidate
-		  lblRoundtrip.Text = format( me.RoundTripMs / 1000.0, "#,0.0" ) + " s"
+		  'DisplayCustomer me.ReturnGetCustomer
+		  'lblRoundtrip.Text = format( me.RoundTripMs / 1000.0, "#,0.0" ) + " s"
+		  
 		End Sub
 	#tag EndEvent
 #tag EndEvents
 #tag Events lbCustomers
 	#tag Event
 		Sub Change()
-		  if me.ListIndex <> LastListIndex then
+		  if me.ListIndex <> PreviousListIndex then
 		    ClearFields
 		    
 		    if me.ListIndex <> -1 then
-		      msgGetCustomer.Disconnect
-		      dim id as text = me.RowTag( me.ListIndex )
-		      msgGetCustomer.ID = id
-		      msgGetCustomer.Send
+		      dim tag as variant = me.RowTag( me.ListIndex )
+		      dim id as text = if( tag isa Eddies.Customer, Eddies.Customer( tag ).ID, tag.TextValue )
+		      
+		      //
+		      // Use surrogate method?
+		      //
+		      if cbStore.Value then
+		        //
+		        // See if we have the customer already
+		        //
+		        if tag isa Eddies.Customer then
+		          DisplayCustomer Eddies.Customer( tag )
+		        else
+		          dim msg as new Eddies.GetCustomer
+		          msg.ID = id
+		          msg.Send smsgGetCustomerSurrogate
+		        end if
+		        
+		      else
+		        //
+		        // Use direct method
+		        //
+		        msgGetCustomer.Disconnect
+		        msgGetCustomer.ID = id
+		        msgGetCustomer.Send smsgGetCustomerSurrogate
+		      end if
 		    end if
 		    
-		    LastListIndex = me.ListIndex
+		    PreviousListIndex = me.ListIndex
 		  end if
+		  
+		  pwBusy.Visible = msgGetCustomer.IsConnected or smsgGetCustomerSurrogate.IsBusy
 		End Sub
 	#tag EndEvent
 #tag EndEvents
@@ -612,13 +760,15 @@ End
 		Sub Paint(g As Graphics, areas() As REALbasic.Rect)
 		  #pragma unused areas
 		  
-		  dim cust as Eddies.Customer = msgGetCustomer.ReturnGetCustomer
+		  dim cust as Eddies.Customer = CurrentCustomer
+		  
 		  if cust isa object and cust.Photo isa object then
 		    g.DrawPicture cust.Photo, 0, 0
 		    
 		  else
 		    g.ClearRect 0, 0, g.Width, g.Height
 		  end if
+		  
 		End Sub
 	#tag EndEvent
 #tag EndEvents
@@ -643,6 +793,64 @@ End
 		  fldEmail.Enabled = value
 		  cbTaxable.Enabled = value
 		  
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events cbStore
+	#tag Event
+		Sub Action()
+		  //
+		  // This checkbox will control whether the already-retrieved records
+		  // will be stored in the Listbox. If not, the existing records will be
+		  // cleared.
+		  //
+		  // This is a simple way to contrast the direct method of downloading information
+		  // by dragging a message to the window (msgGetCustomer) vs. using
+		  // the RESTMessageSurrogate_MTC class.
+		  //
+		  
+		  if not me.Value then
+		    //
+		    // Clear any existing records
+		    //
+		    dim lastListIndex as integer = lbCustomers.ListCount - 1
+		    for row as integer = 0 to lastListIndex
+		      dim tag as variant = lbCustomers.RowTag( row )
+		      if tag isa Eddies.Customer then
+		        lbCustomers.RowTag( row ) = Eddies.Customer( tag ).ID
+		      end if
+		    next
+		  end if
+		  
+		End Sub
+	#tag EndEvent
+#tag EndEvents
+#tag Events smsgGetCustomerSurrogate
+	#tag Event , Description = 546865205245535466756C20736572766572206861732072657475726E6564206120726573706F6E73652E
+		Sub ResponseReceived(sender As RESTMessage_MTC, url As Text, httpStatus As Integer, payload As Auto)
+		  #pragma unused url
+		  #pragma unused httpStatus
+		  #pragma unused payload
+		  
+		  //
+		  // Store the customer if the store checkbox is checked
+		  //
+		  
+		  dim response as Eddies.GetCustomer = Eddies.GetCustomer( sender )
+		  dim cust as Eddies.Customer = response.ReturnGetCustomer
+		  
+		  dim row as integer = RowOfCustomerID( cust.ID )
+		  
+		  if cbStore.Value then
+		    lbCustomers.RowTag( row ) = cust
+		  end if
+		  
+		  if row = lbCustomers.ListIndex then
+		    DisplayCustomer cust
+		  end if
+		  
+		  lblRoundtrip.Text = format( response.RoundTripMs / 1000.0, "#,0.0" ) + " s"
+		  pwBusy.Visible = msgGetCustomer.IsConnected or smsgGetCustomerSurrogate.IsBusy
 		End Sub
 	#tag EndEvent
 #tag EndEvents

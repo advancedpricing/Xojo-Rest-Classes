@@ -30,8 +30,8 @@ Inherits RESTMessage_MTC
 
 	#tag Event
 		Sub Setup()
-		  Options.SendWithPayloadIfAvailable = false // We'll handle it ourselves
-		  Options.ReturnPropertyPrefix = ""
+		  MessageOptions.SendWithPayloadIfAvailable = false // We'll handle it ourselves
+		  MessageOptions.ReturnPropertyPrefix = ""
 		  DBVendor = 1
 		  
 		End Sub
@@ -56,6 +56,7 @@ Inherits RESTMessage_MTC
 			Name="DBVendor"
 			Visible=true
 			Group="Behavior"
+			InitialValue="1"
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
@@ -106,6 +107,11 @@ Inherits RESTMessage_MTC
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="MessageSerialNumber"
+			Group="Behavior"
+			Type="Int64"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
@@ -134,6 +140,11 @@ Inherits RESTMessage_MTC
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RoundTripMs"
+			Group="Behavior"
+			Type="Double"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="RoundTripWithProcessingMs"
 			Group="Behavior"
 			Type="Double"
 		#tag EndViewProperty
