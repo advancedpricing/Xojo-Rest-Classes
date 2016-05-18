@@ -34,8 +34,10 @@ Begin Window WndSQLFormatter
       InputSQL        =   ""
       IsConnected     =   False
       LockedInPosition=   False
+      MessageSerialNumber=   ""
       RESTType        =   ""
       RoundTripMs     =   0.0
+      RoundTripWithProcessingMs=   0.0
       Rspn_Formatted_SQL=   ""
       Scope           =   2
       TabPanelIndex   =   0
@@ -174,9 +176,9 @@ End
 
 #tag Events msgSQLFormatter
 	#tag Event
-		Sub ResponseReceived(url As Text, HTTPStatus As Integer, payload As Auto)
+		Sub ResponseReceived(url As Text, httpStatus As Integer, payload As Auto)
 		  #pragma unused url
-		  #pragma unused HTTPStatus
+		  #pragma unused httpStatus
 		  #pragma unused payload
 		  
 		  fldSQLFormatted.Text = me.Rspn_Formatted_SQL

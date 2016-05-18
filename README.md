@@ -14,13 +14,13 @@ Open the enclosed harness project and copy-and-paste the REST Resources folder i
 
 ### Basic Use
 
-At its most basic, you need to create a "message" for each type of interaction with your RESTful server by subclassing RESTMessage\_MTC. You might create one message that will login, another that will get a list of information, another to save some data. Each message must implement the `GetURLPattern` event <a href='#geturlpatterneventsection'>(see below)</a> and _should_ implement <a href='#getresttypeeventsection'>the `GetRESTType` event</a>.
+At its most basic, you need to create a "message" for each type of interaction with your RESTful server by subclassing `RESTMessage_MTC`. You might create one message that will login, another that will get a list of information, another to save some data. Each message must implement the `GetURLPattern` event <a href='#geturlpatterneventsection'>(see below)</a> and _should_ implement <a href='#getresttypeeventsection'>the `GetRESTType` event</a>.
 
 If the REST server communicates with JSON, you can create properties in the message that correspond to the object keys. You can also use the `ExcludeFromOutgoingPayload` event to exclude a property or modify the key or value that will be included. In the `CancelSend` event you can cancel the send or change the URL, payload, or MIME type.
 
-If you expect information back from the server in the form of JSON, you can create properties with the prefix of "Return", e.g., _ReturnSuccess_, _ReturnFirstName_, etc., and the return payload will be parsed into those properties. You can adjust the prefix through the `MessageOptions` <a href='#optionssection'>(see below)</a>. You can also use the `IncomingPayloadValueToProperty` event to "massage" a value or store it elsewhere. For example, if you expect an image to be returned as Base64-encoded, you can use that event to decode it, store the resulting image in a _ReturnImage_ property, then return `True` to prevent RESTMessage_MTC from processing the value further.
+If you expect information back from the server in the form of JSON, you can create properties with the prefix of "Return", e.g., _ReturnSuccess_, _ReturnFirstName_, etc., and the return payload will be parsed into those properties. You can adjust the prefix through the `Options` <a href='#optionssection'>(see below)</a>. You can also use the `IncomingPayloadValueToProperty` event to "massage" a value or store it elsewhere. For example, if you expect an image to be returned as Base64-encoded, you can use that event to decode it, store the resulting image in a _ReturnImage_ property, then return `True` to prevent `RESTMessage_MTC` from processing the value further.
 
-RESTMessage_MTC will attempt to deserialize a JSON object into a class. For example, suppose you expect JSON from the server that looks like this:
+`RESTMessage_MTC` will attempt to deserialize a JSON object into a class. For example, suppose you expect JSON from the server that looks like this:
 
 ```json
 {
@@ -34,11 +34,13 @@ RESTMessage_MTC will attempt to deserialize a JSON object into a class. For exam
 
 You can create a User class with properties _FirstName As Text_, _LastName As Text_, and _Age As Integer_, then create a property in the message _ReturnUser As User_. The class will automatically create an instance and fill in the properties for you.
 
-Finally, the `ResponseReceived` event will let you know when the server has responded and, if you choose, let you deal with the payload directly.
+The `ResponseReceived` event will let you know when the server has responded and, if you choose, let you deal with the payload directly.
+
+There are times when it is not appropriate to have a single instance of a particular message. For example, if you need to save multiple records in a row. In those cases, you can create a `RESTMessageSurrogate_MTC` <a href='#surrogatesection'>(see below)</a> instead and send the message through it. The surrogate will raise all the events that the message would as if you had used `AddHandler` to map the message's events.
 
 ## Details
 
-This is a more detailed description of the RESTMessage_MTC class.
+This is a more detailed description of the `RESTMessage_MTC` class.
 
 ### Events  <a name='eventssection'></a>
 
@@ -75,13 +77,13 @@ You can create a property in your message subclass, _ZipCode_, and return the UR
 http://www.someweathersite.com/api/get/zip/:ZipCode
 ```
 
-RESTMessage_MTC will do the appropriate substitution. To send the message, you merely have to fill in the property and call `Send`.
+`RESTMessage_MTC` will do the appropriate substitution. To send the message, you merely have to fill in the property and call `Send`.
 
 __Note__: Properties that are part of the URL pattern will never be included in the outgoing payload.
 
 ### <a name='getresttypeeventsection'></a>The `GetRESTType` Event
 
-RESTMessage\_MTC defines a _RESTTypes_ enum whose values either include or correspond to HTTP actions. Return the type appropriate for the message. As of v.1.0, these are:
+`RESTMessage_MTC` defines a _RESTTypes_ enum whose values either include or correspond to HTTP actions. Return the type appropriate for the message. As of v.1.0, these are:
 
 | Type      |
 | --------- |
@@ -109,16 +111,17 @@ The uppercase types correspond directly to an HTTP action. The lowercase types a
 | IsConnected | Boolean | __YES__ | Returns `True` if the socket is currently connected. |
 | MessageOptions | M\_REST.MessageOptions | no | Set the options for the message. See <a href='#optionssection'>_MessageOptions_</a> below. |
 | MessageSerialNumber | Int64 | __YES__ | A unique number (within the session) assigned to each new instance of a message. |
+| MessageTag | Auto | no | Anything you wish to attach to a message. Does not get transmitted. |
 | RESTType | RESTTypes | __YES__ | The REST type that is ultimately used for the message. |
 | RoundTripMs | Double | __YES__ | The round-trip time, in milliseconds, from when the connection was initiated until a response received. |
 | RoundTripWithProcessingMs | Double | __YES__ | The round-trip time, in milliseconds, from when `Send` was invoked until response processing was finished. |
 
 ### Methods
 
-| Method | Parameters | Description |
-| ------ | ---------- | ----------- |
-| Disconnect | | Disconnect from the server immediately. If not connected, will do nothing. |
-| Send | | Fill in the properties first, make sure the <a href='#eventssection'>required events</a> are implemented, then use this to send the message. __Note__: If the socket is already connected to the server, you will get an error. Check the _IsConnected_ property or just call `Disconnect` first. |
+| Method | Parameters | Returns | Description |
+| ------ | ---------- | ------- | ----------- |
+| Disconnect | | | Disconnect from the server immediately. If not connected, will do nothing. |
+| Send | (opt) surrogate As RESTMessageSurrogate\_MTC |  | Fill in the properties first, make sure the <a href='#eventssection'>required events</a> are implemented, then use this to send the message. __Note__: If the socket is already connected to the server, you will get an error. Check the _IsConnected_ property or just call `Disconnect` first.<BR /><BR />If a surrogate is specified, incoming events will be raised for this message in it too <a href='#surrogatesection'>(see below)</a>. |
 
 ### <a name='optionssection'></a>MessageOptions
 
@@ -131,6 +134,33 @@ The _MessageOptions_ will let you set certain parameters for the message. For ex
 | ReturnPropertyPrefix | Text | "Return" | Any property in your subclass that starts with this prefix will never be included in the outgoing payload and will be cleared and, if possible, populated by the incoming payload. These properties may be a basic type like String, Text, or Integer, a Dictionary, Auto() array, or an object whose public properties correspond to the incoming JSON object. |
 | SendWithPayloadIfAvailable | Boolean | True | For any HTTP action _other_ than GET, the class will attempt to construct and attach a payload using the properties of the message that (1) are not "Return" properties and (2) have not been included in the <a href='#geturlpatterneventsection'>URL pattern</a>. Set this to `True` to avoid that processing in all cases. |
 | TimeoutSeconds | Integer | 5 | Sets how long a message can wait before the `ContinueWaiting` event is raised. |
+
+### <a name='surrogatesection'></a>RESTMessageSurrogate_MTC
+
+The `RESTMessageSurrogate_MTC` class will act as a stand-in for a message after it is sent. Drag the class to your window and implement its events. When sending a message, use the optional second parameter to specify the surrogate.
+
+__Note__: Events will be raised in the message first and then in the surrogate, except if an event returns a Boolean, returning `True` in the message will prevent the event from being raised in the surrogate.
+
+Generally it doesn't make much sense to implement the same event in both the message and a surrogate. The surrogate is there for situations where dragging a single copy of a message to your window does not make sense, e.g., you need to quickly save multiple records in a row.
+
+The parameters of each event match the parameters of the `RESTMessage_MTC` or `Xojo.Net.HTTPSocket` with the instance of the message as the first parameter in each case. This emulates using `AddHandler` to intercept the message's events.
+
+You can also use the _RESTMessage\_MTC.MessageTag_ property to further identify an instance of a message.
+
+The `RESTMessageSurrogate_MTC` has some additional properties and methods.
+
+#### Methods
+
+| Method | Parameters | Returns | Description |
+| ------ | ---------- | ------- | ----------- |
+| DisconnectAll | | | Disconnect all of the outstanding messages |
+| DisconnectMessage | msg As RESTMessage\_MTC | | Disconnect a single message |
+| OutstandingMessages | | RESTMessage\_MTC() | An array of outstanding messages | 
+#### Properties
+
+| Property | Type | Default | Description |
+| -------- | :--: | :-----: | ----------- |
+| IsBusy | Boolean | | Returns `True` if there are still outstanding messages |
 
 ## Contributions
 
@@ -151,6 +181,8 @@ With special thanks to [Advanced Medical Pricing Solutions, Inc.](http://www.adv
 - Changed _Options_ property to _MessageOptions_ to prevent possible conflicts in subclasses.
 - Added _MessageSerialNumber_ property.
 - Added _RoundTripWithProcessingMs_ property.
+- Added _MessageTag_ property.
+- Added `RESTMessageSurrogate_MTC` class.
 
 1.0 (May 12, 2016)
 
