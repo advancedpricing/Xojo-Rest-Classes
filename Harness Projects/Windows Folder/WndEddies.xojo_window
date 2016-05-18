@@ -28,7 +28,6 @@ Begin Window WndEddies
    Width           =   758
    Begin Eddies.GetCustomerList msgGetCustomerList
       DefaultRESTType =   "RESTTypes.Unknown"
-      Enabled         =   True
       Index           =   -2147483648
       IsConnected     =   False
       LockedInPosition=   False
@@ -42,8 +41,7 @@ Begin Window WndEddies
    End
    Begin Eddies.GetCustomer msgGetCustomer
       DefaultRESTType =   "RESTTypes.Unknown"
-      Enabled         =   True
-      ID              =   0
+      ID              =   "0"
       Index           =   -2147483648
       IsConnected     =   False
       LockedInPosition=   False
@@ -460,7 +458,6 @@ Begin Window WndEddies
       Width           =   100
    End
    Begin Timer tmrUpdateControls
-      Enabled         =   True
       Index           =   -2147483648
       LockedInPosition=   False
       Mode            =   2
@@ -490,7 +487,6 @@ Begin Window WndEddies
       Selectable      =   False
       TabIndex        =   10
       TabPanelIndex   =   0
-      TabStop         =   True
       Text            =   "RoundTrip"
       TextAlign       =   2
       TextColor       =   &c00000000

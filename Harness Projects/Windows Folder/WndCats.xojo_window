@@ -28,6 +28,7 @@ Begin Window WndCats
    Width           =   600
    Begin GetCatsMessage msgGetCats
       DefaultRESTType =   "7"
+      Enabled         =   True
       Format          =   "src"
       Index           =   -2147483648
       IsConnected     =   False
