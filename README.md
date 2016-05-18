@@ -176,7 +176,7 @@ With special thanks to [Advanced Medical Pricing Solutions, Inc.](http://www.adv
 
 ## Release Notes
 
-1.1 (___, 2016)
+1.1 (May 18, 2016)
 
 - Changed _Options_ property to _MessageOptions_ to prevent possible conflicts in subclasses.
 - Added _MessageSerialNumber_ property.
