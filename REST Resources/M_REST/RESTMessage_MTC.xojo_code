@@ -1665,6 +1665,7 @@ Implements PrivateMessage
 			    mMessageSurrogateWeakRef = nil
 			  else
 			    mMessageSurrogateWeakRef = Xojo.Core.WeakRef.Create( value )
+			    value.AppendMessage self
 			  end if
 			  
 			End Set

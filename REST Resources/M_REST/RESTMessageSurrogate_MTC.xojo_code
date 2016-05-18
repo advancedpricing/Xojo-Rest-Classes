@@ -2,6 +2,72 @@
 Class RESTMessageSurrogate_MTC
 Implements PrivateSurrogate
 	#tag Method, Flags = &h21
+		Private Sub AppendMessage(msg As M_REST.RESTMessage_MTC)
+		  OutstandingMessagesDict.Value( msg ) = nil
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub CleanOutstandingMessages()
+		  dim remove() as M_REST.RESTMessage_MTC
+		  
+		  for each entry as Xojo.Core.DictionaryEntry in OutstandingMessagesDict
+		    dim msg as M_REST.RESTMessage_MTC = M_REST.RESTMessage_MTC( entry.Key )
+		    if not msg.IsConnected then
+		      remove.Append msg
+		    end if
+		  next
+		  
+		  for each msg as M_REST.RESTMessage_MTC in remove
+		    #pragma BreakOnExceptions false
+		    try
+		      OutstandingMessagesDict.Remove msg
+		    catch err as KeyNotFoundException
+		      //
+		      // Already gone, so move along
+		      //
+		    end try
+		    #pragma BreakOnExceptions default
+		  next
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub DisconnectAll()
+		  for each entry as Xojo.Core.DictionaryEntry in OutstandingMessagesDict
+		    dim msg as M_REST.RESTMessage_MTC = M_REST.RESTMessage_MTC( entry.Key )
+		    msg.Disconnect
+		  next
+		  
+		  OutstandingMessagesDict.RemoveAll
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub DisconnectMessage(msg As M_REST.RESTMessage_MTC)
+		  msg.Disconnect
+		  CleanOutstandingMessages
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function OutstandingMessages() As M_REST.RESTMessage_MTC()
+		  CleanOutstandingMessages
+		  dim msgs() as M_REST.RESTMessage_MTC
+		  for each entry as Xojo.Core.DictionaryEntry in OutstandingMessagesDict
+		    msgs.Append M_REST.RESTMessage_MTC( entry.Key )
+		  next
+		  
+		  return msgs
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Function RaiseAuthenticationRequired(sender As RESTMessage_MTC, realm As Text, ByRef name As Text, ByRef password As Text) As Boolean
 		  return RaiseEvent AuthenticationRequired( sender, realm, name, password )
 		End Function
@@ -15,18 +81,21 @@ Implements PrivateSurrogate
 
 	#tag Method, Flags = &h21
 		Private Sub RaiseDisconnected(sender As RESTMessage_MTC)
+		  CleanOutstandingMessages
 		  RaiseEvent Disconnected( sender )
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
 		Private Sub RaiseError(sender As RestMessage_MTC, msg As Text)
+		  CleanOutstandingMessages
 		  RaiseEvent Error( sender, msg )
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
 		Private Sub RaiseHeadersReceived(sender As RESTMessage_MTC, url As Text, httpStatus As Integer)
+		  CleanOutstandingMessages
 		  RaiseEvent HeadersReceived( sender, url, httpStatus )
 		End Sub
 	#tag EndMethod
@@ -40,6 +109,7 @@ Implements PrivateSurrogate
 
 	#tag Method, Flags = &h21
 		Private Sub RaiseResponseReceived(sender As RESTMessage_MTC, url As Text, httpStatus As Integer, payload As Auto)
+		  CleanOutstandingMessages
 		  RaiseEvent ResponseReceived( sender, url, httpStatus, payload )
 		End Sub
 	#tag EndMethod
@@ -85,6 +155,34 @@ Implements PrivateSurrogate
 	#tag EndHook
 
 
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  CleanOutstandingMessages
+			  return OutstandingMessagesDict.Count <> 0
+			End Get
+		#tag EndGetter
+		IsBusy As Boolean
+	#tag EndComputedProperty
+
+	#tag Property, Flags = &h21
+		Attributes( hidden ) Private mOutstandingMessagesDict As Xojo.Core.Dictionary
+	#tag EndProperty
+
+	#tag ComputedProperty, Flags = &h21
+		#tag Getter
+			Get
+			  if mOutstandingMessagesDict is nil then
+			    mOutstandingMessagesDict = new Xojo.Core.Dictionary
+			  end if
+			  
+			  return mOutstandingMessagesDict
+			End Get
+		#tag EndGetter
+		Private OutstandingMessagesDict As Xojo.Core.Dictionary
+	#tag EndComputedProperty
+
+
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="Index"
@@ -92,6 +190,11 @@ Implements PrivateSurrogate
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="IsBusy"
+			Group="Behavior"
+			Type="Boolean"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"

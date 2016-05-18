@@ -1,6 +1,12 @@
 #tag Interface
 Private Interface PrivateSurrogate
 	#tag Method, Flags = &h0
+		Sub AppendMessage(msg As M_REST.RESTMessage_MTC)
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function RaiseAuthenticationRequired(sender As RESTMessage_MTC, realm As Text, ByRef name As Text, ByRef password As Text) As Boolean
 		  
 		End Function
