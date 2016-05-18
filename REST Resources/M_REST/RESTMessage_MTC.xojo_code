@@ -1840,7 +1840,7 @@ Implements PrivateMessage
 	#tag Constant, Name = kContentType, Type = Text, Dynamic = False, Default = \"application/json", Scope = Private
 	#tag EndConstant
 
-	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.0", Scope = Public
+	#tag Constant, Name = kVersion, Type = Text, Dynamic = False, Default = \"1.1", Scope = Public
 	#tag EndConstant
 
 
