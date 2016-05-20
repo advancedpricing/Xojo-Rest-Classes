@@ -394,8 +394,8 @@ Implements PrivateMessage
 		    return value
 		    
 		  else 
-		    dim objectDict as Xojo.Core.Dictionary = value
-		    return DeserializeObject( objectDict, intoProp )
+		    'dim objectDict as Xojo.Core.Dictionary = value
+		    return DeserializeObject( value, intoProp )
 		    
 		  end if
 		End Function
@@ -640,9 +640,11 @@ Implements PrivateMessage
 		      else
 		        redim arr( -1 )
 		      end if
+		      return existingArray
 		      
 		    catch err as TypeMismatchException
 		      redim arr( -1 )
+		      return existingArray
 		    end try
 		    return arr
 		    
@@ -776,6 +778,10 @@ Implements PrivateMessage
 
 	#tag Method, Flags = &h21
 		Private Function DeserializeObject(value As Auto, intoProp As Xojo.Introspection.PropertyInfo, objectTypeInfo As Xojo.Introspection.TypeInfo = Nil) As Object
+		  if value = nil then
+		    return nil
+		  end if
+		  
 		  dim tiObject as Xojo.Introspection.TypeInfo = if( objectTypeInfo is nil, intoProp.PropertyType, objectTypeInfo )
 		  dim typeName as text = tiObject.Name
 		  
@@ -890,7 +896,14 @@ Implements PrivateMessage
 		    if not RaiseEvent IncomingPayloadValueToProperty( value, prop, hostObject ) then
 		      try
 		        value = Deserialize( value, prop, prop.Value( hostObject ) )
-		        prop.Value( hostObject ) = value
+		        
+		        //
+		        // If the value now holds an Object(), it was already populated by
+		        // DeserializeArray, so we can skip the TypeMismatchException
+		        //
+		        if value = nil or Xojo.Introspection.GetType( value ).Name <> "Object()" then
+		          prop.Value( hostObject ) = value
+		        end if
 		        
 		      catch err as TypeMismatchException
 		        //
