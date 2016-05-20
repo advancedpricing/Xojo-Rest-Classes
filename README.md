@@ -52,6 +52,7 @@ This is a more detailed description of the `RESTMessage_MTC` class.
 | Error | msg As Text |  | Some error has occurred during the connection. |
 | ExcludeFromOutgoingPayload | prop As Xojo.Introspection.PropertyInfo,<BR />ByRef propName As Text,<BR />ByRef propValue As Auto | Boolean | A message property is about to be included in the outgoing payload. If it shouldn't be, return `True`. You can also change the property name that will be used as the JSON object key or the value. |
 | GetRESTType |  | RESTTypes | See <a href='#getresttypeeventsection'>The `GetRESTType` Event</a> below. |
+| GetNewObjectForClassName | className As Text | Object | Return a new Object for the given _className_. This is called when deserializing the payload into an array of objects. You can also use the shared method `RegisterClassTypeInfo` to register classes ahead of time. |
 | GetURLPattern |  | Text | See <a href='#geturlpatterneventsection'>The `GetURLPattern` Event</a> below. |
 | IncomingPayloadValueToProperty | value As Auto,<BR />prop As Xojo.Introspection.PropertyInfo,<BR />hostObject As Object | Boolean | The incoming payload has a value that has been matched to a property of the message or one of the objects in its properties. Return `True` to prevent this value from being processed automatically, i.e., you will process it yourself. |
 | ObjectToJSON | o As Object,<BR />typeInfo As Xojo.Introspection.TypeInfo | Auto | An object in one of the message's properties is about to be serialized, but you may prefer to do it yourself. If so, return a `Xojo.Core.Dictionary` or an `Auto()` array. If you do not implement this event or return nil, automatic processing will proceed. |
@@ -122,6 +123,13 @@ The uppercase types correspond directly to an HTTP action. The lowercase types a
 | ------ | ---------- | ------- | ----------- |
 | Disconnect | | | Disconnect from the server immediately. If not connected, will do nothing. |
 | Send | (opt) surrogate As RESTMessageSurrogate\_MTC |  | Fill in the properties first, make sure the <a href='#eventssection'>required events</a> are implemented, then use this to send the message. __Note__: If the socket is already connected to the server, you will get an error. Check the _IsConnected_ property or just call `Disconnect` first.<BR /><BR />If a surrogate is specified, incoming events will be raised for this message in it too <a href='#surrogatesection'>(see below)</a>. |
+
+### Shared Methods
+
+| Method | Parameters | Returns | Description |
+| ------ | ---------- | ------- | ----------- |
+| RegisterClassTypeInfo | classTypeInfo As Xojo.Introspection.TypeInfo | | Register the TypeInfo for a class that may be used when deserializing an array. Or you implement the `GetNewObjectForClassName` event instead. |
+| RESTTypeToHTTPAction | type As RESTTypes | Text | Returns the text that corresponds to the given _type_. |
 
 ### <a name='optionssection'></a>MessageOptions
 
