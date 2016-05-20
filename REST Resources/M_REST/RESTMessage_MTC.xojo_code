@@ -620,14 +620,27 @@ Implements PrivateMessage
 		    //
 		    // Must be an object
 		    //
+		    
 		    dim arr() as object
+		    
+		    //
+		    // Lets get a TypeInfo for the array elements
+		    //
+		    dim objectClassName as text = tiDestination.FullName.Replace( "()", "" )
+		    dim tiObject as Xojo.Introspection.TypeInfo = TypeInfoForClassName( objectClassName )
+		    
 		    try
 		      arr = existingArray
-		      redim arr( sourceArr.Ubound )
 		      
-		      for i as integer = 0 to sourceArr.Ubound
-		        arr( i ) = Deserialize( sourceArr( i ), intoProp, existingArray )
-		      next
+		      if tiObject isa object then
+		        redim arr( sourceArr.Ubound )
+		        for i as integer = 0 to sourceArr.Ubound
+		          arr( i ) = DeserializeObject( sourceArr( i ), intoProp, tiObject )
+		        next
+		      else
+		        redim arr( -1 )
+		      end if
+		      
 		    catch err as TypeMismatchException
 		      redim arr( -1 )
 		    end try
@@ -723,7 +736,7 @@ Implements PrivateMessage
 		  //
 		  // Create the object
 		  //
-		  select case intoProp.PropertyType.FullName
+		  select case intoProp.PropertyType.FullName.Replace( "()", "")
 		  case "Xojo.Core.Date"
 		    dim d as new Xojo.Core.Date( year, month, day, hour, minute, second, 0, tz )
 		    return d
@@ -740,7 +753,7 @@ Implements PrivateMessage
 
 	#tag Method, Flags = &h21
 		Private Function DeserializeDictionary(value As Xojo.Core.Dictionary, intoProp As Xojo.Introspection.PropertyInfo) As Auto
-		  select case intoProp.PropertyType.FullName
+		  select case intoProp.PropertyType.FullName.Replace( "()", "" )
 		  case "Xojo.Core.Dictionary"
 		    dim dict as new Xojo.Core.Dictionary
 		    for each entry as Xojo.Core.DictionaryEntry in value
@@ -762,11 +775,11 @@ Implements PrivateMessage
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function DeserializeObject(value As Auto, intoProp As Xojo.Introspection.PropertyInfo) As Object
-		  dim tiObject as Xojo.Introspection.TypeInfo = intoProp.PropertyType
+		Private Function DeserializeObject(value As Auto, intoProp As Xojo.Introspection.PropertyInfo, objectTypeInfo As Xojo.Introspection.TypeInfo = Nil) As Object
+		  dim tiObject as Xojo.Introspection.TypeInfo = if( objectTypeInfo is nil, intoProp.PropertyType, objectTypeInfo )
 		  dim typeName as text = tiObject.Name
 		  
-		  select case typeName
+		  select case typeName.Replace( "()", "" )
 		  case "Dictionary", "Xojo.Core.Dictionary"
 		    return DeserializeDictionary( value, intoProp )
 		    
@@ -777,7 +790,7 @@ Implements PrivateMessage
 		    //
 		    // Have to create a new object to return
 		    //
-		    dim c as Xojo.Introspection.ConstructorInfo = GetZeroParamConstructor( intoProp.PropertyType )
+		    dim c as Xojo.Introspection.ConstructorInfo = GetZeroParamConstructor( tiObject )
 		    if c isa object then
 		      dim o as object = c.Invoke
 		      
@@ -1518,6 +1531,54 @@ Implements PrivateMessage
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Function TypeInfoForClassName(className As Text) As Xojo.Introspection.TypeInfo
+		  
+		  className = className.Replace( "()", "" ) // In case it's an array
+		  
+		  dim tiObject as Xojo.Introspection.TypeInfo = ClassTypeInfoRegistry.Lookup( className, nil )
+		  
+		  if tiObject is nil then
+		    
+		    dim o as object
+		    select case className
+		    case "Dictionary"
+		      #if TargetiOS then
+		        o = new Xojo.Core.Dictionary
+		      #else
+		        o = new Dictionary
+		      #endif
+		      
+		    case "Date"
+		      #if TargetiOS then
+		        o = Xojo.Core.Date.Now
+		      #else
+		        o = new Date
+		      #endif
+		      
+		    case "Xojo.Core.Dictionary"
+		      o = new Xojo.Core.Dictionary
+		      
+		    case "Xojo.Core.Date"
+		      o = Xojo.Core.Date.Now
+		      
+		    case else
+		      o = RaiseEvent GetNewObjectForClassName( className )
+		      
+		    end select
+		    
+		    if o isa object then
+		      tiObject = Xojo.Introspection.GetType( o )
+		      ClassTypeInfoRegistry.Value( className ) = tiObject
+		    end if
+		    
+		  end if
+		  
+		  return tiObject
+		  
+		End Function
+	#tag EndMethod
+
 
 	#tag Hook, Flags = &h0
 		Event AuthenticationRequired(realm As Text, ByRef username As Text, ByRef password As Text) As Boolean
@@ -1541,6 +1602,10 @@ Implements PrivateMessage
 
 	#tag Hook, Flags = &h0, Description = 4578636C75646520612070726F70657274792066726F6D20746865206F7574676F696E67207061796C6F6164207468617420776F756C64206F746865727769736520626520696E636C756465642C206F72206368616E6765207468652070726F7065727479206E616D6520616E642F6F722076616C756520746861742077696C6C20626520757365642E
 		Event ExcludeFromOutgoingPayload(prop As Xojo.Introspection.PropertyInfo, ByRef propName As Text, ByRef propValue As Auto) As Boolean
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event GetNewObjectForClassName(className As Text) As Object
 	#tag EndHook
 
 	#tag Hook, Flags = &h0, Description = 5468652052455354207479706520746F2075736520666F72207468697320636F6E6E656374696F6E2E204966206E6F7420696D706C656D656E7465642C2044656661756C7452455354547970652077696C6C206265207573656420696E73746561642E
@@ -1592,6 +1657,19 @@ Implements PrivateMessage
 		Private ClassName As Text
 	#tag EndProperty
 
+	#tag ComputedProperty, Flags = &h21
+		#tag Getter
+			Get
+			  if mClassTypeInfoRegistry is nil then
+			    mClassTypeInfoRegistry = new Xojo.Core.Dictionary
+			  end if
+			  
+			  return mClassTypeInfoRegistry
+			End Get
+		#tag EndGetter
+		Private Shared ClassTypeInfoRegistry As Xojo.Core.Dictionary
+	#tag EndComputedProperty
+
 	#tag Property, Flags = &h0
 		DefaultRESTType As RESTTypes = RESTTypes.Unknown
 	#tag EndProperty
@@ -1617,6 +1695,10 @@ Implements PrivateMessage
 		#tag EndGetter
 		IsConnected As Boolean
 	#tag EndComputedProperty
+
+	#tag Property, Flags = &h21
+		Attributes( hidden ) Private Shared mClassTypeInfoRegistry As Xojo.Core.Dictionary
+	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
