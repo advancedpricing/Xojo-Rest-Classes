@@ -1168,6 +1168,17 @@ Implements PrivateMessage
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		 Shared Sub RegisterClassTypeInfo(classTypeInfo As Xojo.Introspection.TypeInfo)
+		  //
+		  // Will raise a NilObjectException if there is not TypeInfo given
+		  //
+		  
+		  dim className as text = classTypeInfo.FullName.Replace( "()", "" )
+		  ClassTypeInfoRegistry.Value( className ) = classTypeInfo
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		 Shared Function RESTTypeToHTTPAction(type As RESTTypes) As Text
 		  select case type
 		  case RESTTypes.Read, RESTTypes.GET
@@ -1533,7 +1544,6 @@ Implements PrivateMessage
 
 	#tag Method, Flags = &h21
 		Private Function TypeInfoForClassName(className As Text) As Xojo.Introspection.TypeInfo
-		  
 		  className = className.Replace( "()", "" ) // In case it's an array
 		  
 		  dim tiObject as Xojo.Introspection.TypeInfo = ClassTypeInfoRegistry.Lookup( className, nil )
