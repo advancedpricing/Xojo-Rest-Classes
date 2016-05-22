@@ -607,7 +607,12 @@ Implements PrivateMessage
 		    return arr
 		    
 		  case "Auto()"
-		    return value
+		    dim arr() as auto
+		    redim arr( sourceArr.Ubound )
+		    for i as integer = 0 to sourceArr.Ubound
+		      arr( i ) = sourceArr( i )
+		    next
+		    return arr
 		    
 		  case "Variant()"
 		    #if not TargetiOS then
