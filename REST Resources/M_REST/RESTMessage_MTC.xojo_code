@@ -391,10 +391,13 @@ Implements PrivateMessage
 		    return DeserializeArray( value, intoProp, currentValue )
 		    
 		  elseif IsIntrinsicType( typeName ) then
+		    //
+		    // See if we have to coerce the value from text
+		    //
+		    value = MaybeCoerceValue( value, tiDestination )
 		    return value
 		    
 		  else 
-		    'dim objectDict as Xojo.Core.Dictionary = value
 		    return DeserializeObject( value, intoProp )
 		    
 		  end if
@@ -427,7 +430,7 @@ Implements PrivateMessage
 		      try
 		        redim arr( sourceArr.Ubound )
 		        for i as integer = 0 to sourceArr.Ubound
-		          arr( i ) = sourceArr( i )
+		          arr( i ) = MaybeCoerceValue( sourceArr( i ), tiDestination )
 		        next
 		      catch err as TypeMismatchException
 		        redim arr( -1 )
@@ -440,7 +443,7 @@ Implements PrivateMessage
 		    try
 		      redim arr( sourceArr.Ubound )
 		      for i as integer = 0 to sourceArr.Ubound
-		        arr( i ) = sourceArr( i )
+		        arr( i ) = MaybeCoerceValue( sourceArr( i ), tiDestination )
 		      next
 		    catch err as TypeMismatchException
 		      redim arr( -1 )
@@ -452,7 +455,7 @@ Implements PrivateMessage
 		    try
 		      redim arr( sourceArr.Ubound )
 		      for i as integer = 0 to sourceArr.Ubound
-		        arr( i ) = sourceArr( i )
+		        arr( i ) = MaybeCoerceValue( sourceArr( i ), tiDestination )
 		      next
 		    catch err as TypeMismatchException
 		      redim arr( -1 )
@@ -464,7 +467,7 @@ Implements PrivateMessage
 		    try
 		      redim arr( sourceArr.Ubound )
 		      for i as integer = 0 to sourceArr.Ubound
-		        arr( i ) = sourceArr( i )
+		        arr( i ) = MaybeCoerceValue( sourceArr( i ), tiDestination )
 		      next
 		    catch err as TypeMismatchException
 		      redim arr( -1 )
@@ -476,7 +479,7 @@ Implements PrivateMessage
 		    try
 		      redim arr( sourceArr.Ubound )
 		      for i as integer = 0 to sourceArr.Ubound
-		        arr( i ) = sourceArr( i )
+		        arr( i ) = MaybeCoerceValue( sourceArr( i ), tiDestination )
 		      next
 		    catch err as TypeMismatchException
 		      redim arr( -1 )
@@ -488,7 +491,7 @@ Implements PrivateMessage
 		    try
 		      redim arr( sourceArr.Ubound )
 		      for i as integer = 0 to sourceArr.Ubound
-		        arr( i ) = sourceArr( i )
+		        arr( i ) = MaybeCoerceValue( sourceArr( i ), tiDestination )
 		      next
 		    catch err as TypeMismatchException
 		      redim arr( -1 )
@@ -500,7 +503,7 @@ Implements PrivateMessage
 		    try
 		      redim arr( sourceArr.Ubound )
 		      for i as integer = 0 to sourceArr.Ubound
-		        arr( i ) = sourceArr( i )
+		        arr( i ) = MaybeCoerceValue( sourceArr( i ), tiDestination )
 		      next
 		    catch err as TypeMismatchException
 		      redim arr( -1 )
@@ -512,7 +515,7 @@ Implements PrivateMessage
 		    try
 		      redim arr( sourceArr.Ubound )
 		      for i as integer = 0 to sourceArr.Ubound
-		        arr( i ) = sourceArr( i )
+		        arr( i ) = MaybeCoerceValue( sourceArr( i ), tiDestination )
 		      next
 		    catch err as TypeMismatchException
 		      redim arr( -1 )
@@ -524,7 +527,7 @@ Implements PrivateMessage
 		    try
 		      redim arr( sourceArr.Ubound )
 		      for i as integer = 0 to sourceArr.Ubound
-		        arr( i ) = sourceArr( i )
+		        arr( i ) = MaybeCoerceValue( sourceArr( i ), tiDestination )
 		      next
 		    catch err as TypeMismatchException
 		      redim arr( -1 )
@@ -536,7 +539,7 @@ Implements PrivateMessage
 		    try
 		      redim arr( sourceArr.Ubound )
 		      for i as integer = 0 to sourceArr.Ubound
-		        arr( i ) = sourceArr( i )
+		        arr( i ) = MaybeCoerceValue( sourceArr( i ), tiDestination )
 		      next
 		    catch err as TypeMismatchException
 		      redim arr( -1 )
@@ -548,7 +551,7 @@ Implements PrivateMessage
 		    try
 		      redim arr( sourceArr.Ubound )
 		      for i as integer = 0 to sourceArr.Ubound
-		        arr( i ) = sourceArr( i )
+		        arr( i ) = MaybeCoerceValue( sourceArr( i ), tiDestination )
 		      next
 		    catch err as TypeMismatchException
 		      redim arr( -1 )
@@ -560,7 +563,7 @@ Implements PrivateMessage
 		    try
 		      redim arr( sourceArr.Ubound )
 		      for i as integer = 0 to sourceArr.Ubound
-		        arr( i ) = sourceArr( i )
+		        arr( i ) = MaybeCoerceValue( sourceArr( i ), tiDestination )
 		      next
 		    catch err as TypeMismatchException
 		      redim arr( -1 )
@@ -572,7 +575,7 @@ Implements PrivateMessage
 		    try
 		      redim arr( sourceArr.Ubound )
 		      for i as integer = 0 to sourceArr.Ubound
-		        arr( i ) = sourceArr( i )
+		        arr( i ) = MaybeCoerceValue( sourceArr( i ), tiDestination )
 		      next
 		    catch err as TypeMismatchException
 		      redim arr( -1 )
@@ -584,7 +587,7 @@ Implements PrivateMessage
 		    try
 		      redim arr( sourceArr.Ubound )
 		      for i as integer = 0 to sourceArr.Ubound
-		        arr( i ) = sourceArr( i )
+		        arr( i ) = MaybeCoerceValue( sourceArr( i ), tiDestination )
 		      next
 		    catch err as TypeMismatchException
 		      redim arr( -1 )
@@ -596,7 +599,7 @@ Implements PrivateMessage
 		    try
 		      redim arr( sourceArr.Ubound )
 		      for i as integer = 0 to sourceArr.Ubound
-		        arr( i ) = sourceArr( i )
+		        arr( i ) = MaybeCoerceValue( sourceArr( i ), tiDestination )
 		      next
 		    catch err as TypeMismatchException
 		      redim arr( -1 )
@@ -618,7 +621,7 @@ Implements PrivateMessage
 		    
 		  case else
 		    //
-		    // Must be an object
+		    // Must be an object array
 		    //
 		    
 		    dim arr() as object
@@ -915,6 +918,97 @@ Implements PrivateMessage
 		  next
 		  
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function MaybeCoerceValue(value As Auto, targetTypeInfo As Xojo.Introspection.TypeInfo) As Auto
+		  //
+		  // Some JSON will return text for certain types of values (doubles or big ints, usually).
+		  // If the value is given as text but we are expecting something else,
+		  // we are going to do our best to coerce it.
+		  //
+		  // In some cases, it won't be enough so the IncomingPayloadValueToProperty event
+		  // should be used to store the value manually.
+		  //
+		  
+		  if value = nil then
+		    return value
+		  end if
+		  
+		  dim targetName as text = targetTypeInfo.Name.Replace( "()", "" )
+		  
+		  dim valueTypeInfo as Xojo.Introspection.TypeInfo = Xojo.Introspection.GetType( value )
+		  dim valueName as text = valueTypeInfo.Name
+		  
+		  if valueName <> "Text" or valueName = targetName then
+		    return value
+		  end if
+		  
+		  //
+		  // If we get here, we are dealing with a Text value so we will try to coerce it
+		  // into the expected type
+		  //
+		  
+		  dim textValue as text = value
+		  select case targetName
+		  case "String"
+		    #if not TargetiOS then
+		      dim s as string = textValue
+		      return s
+		    #endif
+		    
+		  case "Boolean"
+		    select case textValue
+		    case "true", "t", "yes", "y", "1"
+		      return true
+		      
+		    case "false", "f", "no", "n", "0"
+		      return false
+		      
+		    case else
+		      return value
+		      
+		    end select
+		    
+		  case "Integer", "Int8", "Int16", "Int32", "Int64"
+		    try
+		      dim i as Int64 = Int64.FromText( textValue )
+		      return i
+		    catch err as Xojo.Core.BadDataException
+		      return value
+		    end try
+		    
+		  case "UInteger", "UInt8", "Byte", "UInt16", "UInt32", "UInt64"
+		    try
+		      dim i as UInt64 = UInt64.FromText( textValue )
+		      return i
+		    catch err as Xojo.Core.BadDataException
+		      return value
+		    end try
+		    
+		  case "Currency"
+		    try
+		      dim c as currency = Currency.FromText( textValue )
+		      return c
+		    catch err as Xojo.Core.BadDataException
+		      return value
+		    end try
+		    
+		  case "Double", "Single"
+		    try
+		      dim d as double = Double.FromText( textValue )
+		      return d
+		    catch err as Xojo.Core.BadDataException
+		      return value
+		    end try
+		    
+		  end select
+		  
+		  //
+		  // If we get here, just return the original value
+		  //
+		  return value
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
