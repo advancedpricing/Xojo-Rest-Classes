@@ -1000,6 +1000,15 @@ Implements PrivateMessage
 		    end try
 		    
 		  case "Double", "Single"
+		    //
+		    // Won't get an exception with a double, so let's see if it's valid
+		    //
+		    #if not TargetiOS then
+		      if not IsNumeric( textValue ) then
+		        return value
+		      end if
+		    #endif
+		    
 		    try
 		      dim d as double = Double.FromText( textValue )
 		      return d
