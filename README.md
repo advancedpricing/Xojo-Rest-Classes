@@ -185,6 +185,10 @@ With special thanks to [Advanced Medical Pricing Solutions, Inc.](http://www.adv
 
 ## Release Notes
 
+1.3 (___, 2016)
+
+- JSON values that are delivered as Text will be coerced into the expected value, if possible.
+
 1.2 (May 18, 2016)
 
 - Added `RESTMessageSurrogate_MTC.Sent` event.
