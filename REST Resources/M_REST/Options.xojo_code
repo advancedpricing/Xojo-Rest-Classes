@@ -46,7 +46,7 @@ Implements PrivateOptions
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mParentMessageWR As WeakRef
+		Private mParentMessageWR As Xojo.Core.WeakRef
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -69,7 +69,7 @@ Implements PrivateOptions
 			  if value is nil then
 			    mParentMessageWR = nil
 			  else
-			    mParentMessageWR = new WeakRef( value )
+			    mParentMessageWR = Xojo.Core.WeakRef.Create( value )
 			  end if
 			  
 			End Set
