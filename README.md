@@ -188,6 +188,8 @@ With special thanks to [Advanced Medical Pricing Solutions, Inc.](http://www.adv
 1.3 (___, 2016)
 
 - JSON values that are delivered as Text will be coerced into the expected value, if possible.
+- Added XojoUnit framework.
+- Added `UnitTestRESTMessage` interface to facilitate testing of private methods.
 
 1.2 (May 18, 2016)
 
