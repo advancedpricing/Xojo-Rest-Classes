@@ -1,11 +1,21 @@
 #tag Menu
-Begin Menu MainMenuBar
+Begin Menu XojoUnitMenuBar
    Begin MenuItem FileMenu
       SpecialMenu = 0
       Text = "&File"
       Index = -2147483648
       AutoEnable = True
       Visible = True
+      Begin MenuItem FileRunTests
+         SpecialMenu = 0
+         Text = "&Run Tests"
+         Index = -2147483648
+         ShortcutKey = "R"
+         Shortcut = "Cmd+R"
+         MenuModifier = True
+         AutoEnable = True
+         Visible = True
+      End
       Begin QuitMenuItem FileQuit
          SpecialMenu = 0
          Text = "#App.kFileQuit"
@@ -32,7 +42,7 @@ Begin Menu MainMenuBar
          AutoEnable = True
          Visible = True
       End
-      Begin MenuItem EditSeparator1
+      Begin MenuItem UntitledMenu1
          SpecialMenu = 0
          Text = "-"
          Index = -2147483648
@@ -76,7 +86,7 @@ Begin Menu MainMenuBar
          AutoEnable = True
          Visible = True
       End
-      Begin MenuItem EditSeparator2
+      Begin MenuItem UntitledMenu0
          SpecialMenu = 0
          Text = "-"
          Index = -2147483648
@@ -93,44 +103,26 @@ Begin Menu MainMenuBar
          AutoEnable = True
          Visible = True
       End
+      Begin MenuItem EditClearAll
+         SpecialMenu = 0
+         Text = "Clear All"
+         Index = -2147483648
+         ShortcutKey = "-"
+         Shortcut = "Cmd+-"
+         MenuModifier = True
+         AutoEnable = True
+         Visible = True
+      End
    End
-   Begin MenuItem ExamplesMenu
+   Begin MenuItem HelpMenu
       SpecialMenu = 0
-      Text = "Examples"
+      Text = "&Help"
       Index = -2147483648
       AutoEnable = True
       Visible = True
-      Begin MenuItem ExamplesCats
+      Begin AppleMenuItem HelpAboutXojoUnit
          SpecialMenu = 0
-         Text = "Cats"
-         Index = -2147483648
-         AutoEnable = True
-         Visible = True
-      End
-      Begin MenuItem ExamplesEddies
-         SpecialMenu = 0
-         Text = "Eddie's Electronics"
-         Index = -2147483648
-         AutoEnable = True
-         Visible = True
-      End
-      Begin MenuItem ExamplesSQLFormatter
-         SpecialMenu = 0
-         Text = "SQL Formatter"
-         Index = -2147483648
-         AutoEnable = True
-         Visible = True
-      End
-      Begin MenuItem UntitledSeparator
-         SpecialMenu = 0
-         Text = "-"
-         Index = -2147483648
-         AutoEnable = True
-         Visible = True
-      End
-      Begin MenuItem ExamplesUnitTests
-         SpecialMenu = 0
-         Text = "Unit Tests"
+         Text = "&About XojoUnit"
          Index = -2147483648
          AutoEnable = True
          Visible = True
