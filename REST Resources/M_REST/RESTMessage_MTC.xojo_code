@@ -1033,7 +1033,9 @@ Implements PrivateMessage
 		  dim result as Auto
 		  
 		  #if TargetiOS then
-		    #pragma error "Finish this!"
+		    
+		    dim image as iOSImage = iOSImage.FromData( payload )
+		    result = image
 		    
 		  #else
 		    
