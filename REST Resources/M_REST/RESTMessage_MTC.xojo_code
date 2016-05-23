@@ -1,7 +1,7 @@
 #tag Class
 Class RESTMessage_MTC
 Inherits Xojo.Net.HTTPSocket
-Implements PrivateMessage
+Implements PrivateMessage, UnitTestRESTMessage
 	#tag Event
 		Function AuthenticationRequired(Realm as Text, ByRef Name as Text, ByRef Password as Text) As Boolean
 		  dim surrogate as M_REST.PrivateSurrogate = MessageSurrogate
