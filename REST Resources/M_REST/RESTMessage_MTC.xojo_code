@@ -382,8 +382,8 @@ Implements PrivateMessage, UnitTestRESTMessage
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Function Deserialize(value As Auto, intoProp As Xojo.Introspection.PropertyInfo, currentValue As Auto) As Auto
+	#tag Method, Flags = &h1
+		Protected Function Deserialize(value As Auto, intoProp As Xojo.Introspection.PropertyInfo, currentValue As Auto) As Auto
 		  dim tiDestination as Xojo.Introspection.TypeInfo = intoProp.PropertyType
 		  dim typeName as text = tiDestination.Name
 		  
