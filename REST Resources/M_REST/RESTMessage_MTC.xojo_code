@@ -954,6 +954,31 @@ Implements PrivateMessage
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Function GetSendParameters(ByRef action As Text, ByRef url As Text, ByRef mimeType As Text, ByRef payload As Xojo.Core.MemoryBlock) As Boolean
+		  action = HTTPAction
+		  if action = kActionUnknown then
+		    raise new M_REST.RESTException( "REST type was not specified" )
+		  end if
+		  
+		  url = RaiseEvent GetURLPattern
+		  dim payloadProps() as Xojo.Introspection.PropertyInfo
+		  url = ExpandURLPattern( url, payloadProps )
+		  
+		  if action <> kActionGet and payloadProps.Ubound <> -1 and MessageOptions.SendWithPayloadIfAvailable then
+		    payload = CreateOutgoingPayload( payloadProps )
+		  end if
+		  
+		  mimeType = "application/json"
+		  if RaiseEvent CancelSend( url, action, payload, mimeType ) then
+		    return false
+		  end if
+		  
+		  return true
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Shared Function IsIntrinsicType(propType As Text) As Boolean
 		  static types() as text
 		  
@@ -1425,22 +1450,15 @@ Implements PrivateMessage
 		  RequestStartedMicroseconds = microseconds
 		  ReceiveFinishedMicroseconds = -1.0
 		  
-		  dim action as text = HTTPAction
-		  if action = kActionUnknown then
-		    raise new M_REST.RESTException( "REST type was not specified" )
-		  end if
-		  
-		  dim url as text = RaiseEvent GetURLPattern
-		  dim payloadProps() as Xojo.Introspection.PropertyInfo
-		  url = ExpandURLPattern( url, payloadProps )
-		  
+		  dim action as text
+		  dim url as text
+		  dim mimeType as text
 		  dim payload as Xojo.Core.MemoryBlock
-		  if action <> kActionGet and payloadProps.Ubound <> -1 and MessageOptions.SendWithPayloadIfAvailable then
-		    payload = CreateOutgoingPayload( payloadProps )
-		  end if
 		  
-		  dim mimeType as text = "application/json"
-		  if RaiseEvent CancelSend( url, action, payload, mimeType ) then
+		  if not GetSendParameters( action, url, mimeType, payload ) then
+		    //
+		    // The user chose to cancel
+		    //
 		    return
 		  end if
 		  
