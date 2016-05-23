@@ -863,6 +863,97 @@ Implements PrivateMessage
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Function ExpandURLPattern(urlPattern As Text, ByRef returnPayloadProps() As Xojo.Introspection.PropertyInfo) As Text
+		  //
+		  // Expand the given url pattern using the properties
+		  // of the class. The properties must be public and readable.
+		  //
+		  // Returns the payload props as it expands since properties found in the url
+		  // will not be included in the payload. To force it to be included, create a
+		  // second property and use one in the URL. Use the ExcludeFromOutgoingPayload
+		  // event to control when and how a property should be included in the payload.
+		  //
+		  
+		  CreateMeta // Just in case
+		  dim meta as M_REST.ClassMeta = MyMeta
+		  
+		  dim url as text = urlPattern.Trim
+		  
+		  //
+		  // Expand the URL
+		  //
+		  dim urlPropNames() as text
+		  dim payloadProps() as Xojo.Introspection.PropertyInfo
+		  
+		  for each entry as Xojo.Core.DictionaryEntry in meta.SendPropertiesDict
+		    dim prop as Xojo.Introspection.PropertyInfo = entry.Value
+		    dim propName as text = prop.Name
+		    
+		    dim marker as text = ":" + prop.Name
+		    if url.IndexOf( marker ) = -1 then
+		      payloadProps.Append prop
+		    else
+		      
+		      urlPropNames.Append propName
+		      dim value as auto = prop.Value( self )
+		      
+		      //
+		      // Get the text version of the value
+		      //
+		      dim tiValue as Xojo.Introspection.TypeInfo = Xojo.Introspection.GetType( value )
+		      dim textValue as text
+		      
+		      select case tiValue.Name
+		      case "Text"
+		        //
+		        // Already good
+		        //
+		        textValue = value
+		        
+		      case "Integer", "Int8", "Int16", "Int32", "Int64"
+		        dim i as Int64 = value
+		        textValue = i.ToText
+		        
+		      case "UInt8", "UInt16", "UInt32", "UInt64", "Byte"
+		        dim i as UInt64 = value
+		        textValue = i.ToText
+		        
+		      case "Double", "Single", "Currency"
+		        dim d as double = value
+		        textValue = d.ToText
+		        
+		      case "String"
+		        #if not TargetiOS then
+		          dim s as string = value
+		          textValue = s.ToText
+		        #endif
+		        
+		      case "Boolean"
+		        const kTrueValue as text = "true"
+		        const kFalseValue as text = "false"
+		        
+		        dim b as boolean = value
+		        textValue = if( b, kTrueValue, kFalseValue )
+		        
+		      case else
+		        if value isa M_REST.TextProvider then
+		          textValue = M_REST.TextProvider( value ).ConvertToText
+		        else
+		          raise new M_REST.RESTException( "The property " + propName + " cannot be converted to Text" )
+		        end if
+		      end select
+		      
+		      url = url.ReplaceAll( marker, textValue )
+		    end if
+		  next
+		  
+		  returnPayloadProps = payloadProps
+		  return url
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Shared Function IsIntrinsicType(propType As Text) As Boolean
 		  static types() as text
 		  
@@ -1339,79 +1430,9 @@ Implements PrivateMessage
 		    raise new M_REST.RESTException( "REST type was not specified" )
 		  end if
 		  
-		  CreateMeta // Just in case
-		  dim meta as M_REST.ClassMeta = MyMeta
-		  
 		  dim url as text = RaiseEvent GetURLPattern
-		  url = url.Trim
-		  
-		  //
-		  // Parse the URL
-		  //
-		  dim urlPropNames() as text
 		  dim payloadProps() as Xojo.Introspection.PropertyInfo
-		  
-		  for each entry as Xojo.Core.DictionaryEntry in meta.SendPropertiesDict
-		    dim prop as Xojo.Introspection.PropertyInfo = entry.Value
-		    dim propName as text = prop.Name
-		    
-		    dim marker as text = ":" + prop.Name
-		    if url.IndexOf( marker ) = -1 then
-		      payloadProps.Append prop
-		    else
-		      
-		      urlPropNames.Append propName
-		      dim value as auto = prop.Value( self )
-		      
-		      //
-		      // Get the text version of the value
-		      //
-		      dim tiValue as Xojo.Introspection.TypeInfo = Xojo.Introspection.GetType( value )
-		      dim textValue as text
-		      
-		      select case tiValue.Name
-		      case "Text"
-		        //
-		        // Already good
-		        //
-		        textValue = value
-		        
-		      case "Integer", "Int8", "Int16", "Int32", "Int64"
-		        dim i as Int64 = value
-		        textValue = i.ToText
-		        
-		      case "UInt8", "UInt16", "UInt32", "UInt64", "Byte"
-		        dim i as UInt64 = value
-		        textValue = i.ToText
-		        
-		      case "Double", "Single", "Currency"
-		        dim d as double = value
-		        textValue = d.ToText
-		        
-		      case "String"
-		        #if not TargetiOS then
-		          dim s as string = value
-		          textValue = s.ToText
-		        #endif
-		        
-		      case "Boolean"
-		        const kTrueValue as text = "true"
-		        const kFalseValue as text = "false"
-		        
-		        dim b as boolean = value
-		        textValue = if( b, kTrueValue, kFalseValue )
-		        
-		      case else
-		        if value isa M_REST.TextProvider then
-		          textValue = M_REST.TextProvider( value ).ConvertToText
-		        else
-		          raise new M_REST.RESTException( "The property " + propName + " cannot be converted to Text" )
-		        end if
-		      end select
-		      
-		      url = url.ReplaceAll( marker, textValue )
-		    end if
-		  next
+		  url = ExpandURLPattern( url, payloadProps )
 		  
 		  dim payload as Xojo.Core.MemoryBlock
 		  if action <> kActionGet and payloadProps.Ubound <> -1 and MessageOptions.SendWithPayloadIfAvailable then
