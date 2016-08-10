@@ -1,5 +1,62 @@
 #tag Module
 Protected Module M_REST
+	#tag Method, Flags = &h1
+		Protected Sub BuildMultipartRequest(file as Xojo.IO.FolderItem, additionalData as Dictionary = nil, ByRef payload As Xojo.Core.MemoryBlock, ByRef mimeType As Text)
+		  dim boundary as xojo.Core.MemoryBlock
+		  dim boundaryText as text
+		  if true then // Scope
+		    dim boundString as string = "--" + Right(EncodeHex(MD5(Str(Microseconds))), 24) + "-bOuNdArY"
+		    boundString = boundString.DefineEncoding(Encodings.UTF8)
+		    boundaryText = boundString.ToText
+		    boundary = Xojo.Core.TextEncoding.UTF8.ConvertTextToData(boundaryText)
+		  end if
+		  static doubleDashes as xojo.Core.MemoryBlock = Xojo.Core.TextEncoding.UTF8.ConvertTextToData("--")
+		  
+		  static eol as text = &u0D + &u0A
+		  static CRLF as Xojo.Core.MemoryBlock = Xojo.Core.TextEncoding.UTF8.ConvertTextToData(eol)
+		  dim data as new Xojo.Core.MutableMemoryBlock(0)
+		  dim out as new Xojo.IO.BinaryStream(data)
+		  
+		  if additionalData isa Dictionary then
+		    for each key as variant in additionalData.Keys
+		      out.Write(doubleDashes)
+		      out.Write(boundary)
+		      out.Write(CRLF)
+		      dim keyText as text = key.StringValue.ToText
+		      dim keyValue as text = additionalData.Value(key).StringValue.ToText
+		      out.WriteText("Content-Disposition: form-data; name=""" + keyText + """" + eol + eol)
+		      out.WriteText(keyValue)
+		      out.Write(CRLF)
+		    next
+		  end if
+		  
+		  out.WriteText("Content-Disposition: form-data; name=""file""; filename=""" + file.Name + """" + eol)
+		  out.WriteText("Content-Type: application/octet-stream" + eol + eol) ' replace with actual MIME Type
+		  dim bs as Xojo.IO.BinaryStream = Xojo.IO.BinaryStream.Open(file, Xojo.IO.BinaryStream.LockModes.Read)
+		  out.Write(bs.Read(bs.Length))
+		  out.Write(CRLF)
+		  bs.Close
+		  
+		  out.Write(doubleDashes)
+		  out.Write(boundary)
+		  out.Write(doubleDashes)
+		  out.Write(CRLF)
+		  
+		  out.Close
+		  
+		  System.DebugLog CurrentMethodName + " sets the paylod"
+		  
+		  payload = data
+		  mimeType = "multipart/form-data; boundary=" + boundaryText
+		  
+		  'system.DebugLog "about to send request"
+		  'sock.SetRequestContent(data, "multipart/form-data; boundary=" + boundaryText)
+		  '
+		  'dim url as text = RaiseEvent sock.GetURLPattern
+		  'sock.Send(sock.HTTPAction, url)
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Function GetZeroParamConstructor(ti As Xojo.Introspection.TypeInfo) As Xojo.Introspection.ConstructorInfo
 		  dim constructors() as Xojo.Introspection.ConstructorInfo = ti.Constructors
