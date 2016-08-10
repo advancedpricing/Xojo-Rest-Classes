@@ -1,7 +1,7 @@
 #tag Module
 Protected Module M_REST
 	#tag Method, Flags = &h1
-		Protected Sub BuildMultipartRequest(file as Xojo.IO.FolderItem, additionalData as Dictionary = nil, ByRef payload As Xojo.Core.MemoryBlock, ByRef mimeType As Text)
+		Protected Sub BuildMultipartRequest(file as Xojo.IO.FolderItem, formData as Dictionary, ByRef payload As Xojo.Core.MemoryBlock, ByRef mimeType As Text)
 		  dim boundary as xojo.Core.MemoryBlock
 		  dim boundaryText as text
 		  if true then // Scope
@@ -17,18 +17,23 @@ Protected Module M_REST
 		  dim data as new Xojo.Core.MutableMemoryBlock(0)
 		  dim out as new Xojo.IO.BinaryStream(data)
 		  
-		  if additionalData isa Dictionary then
-		    for each key as variant in additionalData.Keys
+		  if formData isa Dictionary then
+		    for each key as variant in formData.Keys
 		      out.Write(doubleDashes)
 		      out.Write(boundary)
 		      out.Write(CRLF)
 		      dim keyText as text = key.StringValue.ToText
-		      dim keyValue as text = additionalData.Value(key).StringValue.ToText
+		      dim keyValue as text = formData.Value(key).StringValue.ToText
 		      out.WriteText("Content-Disposition: form-data; name=""" + keyText + """" + eol + eol)
 		      out.WriteText(keyValue)
 		      out.Write(CRLF)
 		    next
 		  end if
+		  
+		  // Start of file
+		  out.Write(doubleDashes)
+		  out.Write(boundary)
+		  out.Write(CRLF)
 		  
 		  out.WriteText("Content-Disposition: form-data; name=""file""; filename=""" + file.Name + """" + eol)
 		  out.WriteText("Content-Type: application/octet-stream" + eol + eol) ' replace with actual MIME Type
@@ -41,6 +46,7 @@ Protected Module M_REST
 		  out.Write(boundary)
 		  out.Write(doubleDashes)
 		  out.Write(CRLF)
+		  // End of file
 		  
 		  out.Close
 		  
