@@ -95,7 +95,16 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  dim payload as Auto = content
 		  
 		  if not SkipIncomingPayloadProcessing( url, httpStatus, payload ) then
-		    payload = ProcessPayload( payload )
+		    //
+		    // The subclass may have changed the payload into 
+		    // a dictionary. If so, process it
+		    // as JSON
+		    //
+		    if payload isa Xojo.Core.Dictionary then
+		      ProcessJSONPayload( payload )
+		    else
+		      payload = ProcessPayload( payload )
+		    end if
 		  end if
 		  
 		  ReceiveFinishedMicroseconds = microseconds
