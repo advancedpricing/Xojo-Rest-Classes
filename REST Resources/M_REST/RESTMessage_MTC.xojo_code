@@ -1,7 +1,7 @@
 #tag Class
 Class RESTMessage_MTC
 Inherits Xojo.Net.HTTPSocket
-Implements PrivateMessage, UnitTestRESTMessage
+Implements PrivateMessage,UnitTestRESTMessage
 	#tag Event
 		Function AuthenticationRequired(Realm as Text, ByRef Name as Text, ByRef Password as Text) As Boolean
 		  dim surrogate as M_REST.PrivateSurrogate = MessageSurrogate
@@ -389,6 +389,12 @@ Implements PrivateMessage, UnitTestRESTMessage
 		  
 		  if typeName.Length > 2 and typeName.EndsWith( "()" ) then
 		    return DeserializeArray( value, intoProp, currentValue )
+		    
+		  elseif typeName = "Auto" then
+		    return value
+		    
+		  elseif typeName = "Xojo.Core.Dictionary" and value isa Xojo.Core.Dictionary then
+		    return value
 		    
 		  elseif IsIntrinsicType( typeName ) then
 		    //
