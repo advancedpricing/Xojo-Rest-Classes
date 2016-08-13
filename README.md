@@ -46,6 +46,7 @@ This is a more detailed description of the `RESTMessage_MTC` class.
 
 | Event | Parameters | Return Value | Description |
 | ----- | ---------- | :----------: | ----------- |
+| BeforeURLProcessing | ByRef json As Auto |      | The payload was coerced from JSON to an `Auto()` array or `Xojo.Core.Dictionary`. Use this event to make final adjustments before processing begins. |
 | CancelSend | ByRef url As Text,<BR />ByRef httpAction As Text,<BR />ByRef payload As Xojo.Core.MemoryBlock,<BR />ByRef payloadMIMEType As Text | Boolean | The last chance to cancel sending the message, or change the URL, HTTP action, payload, or MIME type for the send. Set the payload to nil to avoid any payload. |
 | ContinueWaiting |  | Boolean | The message has exceeded the time specified in _MessageOptions.TimeoutSeconds_. Return `True` to let it continue waiting for another period. (See <a href='#optionssection'>_MessageOptions_</a> below.) |
 | Disconnected |  |  | The socket has disconnected. |
@@ -190,6 +191,8 @@ With special thanks to [Advanced Medical Pricing Solutions, Inc.](http://www.adv
 - JSON values that are delivered as Text will be coerced into the expected value, if possible.
 - Added XojoUnit framework.
 - Added `UnitTestRESTMessage` interface to facilitate testing of private methods.
+- Added unit tests.
+- Added `BeforeJSONProcessing` event.
 
 1.2 (May 18, 2016)
 

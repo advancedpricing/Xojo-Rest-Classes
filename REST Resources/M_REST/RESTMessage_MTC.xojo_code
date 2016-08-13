@@ -95,7 +95,16 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  dim payload as Auto = content
 		  
 		  if not SkipIncomingPayloadProcessing( url, httpStatus, payload ) then
-		    payload = ProcessPayload( payload )
+		    //
+		    // The subclass may have changed the payload into 
+		    // a dictionary. If so, process it
+		    // as JSON
+		    //
+		    if payload isa Xojo.Core.Dictionary then
+		      ProcessJSONPayload( payload )
+		    else
+		      payload = ProcessPayload( payload )
+		    end if
 		  end if
 		  
 		  ReceiveFinishedMicroseconds = microseconds
@@ -389,6 +398,12 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  
 		  if typeName.Length > 2 and typeName.EndsWith( "()" ) then
 		    return DeserializeArray( value, intoProp, currentValue )
+		    
+		  elseif typeName = "Auto" then
+		    return value
+		    
+		  elseif typeName = "Xojo.Core.Dictionary" and value isa Xojo.Core.Dictionary then
+		    return value
 		    
 		  elseif IsIntrinsicType( typeName ) then
 		    //
@@ -1208,6 +1223,11 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  dim returnProps as Xojo.Core.Dictionary = MyMeta.ReturnPropertiesDict
 		  
 		  //
+		  // Let the subclass modify as needed
+		  //
+		  RaiseEvent BeforeJSONProcessing( payload )
+		  
+		  //
 		  // If the JSON is just an array, see if there is only one return property
 		  // and it's an array. If so, copy the items into that.
 		  //
@@ -1230,7 +1250,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		      end try
 		    end if
 		    
-		  else
+		  elseif payload isa Xojo.Core.Dictionary then // Make sure since the subclass may have changed it
 		    //
 		    // It's an object, so it will be case-sensitive.
 		    // Cycle through the object and match it against the returnProps
@@ -1762,6 +1782,10 @@ Implements PrivateMessage,UnitTestRESTMessage
 
 	#tag Hook, Flags = &h0
 		Event AuthenticationRequired(realm As Text, ByRef username As Text, ByRef password As Text) As Boolean
+	#tag EndHook
+
+	#tag Hook, Flags = &h0, Description = 54686520696E636F6D696E67207061796C6F61642077617320636F6E76657274656420746F204A534F4E20616E642069732061626F757420746F2062652070726F6365737365642E20596F75206D6179206D6F6469667920746865206B65797320616E642076616C756573206173206E656564656420686572652E
+		Event BeforeJSONProcessing(ByRef json As Auto)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0, Description = 4C617374206368616E636520746F2063616E63656C20612073656E64206F72206D6F64696679207468652076616C7565732069742077696C6C207573652E
