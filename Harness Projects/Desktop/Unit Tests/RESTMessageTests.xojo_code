@@ -84,6 +84,7 @@ Inherits TestGroup
 		  
 		  #pragma BreakOnExceptions false
 		  dim dict as Xojo.Core.Dictionary = test.ProcessPayload( returnPayload )
+		  #pragma unused dict
 		  #pragma BreakOnExceptions default 
 		  
 		  Assert.IsTrue msg.ReturnBoolean
