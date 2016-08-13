@@ -1269,7 +1269,15 @@ Implements PrivateMessage,UnitTestRESTMessage
 		Private Function ProcessPayload(payload As Xojo.Core.MemoryBlock) As Auto
 		  dim result as Auto
 		  
-		  dim indicatedContentType as text = self.ResponseHeader( "Content-Type" )
+		  dim indicatedContentType as text 
+		  try
+		    indicatedContentType = self.ResponseHeader( "Content-Type" )
+		  catch err as Xojo.Core.UnsupportedOperationException
+		    //
+		    // Really shouldn't happen, so we're going to guess and hope we're right
+		    //
+		    indicatedContentType = "text/json"
+		  end try
 		  
 		  dim parts() as text = indicatedContentType.Split( "/" )
 		  dim indicatedType as text = if( parts.Ubound <> -1, parts( 0 ), "" )
