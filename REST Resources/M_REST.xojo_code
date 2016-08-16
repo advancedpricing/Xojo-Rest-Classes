@@ -81,6 +81,9 @@ Protected Module M_REST
 		  
 		  static eol as text = &u0D + &u0A
 		  static CRLF as Xojo.Core.MemoryBlock = Xojo.Core.TextEncoding.UTF8.ConvertTextToData(eol)
+		  
+		  dim enc as Xojo.Core.TextEncoding = Xojo.Core.TextEncoding.UTF8
+		  
 		  dim data as new Xojo.Core.MutableMemoryBlock(0)
 		  dim out as new Xojo.IO.BinaryStream(data)
 		  
@@ -91,8 +94,8 @@ Protected Module M_REST
 		      out.Write(CRLF)
 		      dim keyText as text = key.StringValue.ToText
 		      dim keyValue as text = formData.Value(key).StringValue.ToText
-		      out.WriteText("Content-Disposition: form-data; name=""" + keyText + """" + eol + eol)
-		      out.WriteText(keyValue)
+		      out.WriteText("Content-Disposition: form-data; name=""" + keyText + """" + eol + eol, enc)
+		      out.WriteText(keyValue, enc)
 		      out.Write(CRLF)
 		    next
 		  end if
@@ -102,8 +105,8 @@ Protected Module M_REST
 		  out.Write(boundary)
 		  out.Write(CRLF)
 		  
-		  out.WriteText("Content-Disposition: form-data; name=""file""; filename=""" + file.Name + """" + eol)
-		  out.WriteText("Content-Type: application/octet-stream" + eol + eol) ' replace with actual MIME Type
+		  out.WriteText("Content-Disposition: form-data; name=""file""; filename=""" + file.Name + """" + eol, enc)
+		  out.WriteText("Content-Type: application/octet-stream" + eol + eol, enc) ' replace with actual MIME Type
 		  dim bs as Xojo.IO.BinaryStream = Xojo.IO.BinaryStream.Open(file, Xojo.IO.BinaryStream.LockModes.Read)
 		  out.Write(bs.Read(bs.Length))
 		  out.Write(CRLF)
