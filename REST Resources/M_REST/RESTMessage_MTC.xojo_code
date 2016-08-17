@@ -1041,7 +1041,9 @@ Implements PrivateMessage,UnitTestRESTMessage
 		        // DeserializeArray, so we can skip the TypeMismatchException
 		        //
 		        if value = nil or Xojo.Introspection.GetType( value ).Name <> "Object()" then
+		          #pragma BreakOnExceptions false
 		          prop.Value( hostObject ) = value
+		          #pragma BreakOnExceptions default
 		        end if
 		        
 		      catch err as TypeMismatchException
