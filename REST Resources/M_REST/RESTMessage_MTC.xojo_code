@@ -1492,6 +1492,8 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    return
 		  end if
 		  
+		  mSentPayload = nil
+		  
 		  if payload isa object then
 		    if mimeType = "" then
 		      Raise new M_REST.RESTException( "No MIME type specified" )
@@ -1502,6 +1504,11 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  
 		  MessageSurrogate = surrogate
 		  Send action, url
+		  
+		  //
+		  // Store the raw MemoryBlock
+		  //
+		  mSentPayload = payload
 		  
 		  if surrogate isa object then
 		    PrivateSurrogate(surrogate).RaiseSent self
@@ -2010,6 +2017,10 @@ Implements PrivateMessage,UnitTestRESTMessage
 		Private mMessageSurrogateWeakRef As Xojo.Core.WeakRef
 	#tag EndProperty
 
+	#tag Property, Flags = &h21
+		Private mSentPayload As Xojo.Core.MemoryBlock
+	#tag EndProperty
+
 	#tag ComputedProperty, Flags = &h21
 		#tag Getter
 			Get
@@ -2103,6 +2114,15 @@ Implements PrivateMessage,UnitTestRESTMessage
 			End Get
 		#tag EndGetter
 		RoundTripWithProcessingMs As Double
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  return mSentPayload
+			End Get
+		#tag EndGetter
+		SentPayload As Xojo.Core.MemoryBlock
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
