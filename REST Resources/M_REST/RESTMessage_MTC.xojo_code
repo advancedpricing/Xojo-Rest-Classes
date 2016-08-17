@@ -227,6 +227,16 @@ Implements PrivateMessage,UnitTestRESTMessage
 		      dim arr() as UInt64 = prop.Value( self )
 		      redim arr( -1 )
 		      
+		    elseif propType = "Variant()" then
+		      #if not TargetiOS then
+		        dim arr() as variant = prop.Value( self )
+		        redim arr( -1 )
+		      #endif
+		      
+		    elseif propType = "Auto()" then
+		      dim arr() as auto = prop.Value( self )
+		      redim arr( -1 )
+		      
 		    elseif propType.EndsWith( "()" ) then
 		      //
 		      // Object array
@@ -375,7 +385,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    dim propName as text = prop.Name
 		    dim propValue as auto = prop.Value( self )
 		    
-		    if not RaiseEvent ExcludeFromOutgoingPayload( prop, propName, propValue ) then
+		    if not RaiseEvent ExcludeFromOutgoingPayload( prop, propName, propValue, self ) then
 		      json.Value( propName ) = Serialize( propValue )
 		    end if
 		  next
@@ -1602,6 +1612,27 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    next
 		    return result
 		    
+		  elseif ti.Name = "Auto()" then
+		    dim arr() as auto = value
+		    dim result() as auto
+		    redim result( arr.Ubound )
+		    for i as integer = 0 to arr.Ubound
+		      result( i ) = Serialize( arr( i ) )
+		    next
+		    return result
+		    
+		  elseif ti.Name = "Variant()" then
+		    
+		    #if not TargetiOS then
+		      dim arr() as variant = value
+		      dim result() as auto
+		      redim result( arr.Ubound )
+		      for i as integer = 0 to arr.Ubound
+		        result( i ) = Serialize( arr( i ) )
+		      next
+		      return result
+		    #endif
+		    
 		  elseif IsIntrinsicType( ti.Name ) then
 		    //
 		    // It's another basic type so just return it
@@ -1687,7 +1718,11 @@ Implements PrivateMessage,UnitTestRESTMessage
 		      dim keys() as variant = d.Keys
 		      dim values() as variant = d.Values
 		      for i as integer = 0 to keys.Ubound
-		        result.Value( keys( i ) ) = Serialize( values( i ) )
+		        dim propName as text = keys( i )
+		        dim propValue as auto = values( i )
+		        if not ExcludeFromOutgoingPayload( nil, propName, propValue, d ) then
+		          result.Value( propName ) = Serialize( propValue )
+		        end if
 		      next
 		      return result // *** EARLY EXIT
 		    end if
@@ -1704,12 +1739,33 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  
 		  if o isa Xojo.Core.Date then
 		    return SerializeDate( Xojo.Core.Date( o ) ) // *** EARLY EXIT
+		    
+		  elseif o isa Xojo.Core.Dictionary then
+		    //
+		    // Give the subclass a chance to exclude properties
+		    //
+		    dim result as new Xojo.Core.Dictionary
+		    
+		    dim d as Xojo.Core.Dictionary = Xojo.Core.Dictionary( o )
+		    for each entry as Xojo.Core.DictionaryEntry in d
+		      dim propName as text = entry.Key
+		      dim propValue as auto = entry.Value
+		      if not RaiseEvent ExcludeFromOutgoingPayload( nil, propName, propValue, d ) then
+		        result.Value( propName ) = Serialize( propValue )
+		      end if
+		    next
+		    
+		    return result
 		  else
 		    dim result as new Xojo.Core.Dictionary
 		    
 		    for each prop as Xojo.Introspection.PropertyInfo in ti.Properties
 		      if prop.IsPublic and prop.CanRead and not prop.IsShared then
-		        result.Value( prop.Name ) = Serialize( prop.Value( o ) )
+		        dim usePropName as text = prop.Name
+		        dim usePropValue as auto = prop.Value( o )
+		        if not RaiseEvent ExcludeFromOutgoingPayload( prop, usePropName, usePropValue, o ) then
+		          result.Value( usePropName ) = Serialize( usePropValue )
+		        end if
 		      end if
 		    next
 		    
@@ -1814,7 +1870,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 	#tag EndHook
 
 	#tag Hook, Flags = &h0, Description = 4578636C75646520612070726F70657274792066726F6D20746865206F7574676F696E67207061796C6F6164207468617420776F756C64206F746865727769736520626520696E636C756465642C206F72206368616E6765207468652070726F7065727479206E616D6520616E642F6F722076616C756520746861742077696C6C20626520757365642E
-		Event ExcludeFromOutgoingPayload(prop As Xojo.Introspection.PropertyInfo, ByRef propName As Text, ByRef propValue As Auto) As Boolean
+		Event ExcludeFromOutgoingPayload(prop As Xojo.Introspection.PropertyInfo, ByRef propName As Text, ByRef propValue As Auto, hostObject As Object) As Boolean
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
