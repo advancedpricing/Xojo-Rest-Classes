@@ -102,7 +102,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    //
 		    if payload isa Xojo.Core.Dictionary then
 		      ProcessJSONPayload( payload )
-		    else
+		    elseif payload isa Xojo.Core.MemoryBlock and Xojo.Core.MemoryBlock(payload).Size <> 0 then
 		      payload = ProcessPayload( payload )
 		    end if
 		  end if
