@@ -67,8 +67,62 @@ Protected Module M_REST
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Function AutoToText(value As Auto) As Text
+		  #if not TargetiOS then
+		    if value isa Date then
+		      dim d as Date = value
+		      return d.SQLDateTime.ToText
+		    end if
+		  #endif
+		  
+		  if value isa Xojo.Core.Date then
+		    dim d as Xojo.Core.Date = value
+		    return d.ToText
+		  end if
+		  
+		  dim ti as Xojo.Introspection.TypeInfo = Xojo.Introspection.GetType( value )
+		  
+		  select case ti.FullName
+		  case "Text"
+		    return value
+		    
+		  case "String"
+		    #if not TargetiOS then
+		      dim s as string = value
+		      return s.ToText
+		    #endif
+		    
+		  case "Integer", "Int8", "Int16", "Int32", "Int64"
+		    dim i as Int64 = value
+		    return i.ToText
+		    
+		  case "UInteger", "UInt8", "UInt16", "UInt32", "UInt64"
+		    dim i as UInt64 = value
+		    return i.ToText
+		    
+		  case "Double", "Single"
+		    dim d as double = value
+		    return d.ToText
+		    
+		  case "Currency"
+		    dim c as currency = value
+		    return c.ToText
+		    
+		  case "Boolean"
+		    dim b as boolean = value
+		    return if(b, "true", "false")
+		    
+		  case else
+		    dim t as text = value
+		    return t // Expect this to raise an exception
+		    
+		  end select
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h1
-		Protected Sub BuildMultipartRequest(file as Xojo.IO.FolderItem, formData as Dictionary, ByRef payload As Xojo.Core.MemoryBlock, ByRef mimeType As Text)
+		Protected Sub BuildMultipartFileRequest(fileName As Text, fileIn As Xojo.IO.BinaryStream, ByRef payload As Xojo.Core.MemoryBlock, ByRef mimeType As Text)
 		  dim boundary as xojo.Core.MemoryBlock
 		  dim boundaryText as text
 		  if true then // Scope
@@ -87,13 +141,67 @@ Protected Module M_REST
 		  dim data as new Xojo.Core.MutableMemoryBlock(0)
 		  dim out as new Xojo.IO.BinaryStream(data)
 		  
-		  if formData isa Dictionary then
-		    for each key as variant in formData.Keys
+		  // Start of file
+		  out.Write(doubleDashes)
+		  out.Write(boundary)
+		  out.Write(CRLF)
+		  
+		  out.WriteText("Content-Disposition: form-data; name=""file""; filename=""" + fileName + """" + eol, enc)
+		  out.WriteText("Content-Type: application/octet-stream" + eol + eol, enc) ' replace with actual MIME Type
+		  out.Write(fileIn.Read(fileIn.Length))
+		  out.Write(CRLF)
+		  
+		  out.Write(doubleDashes)
+		  out.Write(boundary)
+		  out.Write(doubleDashes)
+		  out.Write(CRLF)
+		  // End of file
+		  
+		  out.Close
+		  
+		  System.DebugLog CurrentMethodName + " sets the paylod"
+		  
+		  payload = data
+		  mimeType = "multipart/form-data; boundary=" + boundaryText
+		  
+		  'system.DebugLog "about to send request"
+		  'sock.SetRequestContent(data, "multipart/form-data; boundary=" + boundaryText)
+		  '
+		  'dim url as text = RaiseEvent sock.GetURLPattern
+		  'sock.Send(sock.HTTPAction, url)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Sub BuildMultipartRequest(file as Xojo.IO.FolderItem, formData as Xojo.Core.Dictionary, ByRef payload As Xojo.Core.MemoryBlock, ByRef mimeType As Text)
+		  dim boundary as xojo.Core.MemoryBlock
+		  dim boundaryText as text
+		  if true then // Scope
+		    dim boundString as string = "--" + Right(EncodeHex(MD5(Str(Microseconds))), 24) + "-bOuNdArY"
+		    boundString = boundString.DefineEncoding(Encodings.UTF8)
+		    boundaryText = boundString.ToText
+		    boundary = Xojo.Core.TextEncoding.UTF8.ConvertTextToData(boundaryText)
+		  end if
+		  static doubleDashes as xojo.Core.MemoryBlock = Xojo.Core.TextEncoding.UTF8.ConvertTextToData("--")
+		  
+		  static eol as text = &u0D + &u0A
+		  static CRLF as Xojo.Core.MemoryBlock = Xojo.Core.TextEncoding.UTF8.ConvertTextToData(eol)
+		  
+		  dim enc as Xojo.Core.TextEncoding = Xojo.Core.TextEncoding.UTF8
+		  
+		  dim data as new Xojo.Core.MutableMemoryBlock(0)
+		  dim out as new Xojo.IO.BinaryStream(data)
+		  
+		  if formData isa object then
+		    for each entry as Xojo.Core.DictionaryEntry in formData
+		      dim key as auto = entry.Key
+		      dim value as auto = entry.Value
+		      
 		      out.Write(doubleDashes)
 		      out.Write(boundary)
 		      out.Write(CRLF)
-		      dim keyText as text = key.StringValue.ToText
-		      dim keyValue as text = formData.Value(key).StringValue.ToText
+		      dim keyText as text = AutoToText( key )
+		      dim keyValue as text = AutoToText( value )
 		      out.WriteText("Content-Disposition: form-data; name=""" + keyText + """" + eol + eol, enc)
 		      out.WriteText(keyValue, enc)
 		      out.Write(CRLF)
