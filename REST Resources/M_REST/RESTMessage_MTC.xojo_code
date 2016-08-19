@@ -1388,7 +1388,9 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    // We are going to try anything since the header could be wrong
 		    //
 		    try
+		      #pragma BreakOnExceptions false
 		      json = Xojo.Data.ParseJSON( textValue )
+		      #pragma BreakOnExceptions default
 		      subtype = "json"
 		      result = json
 		    catch err as RuntimeException
