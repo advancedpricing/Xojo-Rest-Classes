@@ -241,6 +241,45 @@ Protected Module M_REST
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function EncodeURLComponent(src As Text, encoding As Xojo.Core.TextEncoding = Nil) As Text
+		  // Emulates the classic framework's EncodeURLComponent
+		  //
+		  // Where encoding is nil, UTF-8 will be used
+		  
+		  if src.Empty then
+		    return ""
+		  end if
+		  
+		  if encoding is nil then
+		    encoding = Xojo.Core.TextEncoding.UTF8
+		  end if
+		  
+		  dim newChars() as Text
+		  
+		  dim mb as Xojo.Core.MemoryBlock = encoding.ConvertTextToData( src )
+		  dim p as ptr = mb.Data
+		  
+		  dim lastByteIndex as integer = mb.Size - 1
+		  for byteIndex as integer = 0 to lastByteIndex
+		    dim code as integer = p.Byte( byteIndex )
+		    
+		    select case code
+		    case 45, 46, 48 to 57, 65 to 90, 95, 97 to 122 // [-.0-9A-Z_a-z]
+		      newChars.Append Text.FromUnicodeCodepoint( code)
+		      
+		    case else
+		      newChars.Append "%"
+		      newChars.Append code.ToHex( 2 )
+		      
+		    end select
+		  next
+		  
+		  return Text.Join( newChars, "" )
+		  
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Function GetZeroParamConstructor(ti As Xojo.Introspection.TypeInfo) As Xojo.Introspection.ConstructorInfo
 		  dim constructors() as Xojo.Introspection.ConstructorInfo = ti.Constructors
