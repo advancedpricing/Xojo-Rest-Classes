@@ -933,7 +933,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		        //
 		        // Already good
 		        //
-		        textValue = value
+		        textValue = M_REST.EncodeURLComponent( value )
 		        
 		      case "Integer", "Int8", "Int16", "Int32", "Int64"
 		        dim i as Int64 = value
@@ -950,7 +950,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		      case "String"
 		        #if not TargetiOS then
 		          dim s as string = value
-		          textValue = s.ToText
+		          textValue = EncodeURLComponent( s ).ToText
 		        #endif
 		        
 		      case "Boolean"
@@ -963,6 +963,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		      case else
 		        if value isa M_REST.TextProvider then
 		          textValue = M_REST.TextProvider( value ).ConvertToText
+		          textValue = M_REST.EncodeURLComponent( textValue )
 		        else
 		          raise new M_REST.RESTException( "The property " + propName + " cannot be converted to Text" )
 		        end if
@@ -1449,7 +1450,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Sub RegisterClassTypeInfo(classTypeInfo As Xojo.Introspection.TypeInfo)
+		Shared Sub RegisterClassTypeInfo(classTypeInfo As Xojo.Introspection.TypeInfo)
 		  //
 		  // Will raise a NilObjectException if there is not TypeInfo given
 		  //
@@ -1460,7 +1461,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function RESTTypeToHTTPAction(type As RESTTypes) As Text
+		Shared Function RESTTypeToHTTPAction(type As RESTTypes) As Text
 		  select case type
 		  case RESTTypes.Read, RESTTypes.GET
 		    return kActionGet
