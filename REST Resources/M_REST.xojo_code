@@ -1,7 +1,7 @@
 #tag Module
 Protected Module M_REST
 	#tag Method, Flags = &h1
-		Protected Function AssembleURL(baseURL As Text, encodedQuery As Text, ParamArray additionalQueries() As Text) As Text
+		Protected Function AssembleURL(baseURL As Text, encodedQueries() As Text) As Text
 		  //
 		  // Appends the properly encoded queries to a base URL
 		  //
@@ -25,12 +25,7 @@ Protected Module M_REST
 		  
 		  dim queries() as text
 		  
-		  encodedQuery = encodedQuery.Trim
-		  if encodedQuery <> "" then
-		    queries.Append encodedQuery
-		  end if
-		  
-		  for each query as text in additionalQueries
+		  for each query as text in encodedQueries
 		    query = query.Trim
 		    if query <> "" then
 		      queries.Append query
@@ -64,6 +59,31 @@ Protected Module M_REST
 		  end if
 		  
 		  return result
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function AssembleURL(baseURL As Text, encodedQuery As Text, ParamArray additionalQueries() As Text) As Text
+		  //
+		  // Appends the properly encoded queries to a base URL
+		  //
+		  // See examples in overloaded method
+		  //
+		  
+		  dim queries() as text
+		  
+		  queries.Append encodedQuery
+		  
+		  for each query as text in additionalQueries
+		    queries.Append query
+		  next
+		  
+		  //
+		  // Will handle trimming and weeding out
+		  // blank entries
+		  //
+		  return AssembleURL( baseURL, queries )
+		  
 		End Function
 	#tag EndMethod
 
