@@ -141,7 +141,7 @@ Protected Module M_REST
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
+	#tag Method, Flags = &h1, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Protected Sub BuildMultipartFileRequest(fileName As Text, fileIn As Xojo.IO.BinaryStream, ByRef payload As Xojo.Core.MemoryBlock, ByRef mimeType As Text)
 		  dim boundary as xojo.Core.MemoryBlock
 		  dim boundaryText as text
@@ -192,7 +192,7 @@ Protected Module M_REST
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
+	#tag Method, Flags = &h1, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Protected Sub BuildMultipartRequest(file as Xojo.IO.FolderItem, formData as Xojo.Core.Dictionary, ByRef payload As Xojo.Core.MemoryBlock, ByRef mimeType As Text)
 		  dim boundary as xojo.Core.MemoryBlock
 		  dim boundaryText as text
