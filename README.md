@@ -46,14 +46,14 @@ This is a more detailed description of the `RESTMessage_MTC` class.
 
 | Event | Parameters | Return Value | Description |
 | ----- | ---------- | :----------: | ----------- |
-| BeforeURLProcessing | ByRef json As Auto |      | The payload was coerced from JSON to an `Auto()` array or `Xojo.Core.Dictionary`. Use this event to make final adjustments before processing begins. |
+| BeforeJSONProcessing | ByRef json As Auto |      | The payload was coerced from JSON to an `Auto()` array or `Xojo.Core.Dictionary`. Use this event to make final adjustments before processing begins. |
 | CancelSend | ByRef url As Text,<BR />ByRef httpAction As Text,<BR />ByRef payload As Xojo.Core.MemoryBlock,<BR />ByRef payloadMIMEType As Text | Boolean | The last chance to cancel sending the message, or change the URL, HTTP action, payload, or MIME type for the send. Set the payload to nil to avoid any payload. |
 | ContinueWaiting |  | Boolean | The message has exceeded the time specified in _MessageOptions.TimeoutSeconds_. Return `True` to let it continue waiting for another period. (See <a href='#optionssection'>_MessageOptions_</a> below.) |
 | Disconnected |  |  | The socket has disconnected. |
 | Error | msg As Text |  | Some error has occurred during the connection. |
 | ExcludeFromOutgoingPayload | prop As Xojo.Introspection.PropertyInfo,<BR />ByRef propName As Text,<BR />ByRef propValue As Auto | Boolean | A message property is about to be included in the outgoing payload. If it shouldn't be, return `True`. You can also change the property name that will be used as the JSON object key or the value. |
-| GetRESTType |  | RESTTypes | See <a href='#getresttypeeventsection'>The `GetRESTType` Event</a> below. |
 | GetNewObjectForClassName | className As Text | Object | Return a new Object for the given _className_. This is called when deserializing the payload into an array of objects. You can also use the shared method `RegisterClassTypeInfo` to register classes ahead of time. |
+| GetRESTType |  | RESTTypes | See <a href='#getresttypeeventsection'>The `GetRESTType` Event</a> below. |
 | GetURLPattern |  | Text | See <a href='#geturlpatterneventsection'>The `GetURLPattern` Event</a> below. |
 | IncomingPayloadValueToProperty | value As Auto,<BR />prop As Xojo.Introspection.PropertyInfo,<BR />hostObject As Object | Boolean | The incoming payload has a value that has been matched to a property of the message or one of the objects in its properties. Return `True` to prevent this value from being processed automatically, i.e., you will process it yourself. |
 | ObjectToJSON | o As Object,<BR />typeInfo As Xojo.Introspection.TypeInfo | Auto | An object in one of the message's properties is about to be serialized, but you may prefer to do it yourself. If so, return a `Xojo.Core.Dictionary` or an `Auto()` array. If you do not implement this event or return nil, automatic processing will proceed. |
@@ -79,7 +79,7 @@ You can create a property in your message subclass, _ZipCode_, and return the UR
 http://www.someweathersite.com/api/get/zip/:ZipCode
 ```
 
-`RESTMessage_MTC` will do the appropriate substitution. To send the message, you merely have to fill in the property and call `Send`.
+`RESTMessage_MTC` will do the appropriate substitution and encode the value for you. To send the message, you merely have to fill in the property and call `Send`.
 
 __Note__: Properties that are part of the URL pattern will never be included in the outgoing payload.
 
@@ -172,6 +172,18 @@ The `RESTMessageSurrogate_MTC` has some additional properties and methods.
 | -------- | :--: | :-----: | ----------- |
 | IsBusy | Boolean | | Returns `True` if there are still outstanding messages |
 
+## Global Methods in `M_REST` Module
+
+The `M_REST` module has some helper methods that are of use outside of this REST framework. Call them with the `M_REST.` prefix.
+
+| Method | Parameters | Returns | Description |
+| ------ | ---------- | ------- | ----------- |
+| AssembleURL | baseURL As Text,<BR/ >encodedQuery As Text,<BR />ParamArray additionalQueries() As Text | Text | Assemble a URL from the given base and array of queries. Will properly insert "?" and "&" where needed. Values within the query should be properly URL encoded. |
+| AssembleURL | baseURL As Text,<BR />encodedQueries() As Text | Text | Same as above but allows you specify all the queries as an array. |
+| BuildMultipartFileRequest | fileName As Text,<BR />fileIn As Xojo.IO.BinaryStream,<BR />ByRef payload As Xojo.Core.MemoryBlock,<BR />ByRef mimeType As Text | | Build a Multipart File request from the given parameters. Primarily intended to send a file from raw data. Returns values in the `ByRef` parameters. |
+| BuildMultipartRequest | file as Xojo.IO.FolderItem,<BR />formData as Xojo.Core.Dictionary,<BR />ByRef payload As Xojo.Core.MemoryBlock,<BR />ByRef mimeType As Text | | Build a Multipart File request from the given parameters. Primarily intended to send a file from a FolderItem. Returns values in the `ByRef` parameters. | 
+| EncodeURLComponent | src As Text,<BR />encoding As Xojo.Core.TextEncoding = Nil | Text | Emulates the Classic Framework's EncodeURLComponent but for Text. |
+
 ## Contributions
 
 Contributions to this project are welcome. Fork it to your own repo, then submit changes. However, be forewarned that only those changes that we deem universally useful will be included.
@@ -188,11 +200,19 @@ With special thanks to [Advanced Medical Pricing Solutions, Inc.](http://www.adv
 
 1.3 (___, 2016)
 
-- JSON values that are delivered as Text will be coerced into the expected value, if possible.
+- JSON values that are delivered as `Text` will be coerced into the expected value, if possible.
 - Added XojoUnit framework.
 - Added `UnitTestRESTMessage` interface to facilitate testing of private methods.
 - Added unit tests.
 - Added `BeforeJSONProcessing` event.
+- Added pragmas to keep from dropping to the debugger for anticipated exceptions.
+- Added `M_REST.BuildMultipartRequest` and `M_REST.BuildMultipartFileRequest` functions.
+- Added `M_REST.AssembleURL` function.
+- Added `M_REST.EncodeURLComponent` function.
+- No longer try to process a payload if there isn't one.
+- Better handle `Auto()`, `Variant()`,  and `Dictionary` properties.
+- After sending, store the last sent payload for reference.
+- If a return value is matched to an `Auto` property, just store it directly without processing.
 
 1.2 (May 18, 2016)
 
