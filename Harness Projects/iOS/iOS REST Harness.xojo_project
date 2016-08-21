@@ -10,6 +10,7 @@ LaunchImages=Launch Images;Launch Images.xojo_image;&h5241AFFF;&h0;false
 Folder=REST Resources;../../REST Resources;&hF907FFF;&h0;false
 BuildSteps=Build Automation;Build Automation.xojo_code;&h2F5A57FF;&h0;false
 Module=M_REST;../../REST Resources/M_REST.xojo_code;&h608AF7FF;&hF907FFF;false
+Interface=UnitTestRESTMessage;../../REST Resources/M_REST/UnitTestRESTMessage.xojo_code;&h26E717FF;&h608AF7FF;false
 Class=Options;../../REST Resources/M_REST/Options.xojo_code;&h37BAA7FF;&h608AF7FF;false
 Class=RESTException;../../REST Resources/M_REST/RESTException.xojo_code;&h394E8FFF;&h608AF7FF;false
 Class=RESTMessage_MTC;../../REST Resources/M_REST/RESTMessage_MTC.xojo_code;&h109DCFFF;&h608AF7FF;false
