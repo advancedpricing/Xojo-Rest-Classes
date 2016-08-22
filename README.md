@@ -51,7 +51,7 @@ This is a more detailed description of the `RESTMessage_MTC` class.
 | ContinueWaiting |  | Boolean | The message has exceeded the time specified in _MessageOptions.TimeoutSeconds_. Return `True` to let it continue waiting for another period. (See <a href='#optionssection'>_MessageOptions_</a> below.) |
 | Disconnected |  |  | The socket has disconnected. |
 | Error | msg As Text |  | Some error has occurred during the connection. |
-| ExcludeFromOutgoingPayload | prop As Xojo.Introspection.PropertyInfo,<BR />ByRef propName As Text,<BR />ByRef propValue As Auto | Boolean | A message property is about to be included in the outgoing payload. If it shouldn't be, return `True`. You can also change the property name that will be used as the JSON object key or the value. |
+| ExcludeFromOutgoingPayload | prop As Xojo.Introspection.PropertyInfo,<BR />ByRef propName As Text,<BR />ByRef propValue As Auto,<BR />hostObject As Object | Boolean | A message property is about to be included in the outgoing payload. If it shouldn't be, return `True`. You can also change the property name that will be used as the JSON object key or the value. |
 | GetNewObjectForClassName | className As Text | Object | Return a new Object for the given _className_. This is called when deserializing the payload into an array of objects. You can also use the shared method `RegisterClassTypeInfo` to register classes ahead of time. |
 | GetRESTType |  | RESTTypes | See <a href='#getresttypeeventsection'>The `GetRESTType` Event</a> below. |
 | GetURLPattern |  | Text | See <a href='#geturlpatterneventsection'>The `GetURLPattern` Event</a> below. |
@@ -213,6 +213,7 @@ With special thanks to [Advanced Medical Pricing Solutions, Inc.](http://www.adv
 - Better handle `Auto()`, `Variant()`,  and `Dictionary` properties.
 - After sending, store the last sent payload for reference.
 - If a return value is matched to an `Auto` property, just store it directly without processing.
+- `ExcludeFromOutgoingPayload` event not includes the `hostObject` of the property.
 
 1.2 (May 18, 2016)
 
