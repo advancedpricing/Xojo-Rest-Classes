@@ -2,9 +2,10 @@
 Protected Class UnitTestMessage
 Inherits RESTMessage_MTC
 	#tag Event , Description = 4578636C75646520612070726F70657274792066726F6D20746865206F7574676F696E67207061796C6F6164207468617420776F756C64206F746865727769736520626520696E636C756465642C206F72206368616E6765207468652070726F7065727479206E616D6520616E642F6F722076616C756520746861742077696C6C20626520757365642E
-		Function ExcludeFromOutgoingPayload(prop As Xojo.Introspection.PropertyInfo, ByRef propName As Text, ByRef propValue As Auto) As Boolean
+		Function ExcludeFromOutgoingPayload(prop As Xojo.Introspection.PropertyInfo, ByRef propName As Text, ByRef propValue As Auto, hostObject As Object) As Boolean
 		  #pragma unused prop
 		  #pragma unused propValue
+		  #pragma unused hostObject
 		  
 		  select case propName
 		  case "UseURL"
@@ -97,6 +98,22 @@ Inherits RESTMessage_MTC
 			#tag EndEnumValues
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="IncludeBoolean"
+			Group="Behavior"
+			Type="Boolean"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="IncludeString"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="IncludeText"
+			Group="Behavior"
+			Type="Text"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Index"
 			Visible=true
 			Group="ID"
@@ -148,6 +165,22 @@ Inherits RESTMessage_MTC
 			#tag EndEnumValues
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="ReturnBoolean"
+			Group="Behavior"
+			Type="Boolean"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="ReturnString"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="ReturnText"
+			Group="Behavior"
+			Type="Text"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="RoundTripMs"
 			Group="Behavior"
 			Type="Double"
@@ -158,9 +191,26 @@ Inherits RESTMessage_MTC
 			Type="Double"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="SomeString"
+			Name="SomeIndex"
 			Group="Behavior"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="SomeString"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="State"
+			Group="Behavior"
+			Type="States"
+			EditorType="Enum"
+			#tag EnumValues
+				"0 - Idle"
+				"1 - Queued"
+				"2 - Active"
+			#tag EndEnumValues
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
@@ -174,6 +224,11 @@ Inherits RESTMessage_MTC
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="UseURL"
+			Group="Behavior"
+			Type="Text"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="ValidateCertificates"
