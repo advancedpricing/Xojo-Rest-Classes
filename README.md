@@ -38,6 +38,8 @@ The `ResponseReceived` event will let you know when the server has responded and
 
 There are times when it is not appropriate to have a single instance of a particular message. For example, if you need to save multiple records in a row. In those cases, you can create a `RESTMessageSurrogate_MTC` <a href='#surrogatesection'>(see below)</a> instead and send the message through it. The surrogate will raise all the events that the message would as if you had used `AddHandler` to map the message's events.
 
+Messages are not sent immediately. Instead, `Send` will add them to a queue that is processed very quickly. The `MaximumConnections` property will determine how many active connections are permitted at one time. For example, with `MaximumConnections` set to `4`, you could send 100 messages without worrying about flooding a server as only four at most will be connected at any given time.
+
 ## Details
 
 This is a more detailed description of the `RESTMessage_MTC` class.
@@ -111,12 +113,15 @@ The uppercase types correspond directly to an HTTP action. The lowercase types a
 | -------- | ---- | :------: | ------------ |
 | DefaultRESTType | RESTTypes | no | The default REST type that will be used of <a href='#getresttypeeventsection'>the `GetRestType` event</a> is not implemented. |
 | IsConnected | Boolean | __YES__ | Returns `True` if the socket is currently connected. |
+| MaximumConnections | Integer | no | The maximum number of simultaneous connections allowed. Additional messages will be queued automatically until they can be sent. Set to 0 to allow unlimited connections. The default is 4.
 | MessageOptions | M\_REST.MessageOptions | no | Set the options for the message. See <a href='#optionssection'>_MessageOptions_</a> below. |
 | MessageSerialNumber | Int64 | __YES__ | A unique number (within the session) assigned to each new instance of a message. |
 | MessageTag | Auto | no | Anything you wish to attach to a message. Does not get transmitted. |
+| QueueState | QueueStates enum | __YES__ | The current state of the message, either `Queued` or `Processed`. |
 | RESTType | RESTTypes | __YES__ | The REST type that is ultimately used for the message. |
 | RoundTripMs | Double | __YES__ | The round-trip time, in milliseconds, from when the connection was initiated until a response received. |
 | RoundTripWithProcessingMs | Double | __YES__ | The round-trip time, in milliseconds, from when `Send` was invoked until response processing was finished. |
+| SentPayload | Xojo.Core.MemoryBlock | __YES__ | The payload as it was ultimately sent to the server. |
 
 ### Methods
 
@@ -214,6 +219,7 @@ With special thanks to [Advanced Medical Pricing Solutions, Inc.](http://www.adv
 - After sending, store the last sent payload for reference.
 - If a return value is matched to an `Auto` property, just store it directly without processing.
 - `ExcludeFromOutgoingPayload` event not includes the `hostObject` of the property.
+- `Send` will queue messages instead of sending immediately and will allow no more than `MaximumConnections` simultaneous connections.
 
 1.2 (May 18, 2016)
 
