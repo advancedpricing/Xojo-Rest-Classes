@@ -279,6 +279,13 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  
 		  AddHandler TimeoutTimer.Action, WeakAddressOf TimeoutTimer_Action
 		  
+		  if MessageQueueTimer is nil then
+		    MessageQueueTimer = new Xojo.Core.Timer
+		    MessageQueueTimer.Period = kQueuePeriodNormal
+		    AddHandler MessageQueueTimer.Action, AddressOf ProcessMessageQueue
+		    MessageQueueTimer.Mode = Xojo.Core.Timer.Modes.Multiple
+		  end if
+		  
 		  RaiseEvent Setup
 		  
 		End Sub
@@ -871,6 +878,12 @@ Implements PrivateMessage,UnitTestRESTMessage
 
 	#tag Method, Flags = &h0
 		Sub Disconnect()
+		  //
+		  // Change the state to make sure it's removed from the queue
+		  //
+		  
+		  mQueueState = QueueStates.Processed
+		  
 		  if IsConnected then
 		    mIsConnected = false
 		    TimeoutTimer.Mode = Xojo.Core.Timer.Modes.Off
@@ -883,6 +896,53 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    MessageSurrogate = nil
 		  end if
 		  
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Sub DoSend()
+		  mQueueState = QueueStates.Processed
+		  
+		  dim surrogate as M_REST.RESTMessageSurrogate_MTC = M_REST.RESTMessageSurrogate_MTC( MessageSurrogate )
+		  MessageSurrogate = nil // Will be added back later
+		  
+		  RequestStartedMicroseconds = microseconds
+		  ReceiveFinishedMicroseconds = -1.0
+		  
+		  dim action as text
+		  dim url as text
+		  dim mimeType as text
+		  dim payload as Xojo.Core.MemoryBlock
+		  
+		  if not GetSendParameters( action, url, mimeType, payload ) then
+		    //
+		    // The user chose to cancel
+		    //
+		    return
+		  end if
+		  
+		  mSentPayload = nil
+		  
+		  if payload isa object then
+		    if mimeType = "" then
+		      Raise new M_REST.RESTException( "No MIME type specified" )
+		    end if
+		    
+		    SetRequestContent payload, mimeType
+		  end if
+		  
+		  MessageSurrogate = surrogate
+		  Send action, url
+		  
+		  //
+		  // Store the raw MemoryBlock
+		  //
+		  mSentPayload = payload
+		  
+		  if surrogate isa object then
+		    PrivateSurrogate(surrogate).RaiseSent self
+		  end if
 		  
 		End Sub
 	#tag EndMethod
@@ -1170,7 +1230,21 @@ Implements PrivateMessage,UnitTestRESTMessage
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
+		Private Shared Function PositionInQueue(msg As M_REST.RESTMessage_MTC) As Integer
+		  for i as integer = 0 to MessageQueue.Ubound
+		    if MessageQueue( i ) is msg then
+		      return i
+		    end if
+		  next
+		  
+		  return -1
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
 		Private Sub PrepareToSend()
+		  mQueueState = QueueStates.Processed
 		  mIsConnected = true
 		  RequestSentMicroseconds = Microseconds
 		  ResponseReceivedMicroseconds = -1.0
@@ -1275,6 +1349,49 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    JSONObjectToProps( json, returnProps, returnPropPrefix, self )
 		    
 		  end if
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Shared Sub ProcessMessageQueue(sender As Xojo.Core.Timer)
+		  dim connectedCount as integer
+		  dim queuedCount as integer
+		  //
+		  // First clear the stale connections
+		  // and count the connections
+		  //
+		  for i as integer = MessageQueue.Ubound downto 0
+		    dim msg as M_REST.RESTMessage_MTC = MessageQueue( i )
+		    if msg.QueueState = QueueStates.Processed and not msg.IsConnected then
+		      MessageQueue.Remove i
+		    elseif msg.IsConnected then
+		      connectedCount = connectedCount + 1
+		    elseif msg.QueueState = QueueStates.Queued then
+		      queuedCount = queuedCount + 1
+		    end if
+		  next
+		  
+		  //
+		  // See if we need to connect more
+		  //
+		  if queuedCount <> 0 and _ 
+		    ( MaximumConnections <= 0 or connectedCount < MaximumConnections ) then
+		    for i as integer = 0 to MessageQueue.Ubound
+		      dim msg as M_REST.RESTMessage_MTC = MessageQueue( i )
+		      
+		      if msg.QueueState = QueueStates.Queued then
+		        msg.DoSend
+		        connectedCount = connectedCount + 1
+		        queuedCount = queuedCount - 1
+		        if connectedCount >= MaximumConnections or queuedCount <= 0 then
+		          exit for i
+		        end if
+		      end if
+		    next
+		  end if
+		  
+		  sender.Period = kQueuePeriodNormal
+		  
 		End Sub
 	#tag EndMethod
 
@@ -1490,42 +1607,12 @@ Implements PrivateMessage,UnitTestRESTMessage
 
 	#tag Method, Flags = &h0
 		Sub Send(surrogate As RESTMessageSurrogate_MTC = Nil)
-		  RequestStartedMicroseconds = microseconds
-		  ReceiveFinishedMicroseconds = -1.0
-		  
-		  dim action as text
-		  dim url as text
-		  dim mimeType as text
-		  dim payload as Xojo.Core.MemoryBlock
-		  
-		  if not GetSendParameters( action, url, mimeType, payload ) then
-		    //
-		    // The user chose to cancel
-		    //
-		    return
-		  end if
-		  
-		  mSentPayload = nil
-		  
-		  if payload isa object then
-		    if mimeType = "" then
-		      Raise new M_REST.RESTException( "No MIME type specified" )
-		    end if
-		    
-		    SetRequestContent payload, mimeType
-		  end if
-		  
+		  mQueueState = QueueStates.Queued
 		  MessageSurrogate = surrogate
-		  Send action, url
+		  MessageQueue.Append self
 		  
-		  //
-		  // Store the raw MemoryBlock
-		  //
-		  mSentPayload = payload
+		  MessageQueueTimer.Period = kQueuePeriodImmediate
 		  
-		  if surrogate isa object then
-		    PrivateSurrogate(surrogate).RaiseSent self
-		  end if
 		  
 		End Sub
 	#tag EndMethod
@@ -1968,6 +2055,10 @@ Implements PrivateMessage,UnitTestRESTMessage
 		IsConnected As Boolean
 	#tag EndComputedProperty
 
+	#tag Property, Flags = &h0
+		Shared MaximumConnections As Integer = 4
+	#tag EndProperty
+
 	#tag Property, Flags = &h21
 		Attributes( hidden ) Private Shared mClassTypeInfoRegistry As Xojo.Core.Dictionary
 	#tag EndProperty
@@ -2007,6 +2098,14 @@ Implements PrivateMessage,UnitTestRESTMessage
 		#tag EndSetter
 		MessageOptions As M_REST.Options
 	#tag EndComputedProperty
+
+	#tag Property, Flags = &h21
+		Private Shared MessageQueue() As M_REST.RESTMessage_MTC
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared MessageQueueTimer As Xojo.Core.Timer
+	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
@@ -2077,6 +2176,10 @@ Implements PrivateMessage,UnitTestRESTMessage
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
+		Private mQueueState As QueueStates
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
 		Private mSentPayload As Xojo.Core.MemoryBlock
 	#tag EndProperty
 
@@ -2095,6 +2198,16 @@ Implements PrivateMessage,UnitTestRESTMessage
 			End Get
 		#tag EndGetter
 		Private MyMeta As M_REST.ClassMeta
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  return mQueueState
+			  
+			End Get
+		#tag EndGetter
+		QueueState As QueueStates
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
@@ -2213,9 +2326,20 @@ Implements PrivateMessage,UnitTestRESTMessage
 	#tag Constant, Name = kContentType, Type = Text, Dynamic = False, Default = \"application/json", Scope = Private
 	#tag EndConstant
 
+	#tag Constant, Name = kQueuePeriodImmediate, Type = Double, Dynamic = False, Default = \"2", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = kQueuePeriodNormal, Type = Double, Dynamic = False, Default = \"200", Scope = Private
+	#tag EndConstant
+
 	#tag Constant, Name = kVersion, Type = Text, Dynamic = False, Default = \"1.2", Scope = Public
 	#tag EndConstant
 
+
+	#tag Enum, Name = QueueStates, Type = Integer, Flags = &h0
+		Queued
+		Processed
+	#tag EndEnum
 
 	#tag Enum, Name = RESTTypes, Type = Integer, Flags = &h0
 		Unknown
@@ -2287,6 +2411,17 @@ Implements PrivateMessage,UnitTestRESTMessage
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="QueueState"
+			Group="Behavior"
+			Type="States"
+			EditorType="Enum"
+			#tag EnumValues
+				"0 - Idle"
+				"1 - Queued"
+				"2 - Active"
+			#tag EndEnumValues
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RESTType"
