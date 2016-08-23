@@ -1362,7 +1362,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  //
 		  for i as integer = MessageQueue.Ubound downto 0
 		    dim msg as M_REST.RESTMessage_MTC = MessageQueue( i )
-		    if msg.QueueState = QueueStates.Processed and not msg.IsConnected then
+		    if msg.QueueState = QueueStates.Processed and not msg.IsConnected then // Same as IsActive
 		      MessageQueue.Remove i
 		    elseif msg.IsConnected then
 		      connectedCount = connectedCount + 1
@@ -2049,6 +2049,15 @@ Implements PrivateMessage,UnitTestRESTMessage
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  return IsConnected or QueueState = QueueStates.Queued
+			End Get
+		#tag EndGetter
+		IsActive As Boolean
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
 			  return mIsConnected
 			End Get
 		#tag EndGetter
@@ -2390,6 +2399,11 @@ Implements PrivateMessage,UnitTestRESTMessage
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="IsActive"
+			Group="Behavior"
+			Type="Boolean"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="IsConnected"
 			Group="Behavior"
 			Type="Boolean"
@@ -2415,12 +2429,11 @@ Implements PrivateMessage,UnitTestRESTMessage
 		#tag ViewProperty
 			Name="QueueState"
 			Group="Behavior"
-			Type="States"
+			Type="QueueStates"
 			EditorType="Enum"
 			#tag EnumValues
-				"0 - Idle"
-				"1 - Queued"
-				"2 - Active"
+				"0 - Queued"
+				"1 - Processed"
 			#tag EndEnumValues
 		#tag EndViewProperty
 		#tag ViewProperty
