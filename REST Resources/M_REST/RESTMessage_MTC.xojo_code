@@ -2346,7 +2346,8 @@ Implements PrivateMessage,UnitTestRESTMessage
 
 
 	#tag Enum, Name = QueueStates, Type = Integer, Flags = &h0
-		Queued
+		Unused
+		  Queued
 		Processed
 	#tag EndEnum
 
