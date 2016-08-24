@@ -112,12 +112,13 @@ The uppercase types correspond directly to an HTTP action. The lowercase types a
 | Property | Type | Read Only |  Description |
 | -------- | ---- | :------: | ------------ |
 | DefaultRESTType | RESTTypes | no | The default REST type that will be used of <a href='#getresttypeeventsection'>the `GetRestType` event</a> is not implemented. |
+| IsActive | Boolean | __YES__ | Returns `True` if the socket is connected or queued. |
 | IsConnected | Boolean | __YES__ | Returns `True` if the socket is currently connected. |
 | MaximumConnections | Integer | no | The maximum number of simultaneous connections allowed. Additional messages will be queued automatically until they can be sent. Set to 0 to allow unlimited connections. The default is 4.
 | MessageOptions | M\_REST.MessageOptions | no | Set the options for the message. See <a href='#optionssection'>_MessageOptions_</a> below. |
 | MessageSerialNumber | Int64 | __YES__ | A unique number (within the session) assigned to each new instance of a message. |
 | MessageTag | Auto | no | Anything you wish to attach to a message. Does not get transmitted. |
-| QueueState | QueueStates enum | __YES__ | The current state of the message, either `Queued` or `Processed`. |
+| QueueState | QueueStates | __YES__ | The current state of the message, `Unused`, `Queued` or `Processed`. |
 | RESTType | RESTTypes | __YES__ | The REST type that is ultimately used for the message. |
 | RoundTripMs | Double | __YES__ | The round-trip time, in milliseconds, from when the connection was initiated until a response received. |
 | RoundTripWithProcessingMs | Double | __YES__ | The round-trip time, in milliseconds, from when `Send` was invoked until response processing was finished. |
@@ -218,8 +219,9 @@ With special thanks to [Advanced Medical Pricing Solutions, Inc.](http://www.adv
 - Better handle `Auto()`, `Variant()`,  and `Dictionary` properties.
 - After sending, store the last sent payload for reference.
 - If a return value is matched to an `Auto` property, just store it directly without processing.
-- `ExcludeFromOutgoingPayload` event not includes the `hostObject` of the property.
-- `Send` will queue messages instead of sending immediately and will allow no more than `MaximumConnections` simultaneous connections.
+- `ExcludeFromOutgoingPayload` event not includes the _hostObject_ of the property.
+- `Send` will queue messages instead of sending immediately and will allow no more than _MaximumConnections_ simultaneous connections.
+- Added _IsActive_ property.
 
 1.2 (May 18, 2016)
 
@@ -238,3 +240,12 @@ With special thanks to [Advanced Medical Pricing Solutions, Inc.](http://www.adv
 1.0 (May 12, 2016)
 
 - Initial release.
+
+<!--
+Document conventions:
+
+  - Properties and variables are italicized.
+  - Classes are wrapped in code.
+  - Functions/events are wrapped in code.
+  - Return values like True or False are wrapped in code.
+-->
