@@ -422,7 +422,10 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  elseif typeName = "Xojo.Core.Dictionary" and value isa Xojo.Core.Dictionary then
 		    return value
 		    
-		  elseif IsIntrinsicType( typeName ) then
+		  elseif tiDestination.IsEnum then
+		    return value
+		    
+		  elseif tiDestination.IsPrimitive or IsIntrinsicType( typeName ) then
 		    //
 		    // See if we have to coerce the value from text
 		    //
