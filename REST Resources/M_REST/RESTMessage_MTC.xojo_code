@@ -82,6 +82,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 	#tag Event
 		Sub PageReceived(URL as Text, HTTPStatus as Integer, Content as xojo.Core.MemoryBlock)
 		  ResponseReceivedMicroseconds = Microseconds
+		  System.DebugLog "Response received at " + format(ResponseReceivedMicroseconds / 1000.0, "#,0")
 		  
 		  mIsConnected = false
 		  dim surrogate as M_REST.PrivateSurrogate = MessageSurrogate
@@ -107,8 +108,12 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    end if
 		  end if
 		  
+		  System.DebugLog "Processed at " + format(Microseconds / 1000.0, "#,0")
+		  
 		  ReceiveFinishedMicroseconds = microseconds
 		  RaiseEvent ResponseReceived url, httpStatus, payload 
+		  
+		  System.DebugLog "Finished raising event at " + format(Microseconds / 1000.0, "#,0")
 		  
 		  //
 		  // NOTE: If the caller no longer exists, you will get a NilObjectException here
@@ -118,6 +123,8 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    surrogate.RaiseResponseReceived( self, url, httpStatus, payload )
 		    MessageSurrogate = nil
 		  end if
+		  
+		  System.DebugLog "Round-trip ms = " + format((ResponseReceivedMicroseconds - RequestSentMicroseconds) / 1000.0, "#,0")
 		  
 		End Sub
 	#tag EndEvent
@@ -1132,6 +1139,21 @@ Implements PrivateMessage,UnitTestRESTMessage
 
 	#tag Method, Flags = &h21
 		Private Sub JSONObjectToProps(json As Xojo.Core.Dictionary, propsDict As Xojo.Core.Dictionary, propPrefix As Text, hostObject As Object)
+		  #if DebugBuild then
+		    json = json // A place to break
+		    
+		    #if not TargetiOS then
+		      if propsDict.Count <> 0 then
+		        for each entry as Xojo.Core.DictionaryEntry in propsDict
+		          if Xojo.Introspection.GetType( entry.Key ).Name <> "String" then
+		            entry = entry // A place to break
+		          end if
+		          exit for entry
+		        next
+		      end if
+		    #endif
+		  #endif
+		  
 		  for each entry as Xojo.Core.DictionaryEntry in json
 		    dim returnPropName as text = propPrefix + entry.Key
 		    #if TargetiOS then
@@ -1296,6 +1318,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  TimeoutTimer.Period = MessageOptions.TimeOutSeconds * 1000
 		  TimeoutTimer.Mode = Xojo.Core.Timer.Modes.Multiple
 		  
+		  System.DebugLog "Message sent at " + format(Microseconds / 1000.0, "#,0")
 		End Sub
 	#tag EndMethod
 
@@ -1550,9 +1573,16 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    // We are going to try anything since the header could be wrong
 		    //
 		    try
+		      #if DebugBuild and not TargetiOS then
+		        dim processStart as double = Microseconds
+		      #endif
 		      #pragma BreakOnExceptions false
 		      json = Xojo.Data.ParseJSON( textValue )
 		      #pragma BreakOnExceptions default
+		      #if DebugBuild and not TargetiOS then
+		        dim msDiff as double = ( Microseconds - processStart ) / 1000.0
+		        System.DebugLog format( msDiff, "#,0" ) + " ms for ParseJSON"
+		      #endif
 		      subtype = "json"
 		      result = json
 		    catch err as RuntimeException
