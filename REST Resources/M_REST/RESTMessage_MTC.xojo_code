@@ -149,7 +149,13 @@ Implements PrivateMessage,UnitTestRESTMessage
 
 	#tag Method, Flags = &h21
 		Private Sub ClearClassMeta()
-		  if ClassName <> "" and ClassMetaDict isa object and ClassMetaDict.HasKey( ClassName ) then
+		  #if TargetiOS then
+		    dim classNameKey as text = ClassName
+		  #else
+		    dim classNameKey as string = ClassName
+		  #endif
+		  
+		  if ClassName <> "" and ClassMetaDict isa object and ClassMetaDict.HasKey( classNameKey ) then
 		    ClassMetaDict.Remove ClassName
 		  end if
 		  
@@ -299,7 +305,13 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  
 		  dim tiSelf as Xojo.Introspection.TypeInfo = Xojo.Introspection.GetType( self )
 		  ClassName = tiSelf.FullName
-		  dim classMeta as M_REST.ClassMeta = ClassMetaDict.Lookup( className, nil )
+		  #if TargetiOS then
+		    dim classNameKey as text = ClassName
+		  #else
+		    dim classNameKey as string = ClassName
+		  #endif
+		  
+		  dim classMeta as M_REST.ClassMeta = ClassMetaDict.Lookup( classNameKey, nil )
 		  if classMeta isa object then
 		    //
 		    // Already done
@@ -317,7 +329,13 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  // Get or create the meta for the base class
 		  //
 		  dim baseName as text = tiBase.FullName
-		  dim baseMeta as M_REST.ClassMeta = ClassMetaDict.Lookup( baseName, nil )
+		  #if TargetiOS then
+		    dim baseNameKey as text = baseName
+		  #else
+		    dim baseNameKey as string = baseName
+		  #endif
+		  
+		  dim baseMeta as M_REST.ClassMeta = ClassMetaDict.Lookup( baseNameKey, nil )
 		  if baseMeta is nil then
 		    baseMeta = new M_REST.ClassMeta
 		    dim dict as Xojo.Core.Dictionary = baseMeta.SendPropertiesDict
@@ -325,8 +343,14 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    dim props() as Xojo.Introspection.PropertyInfo = tiBase.Properties
 		    for each prop as Xojo.Introspection.PropertyInfo in props
 		      dim propName as text = prop.Name
+		      #if TargetiOS then
+		        dim propNameKey as text = propName
+		      #else
+		        dim propNameKey as string = propName
+		      #endif
+		      
 		      if prop.CanRead and prop.IsPublic and not prop.IsShared then
-		        dict.Value( propName ) = prop
+		        dict.Value( propNameKey ) = prop
 		      end if
 		    next
 		  end if
@@ -336,6 +360,11 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  //
 		  for each prop as Xojo.Introspection.PropertyInfo in tiSelf.Properties
 		    dim propName as text = prop.Name
+		    #if TargetiOS then
+		      dim propNameKey as text = propName
+		    #else
+		      dim propNameKey as string = propName
+		    #endif
 		    
 		    if prop.IsShared or not prop.IsPublic then
 		      //
@@ -344,7 +373,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		      continue for prop
 		    end if
 		    
-		    if baseMeta.SendPropertiesDict.HasKey( propName ) or baseMeta.ReturnPropertiesDict.HasKey( propName ) then
+		    if baseMeta.SendPropertiesDict.HasKey( propNameKey ) or baseMeta.ReturnPropertiesDict.HasKey( propNameKey ) then
 		      //
 		      // Part of the base so we ignore it
 		      //
@@ -365,19 +394,19 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    if returnPropPrefix = "" or _ // Can be empty
 		      ( propName.Length > prefixLength and propName.Left( prefixLength ) = returnPropPrefix ) then // Return property 
 		      if prop.CanWrite then 
-		        classMeta.ReturnPropertiesDict.Value( propName ) = prop
+		        classMeta.ReturnPropertiesDict.Value( propNameKey ) = prop
 		        isReturnProp = true
 		      end if
 		    end if
 		    
 		    if not isReturnProp or returnPropPrefix = "" then // Send property
 		      if prop.CanRead then
-		        classMeta.SendPropertiesDict.Value( propName ) = prop
+		        classMeta.SendPropertiesDict.Value( propNameKey ) = prop
 		      end if
 		    end if
 		  next prop
 		  
-		  classMetaDict.Value( className ) = classMeta
+		  classMetaDict.Value( classNameKey ) = classMeta
 		  
 		End Sub
 	#tag EndMethod
@@ -847,9 +876,16 @@ Implements PrivateMessage,UnitTestRESTMessage
 		      // Create a dictionary of the object's properties
 		      //
 		      dim propsDict as new Xojo.Core.Dictionary
+		      
 		      for each prop as Xojo.Introspection.PropertyInfo in tiObject.Properties
 		        if prop.CanWrite and prop.IsPublic and not prop.IsShared then
-		          propsDict.Value( prop.Name ) = prop
+		          #if TargetiOS then
+		            dim k as text
+		          #else
+		            dim k as string
+		          #endif
+		          k = prop.Name
+		          propsDict.Value( k ) = prop
 		        end if
 		      next prop
 		      
@@ -1098,15 +1134,20 @@ Implements PrivateMessage,UnitTestRESTMessage
 		Private Sub JSONObjectToProps(json As Xojo.Core.Dictionary, propsDict As Xojo.Core.Dictionary, propPrefix As Text, hostObject As Object)
 		  for each entry as Xojo.Core.DictionaryEntry in json
 		    dim returnPropName as text = propPrefix + entry.Key
-		    if not propsDict.HasKey( returnPropName ) then
+		    #if TargetiOS then
+		      dim returnPropNameKey as text = returnPropName
+		    #else
+		      dim returnPropNameKey as string = returnPropName
+		    #endif
+		    
+		    dim prop as Xojo.Introspection.PropertyInfo = propsDict.Lookup( returnPropNameKey, nil )
+		    if prop is nil then
 		      continue for entry
 		    end if
 		    
-		    dim prop as Xojo.Introspection.PropertyInfo = propsDict.Value( returnPropName )
-		    
 		    dim value as Auto = entry.Value
 		    
-		    if not RaiseEvent IncomingPayloadValueToProperty( value, prop, hostObject ) then
+		    if RaiseEvent IncomingPayloadValueToProperty( value, prop, hostObject ) = false then
 		      try
 		        value = Deserialize( value, prop, prop.Value( hostObject ) )
 		        
@@ -1576,7 +1617,13 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  //
 		  
 		  dim className as text = classTypeInfo.FullName.Replace( "()", "" )
-		  ClassTypeInfoRegistry.Value( className ) = classTypeInfo
+		  #if TargetiOS then
+		    dim classNameKey as text = className
+		  #else
+		    dim classNameKey as string = className
+		  #endif
+		  
+		  ClassTypeInfoRegistry.Value( classNameKey ) = classTypeInfo
 		End Sub
 	#tag EndMethod
 
@@ -1894,7 +1941,13 @@ Implements PrivateMessage,UnitTestRESTMessage
 		Private Function TypeInfoForClassName(className As Text) As Xojo.Introspection.TypeInfo
 		  className = className.Replace( "()", "" ) // In case it's an array
 		  
-		  dim tiObject as Xojo.Introspection.TypeInfo = ClassTypeInfoRegistry.Lookup( className, nil )
+		  #if TargetiOS then
+		    dim classNameKey as text = className
+		  #else
+		    dim classNameKey as string = className
+		  #endif
+		  
+		  dim tiObject as Xojo.Introspection.TypeInfo = ClassTypeInfoRegistry.Lookup( classNameKey, nil )
 		  
 		  if tiObject is nil then
 		    
@@ -1927,7 +1980,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    
 		    if o isa object then
 		      tiObject = Xojo.Introspection.GetType( o )
-		      ClassTypeInfoRegistry.Value( className ) = tiObject
+		      ClassTypeInfoRegistry.Value( classNameKey ) = tiObject
 		    end if
 		    
 		  end if
@@ -2206,7 +2259,13 @@ Implements PrivateMessage,UnitTestRESTMessage
 			    return nil
 			  end if
 			  
-			  return ClassMetaDict.Value( ClassName )
+			  #if TargetiOS then
+			    dim key as text = ClassName
+			  #else
+			    dim key as string = ClassName
+			  #endif
+			  
+			  return ClassMetaDict.Value( key )
 			End Get
 		#tag EndGetter
 		Private MyMeta As M_REST.ClassMeta
@@ -2436,8 +2495,9 @@ Implements PrivateMessage,UnitTestRESTMessage
 			Type="QueueStates"
 			EditorType="Enum"
 			#tag EnumValues
-				"0 - Queued"
-				"1 - Processed"
+				"0 - Unused"
+				"1 - Queued"
+				"2 - Processed"
 			#tag EndEnumValues
 		#tag EndViewProperty
 		#tag ViewProperty
