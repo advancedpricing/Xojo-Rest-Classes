@@ -442,7 +442,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  dim tiDestination as Xojo.Introspection.TypeInfo = intoProp.PropertyType
 		  dim typeName as text = tiDestination.Name
 		  
-		  if typeName.Length > 2 and typeName.EndsWith( "()" ) then
+		  if tiDestination.IsArray or ( typeName.Length > 2 and typeName.EndsWith( "()" ) ) then
 		    return DeserializeArray( value, intoProp, currentValue )
 		    
 		  elseif typeName = "Auto" then
