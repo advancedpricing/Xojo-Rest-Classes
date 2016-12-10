@@ -95,7 +95,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  
 		  dim payload as Auto = content
 		  
-		  if not SkipIncomingPayloadProcessing( url, httpStatus, payload ) then
+		  if not RaiseEvent SkipIncomingPayloadProcessing( url, httpStatus, payload ) then
 		    //
 		    // The subclass may have changed the payload into 
 		    // a dictionary. If so, process it
@@ -480,7 +480,11 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  dim tiDestination as Xojo.Introspection.TypeInfo = intoProp.PropertyType
 		  dim typeName as text = tiDestination.Name
 		  
-		  dim sourceArr() as auto = value
+		  #if TargetiOS then
+		    dim sourceArr() as auto = value
+		  #else
+		    dim sourceArr() as variant = value
+		  #endif
 		  
 		  select case typeName
 		  case "Text()"
@@ -732,13 +736,21 @@ Implements PrivateMessage,UnitTestRESTMessage
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function DeserializeDate(value As Text, intoProp As Xojo.Introspection.PropertyInfo) As Auto
+		Private Function DeserializeDate(autoValue As Auto, intoProp As Xojo.Introspection.PropertyInfo) As Auto
 		  //
 		  // We are expecting the ISO 8601 format
 		  // as a date or date and time.
 		  //
 		  // https://en.wikipedia.org/wiki/ISO_8601
 		  //
+		  
+		  dim value as text
+		  #if TargetiOS then
+		    value = autoValue
+		  #else
+		    dim stringValue as string = autoValue
+		    value = stringValue.ToText
+		  #endif
 		  
 		  dim parts() as text = value.Split( "T" )
 		  if parts.Ubound = -1 or parts.Ubound > 1 then
@@ -832,6 +844,41 @@ Implements PrivateMessage,UnitTestRESTMessage
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Private Function DeserializeDictionary(source As Dictionary, intoProp As Xojo.Introspection.PropertyInfo) As Auto
+		  select case intoProp.PropertyType.FullName.Replace( "()", "" )
+		  case "Xojo.Core.Dictionary"
+		    dim dict as new Xojo.Core.Dictionary
+		    
+		    dim keys() as variant = source.Keys
+		    dim values() as variant = source.Values
+		    for i as integer = 0 to keys.Ubound
+		      dim key as variant = keys( i )
+		      dim value as variant = values( i )
+		      
+		      dict.Value( key ) = value
+		    next
+		    return dict
+		    
+		  case "Dictionary"
+		    #if not TargetiOS then
+		      dim dict as new Dictionary
+		      
+		      dim keys() as variant = source.Keys
+		      dim values() as variant = source.Values
+		      for i as integer = 0 to keys.Ubound
+		        dim key as variant = keys( i )
+		        dim value as variant = values( i )
+		        
+		        dict.Value( key ) = value
+		      next
+		      return dict
+		    #endif
+		    
+		  end select
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Function DeserializeDictionary(value As Xojo.Core.Dictionary, intoProp As Xojo.Introspection.PropertyInfo) As Auto
 		  select case intoProp.PropertyType.FullName.Replace( "()", "" )
@@ -866,7 +913,11 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  
 		  select case typeName.Replace( "()", "" )
 		  case "Dictionary", "Xojo.Core.Dictionary"
-		    return DeserializeDictionary( value, intoProp )
+		    #if TargetiOS then
+		      return DeserializeDictionary( Xojo.Core.Dictionary( value ), intoProp )
+		    #else
+		      return DeserializeDictionary( Dictionary( value ), intoProp )
+		    #endif
 		    
 		  case "Date", "Xojo.Core.Date"
 		    return DeserializeDate( value, intoProp )
@@ -897,7 +948,14 @@ Implements PrivateMessage,UnitTestRESTMessage
 		      next prop
 		      
 		      if propsDict.Count <> 0 then
-		        JSONObjectToProps( value, propsDict, "", o )
+		        #if TargetiOS then
+		          dim d as Xojo.Core.Dictionary = value
+		          JSONObjectToProps( d, propsDict, "", o )
+		        #else
+		          dim d as Dictionary = value
+		          JSONObjectToProps( d, propsDict, "", o )
+		        #endif
+		        
 		      end if
 		      
 		      return o
@@ -1137,6 +1195,68 @@ Implements PrivateMessage,UnitTestRESTMessage
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Private Sub JSONObjectToProps(json As Dictionary, propsDict As Xojo.Core.Dictionary, propPrefix As Text, hostObject As Object)
+		  #if DebugBuild then
+		    json = json // A place to break
+		    
+		    #if not TargetiOS then
+		      if propsDict.Count <> 0 then
+		        for each entry as Xojo.Core.DictionaryEntry in propsDict
+		          if Xojo.Introspection.GetType( entry.Key ).Name <> "String" then
+		            entry = entry // A place to break
+		          end if
+		          exit for entry
+		        next
+		      end if
+		    #endif
+		  #endif
+		  
+		  dim keys() as variant = json.Keys
+		  dim values() as variant = json.Values
+		  
+		  for i as integer = 0 to keys.Ubound
+		    dim key as string = keys( i )
+		    dim value as auto = values( i )
+		    
+		    dim returnPropName as text = propPrefix + key.ToText
+		    #if TargetiOS then
+		      dim returnPropNameKey as text = returnPropName
+		    #else
+		      dim returnPropNameKey as string = returnPropName
+		    #endif
+		    
+		    dim prop as Xojo.Introspection.PropertyInfo = propsDict.Lookup( returnPropNameKey, nil )
+		    if prop is nil then
+		      continue for i
+		    end if
+		    
+		    if RaiseEvent IncomingPayloadValueToProperty( value, prop, hostObject ) = false then
+		      try
+		        value = Deserialize( value, prop, prop.Value( hostObject ) )
+		        
+		        //
+		        // If the value now holds an Object(), it was already populated by
+		        // DeserializeArray, so we can skip the TypeMismatchException
+		        //
+		        if value = nil or Xojo.Introspection.GetType( value ).Name <> "Object()" then
+		          #pragma BreakOnExceptions false
+		          prop.Value( hostObject ) = value
+		          #pragma BreakOnExceptions default
+		        end if
+		        
+		      catch err as TypeMismatchException
+		        //
+		        // Didn't work, move on
+		        //
+		      end try
+		      
+		    end if
+		  next
+		  
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Sub JSONObjectToProps(json As Xojo.Core.Dictionary, propsDict As Xojo.Core.Dictionary, propPrefix As Text, hostObject As Object)
 		  #if DebugBuild then
@@ -1215,7 +1335,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  dim valueTypeInfo as Xojo.Introspection.TypeInfo = Xojo.Introspection.GetType( value )
 		  dim valueName as text = valueTypeInfo.Name
 		  
-		  if valueName <> "Text" or valueName = targetName then
+		  if ( valueName <> "String" and valueName <> "Text" ) or valueName = targetName then
 		    return value
 		  end if
 		  
@@ -1224,13 +1344,27 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  // into the expected type
 		  //
 		  
-		  dim textValue as text = value
+		  dim textValue as text
+		  #if not TargetiOS then
+		    if valueName = "String" then
+		      dim stringValue as string = value
+		      textValue = stringValue.ToText
+		    else
+		      textValue = value
+		    end if
+		  #else
+		    textValue = value
+		  #endif
+		  
 		  select case targetName
 		  case "String"
 		    #if not TargetiOS then
 		      dim s as string = textValue
 		      return s
 		    #endif
+		    
+		  case "Text"
+		    return textValue
 		    
 		  case "Boolean"
 		    select case textValue
@@ -1415,6 +1549,13 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    dim returnPropPrefix as text = MessageOptions.ReturnPropertyPrefix
 		    JSONObjectToProps( json, returnProps, returnPropPrefix, self )
 		    
+		    #if not TargetiOS then
+		  elseif payload isa Dictionary then
+		    dim json as Dictionary = payload
+		    dim returnPropPrefix as text = MessageOptions.ReturnPropertyPrefix
+		    JSONObjectToProps( json, returnProps, returnPropPrefix, self )
+		    #endif
+		    
 		  end if
 		End Sub
 	#tag EndMethod
@@ -1567,7 +1708,12 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  //
 		  // JSON?
 		  //
-		  dim json as Xojo.Core.Dictionary
+		  #if TargetiOS then
+		    dim json as Xojo.Core.Dictionary
+		  #else
+		    dim json as Dictionary
+		  #endif
+		  
 		  if subtype <> "xml" then
 		    //
 		    // We are going to try anything since the header could be wrong
@@ -1577,7 +1723,12 @@ Implements PrivateMessage,UnitTestRESTMessage
 		        dim processStart as double = Microseconds
 		      #endif
 		      #pragma BreakOnExceptions false
-		      json = Xojo.Data.ParseJSON( textValue )
+		      #if TargetiOS then
+		        json = Xojo.Data.ParseJSON( textValue )
+		      #else
+		        json = JSONItem_MTC.ParseJSON( textValue )
+		      #endif
+		      
 		      #pragma BreakOnExceptions default
 		      #if DebugBuild and not TargetiOS then
 		        dim msDiff as double = ( Microseconds - processStart ) / 1000.0
@@ -1618,6 +1769,12 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    // properties
 		    //
 		    ProcessJSONPayload( json )
+		    
+		    #if not TargetiOS then
+		  elseif json isa Dictionary then
+		    ProcessJSONPayload( json )
+		    #endif
+		    
 		  end if
 		  
 		  return result
