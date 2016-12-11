@@ -2,18 +2,18 @@
 Private Class ClassMeta
 	#tag Method, Flags = &h0
 		Sub Constructor()
-		  ReturnPropertiesDict = new Xojo.Core.Dictionary
-		  SendPropertiesDict = new Xojo.Core.Dictionary
+		  ReturnPropertiesDict = new Dictionary
+		  SendPropertiesDict = new Dictionary
 		End Sub
 	#tag EndMethod
 
 
 	#tag Property, Flags = &h0
-		ReturnPropertiesDict As Xojo.Core.Dictionary
+		ReturnPropertiesDict As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		SendPropertiesDict As Xojo.Core.Dictionary
+		SendPropertiesDict As Dictionary
 	#tag EndProperty
 
 

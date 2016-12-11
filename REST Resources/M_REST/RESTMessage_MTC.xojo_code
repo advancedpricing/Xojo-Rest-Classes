@@ -178,8 +178,9 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    return
 		  end if
 		  
-		  for each entry as Xojo.Core.DictionaryEntry in meta.ReturnPropertiesDict
-		    dim prop as Xojo.Introspection.PropertyInfo = entry.Value
+		  dim returnValues() as variant = meta.ReturnPropertiesDict.Values
+		  for i as integer = 0 to returnValues.Ubound
+		    dim prop as Xojo.Introspection.PropertyInfo = returnValues( i )
 		    dim propType as text = prop.PropertyType.Name
 		    
 		    if propType = "String()" then
@@ -345,7 +346,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  dim baseMeta as M_REST.ClassMeta = ClassMetaDict.Lookup( baseNameKey, nil )
 		  if baseMeta is nil then
 		    baseMeta = new M_REST.ClassMeta
-		    dim dict as Xojo.Core.Dictionary = baseMeta.SendPropertiesDict
+		    dim dict as Dictionary = baseMeta.SendPropertiesDict
 		    
 		    dim props() as Xojo.Introspection.PropertyInfo = tiBase.Properties
 		    for each prop as Xojo.Introspection.PropertyInfo in props
@@ -735,7 +736,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Private Function DeserializeDate(autoValue As Auto, intoProp As Xojo.Introspection.PropertyInfo) As Auto
 		  //
 		  // We are expecting the ISO 8601 format
@@ -744,13 +745,110 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  // https://en.wikipedia.org/wiki/ISO_8601
 		  //
 		  
-		  dim value as text
-		  #if TargetiOS then
-		    value = autoValue
-		  #else
-		    dim stringValue as string = autoValue
-		    value = stringValue.ToText
-		  #endif
+		  dim value as string = autoValue
+		  
+		  dim parts() as string = value.Split( "T" )
+		  if parts.Ubound = -1 or parts.Ubound > 1 then
+		    //
+		    // We don't recognize this format
+		    //
+		    return nil
+		  end if
+		  
+		  dim datePart as string = parts( 0 )
+		  dim dateParts() as string = datePart.Split( "-" )
+		  if dateParts.Ubound <> 2 then
+		    return nil
+		  end if
+		  
+		  dim year as integer = dateParts( 0 ).Val
+		  dim month as integer = dateParts( 1 ).Val
+		  dim day as integer = dateParts( 2 ).Val
+		  
+		  //
+		  // See if there is a time
+		  //
+		  dim hour as integer
+		  dim minute as integer
+		  dim second as integer
+		  
+		  dim tz as Xojo.Core.TimeZone = Xojo.Core.TimeZone.Current
+		  dim tzHours as double = tz.SecondsFromGMT / 3600.0
+		  
+		  if parts.Ubound = 1 then
+		    dim timePart as string = parts( 1 )
+		    dim timeParts() as string 
+		    dim tzPart as string
+		    
+		    select case true
+		    case timePart.InStr( "Z" ) <> 0
+		      timeParts = timePart.Split( "Z" )
+		      timePart = timeParts( 0 )
+		      tzPart = "0"
+		      
+		    case timePart.InStr( "-" ) <> 0
+		      timeParts = timePart.Split( "-" )
+		      timePart = timeParts( 0 )
+		      tzPart = "-" + timeParts( 1 )
+		      
+		    case timePart.InStr( "+" ) <> 0
+		      timeParts = timePart.Split( "+" )
+		      timePart = timeParts( 0 )
+		      tzPart = timeParts( 1 )
+		      
+		    end select
+		    
+		    //
+		    // The time will either be in HH:MM:SS format or HHMMSS format
+		    //
+		    timePart = timePart.ReplaceAll( ":", "" )
+		    if timePart.Len = 6 then
+		      hour = timePart.Left( 2 ).Val
+		      minute = timePart.Mid( 2, 2 ).Val
+		      second = timePart.Right( 2 ).Val
+		      
+		      //
+		      // Process the timezone, maybe
+		      //
+		      if MessageOptions.AdjustDatesForTimeZone then
+		        dim tzParts() as string = tzPart.Split( ":" )
+		        if tzParts.Ubound = 1 then
+		          tzHours = tzParts( 0 ).Val + ( tzParts( 1 ).Val / 60.0 )
+		          tz = new Xojo.Core.TimeZone( tzHours * 3600.0 )
+		        end if
+		      end if
+		      
+		    end if
+		  end if
+		  
+		  //
+		  // Create the object
+		  //
+		  select case intoProp.PropertyType.FullName.Replace( "()", "")
+		  case "Xojo.Core.Date"
+		    dim d as new Xojo.Core.Date( year, month, day, hour, minute, second, 0, tz )
+		    return d
+		    
+		  case else
+		    #if not TargetiOS then
+		      dim d as new Date( year, month, day, hour, minute, second, tzHours )
+		      return d
+		    #endif
+		    
+		  end select
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Private Function DeserializeDate(autoValue As Auto, intoProp As Xojo.Introspection.PropertyInfo) As Auto
+		  //
+		  // We are expecting the ISO 8601 format
+		  // as a date or date and time.
+		  //
+		  // https://en.wikipedia.org/wiki/ISO_8601
+		  //
+		  
+		  dim value as text = autoValue
 		  
 		  dim parts() as text = value.Split( "T" )
 		  if parts.Ubound = -1 or parts.Ubound > 1 then
@@ -909,7 +1007,11 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  end if
 		  
 		  dim tiObject as Xojo.Introspection.TypeInfo = if( objectTypeInfo is nil, intoProp.PropertyType, objectTypeInfo )
-		  dim typeName as text = tiObject.Name
+		  #if TargetiOS then
+		    dim typeName as text = tiObject.Name
+		  #else
+		    dim typeName as string = tiObject.Name
+		  #endif
 		  
 		  select case typeName.Replace( "()", "" )
 		  case "Dictionary", "Xojo.Core.Dictionary"
@@ -933,7 +1035,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		      //
 		      // Create a dictionary of the object's properties
 		      //
-		      dim propsDict as new Xojo.Core.Dictionary
+		      dim propsDict as new Dictionary
 		      
 		      for each prop as Xojo.Introspection.PropertyInfo in tiObject.Properties
 		        if prop.CanWrite and prop.IsPublic and not prop.IsShared then
@@ -1074,8 +1176,9 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  dim urlPropNames() as text
 		  dim payloadProps() as Xojo.Introspection.PropertyInfo
 		  
-		  for each entry as Xojo.Core.DictionaryEntry in meta.SendPropertiesDict
-		    dim prop as Xojo.Introspection.PropertyInfo = entry.Value
+		  dim sendValues() as variant = meta.SendPropertiesDict.Values
+		  for sendValuesIndex as integer = 0 to sendValues.Ubound
+		    dim prop as Xojo.Introspection.PropertyInfo = sendValues( sendValuesIndex )
 		    dim propName as text = prop.Name
 		    
 		    dim marker as text = ":" + prop.Name
@@ -1196,21 +1299,21 @@ Implements PrivateMessage,UnitTestRESTMessage
 	#tag EndMethod
 
 	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Private Sub JSONObjectToProps(json As Dictionary, propsDict As Xojo.Core.Dictionary, propPrefix As Text, hostObject As Object)
-		  #if DebugBuild then
-		    json = json // A place to break
-		    
-		    #if not TargetiOS then
-		      if propsDict.Count <> 0 then
-		        for each entry as Xojo.Core.DictionaryEntry in propsDict
-		          if Xojo.Introspection.GetType( entry.Key ).Name <> "String" then
-		            entry = entry // A place to break
-		          end if
-		          exit for entry
-		        next
-		      end if
-		    #endif
-		  #endif
+		Private Sub JSONObjectToProps(json As Dictionary, propsDict As Dictionary, propPrefix As Text, hostObject As Object)
+		  '#if DebugBuild then
+		  'json = json // A place to break
+		  '
+		  '#if not TargetiOS then
+		  'if propsDict.Count <> 0 then
+		  'for each entry as Xojo.Core.DictionaryEntry in propsDict
+		  'if Xojo.Introspection.GetType( entry.Key ).Name <> "String" then
+		  'entry = entry // A place to break
+		  'end if
+		  'exit for entry
+		  'next
+		  'end if
+		  '#endif
+		  '#endif
 		  
 		  dim keys() as variant = json.Keys
 		  dim values() as variant = json.Values
@@ -1219,12 +1322,8 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    dim key as string = keys( i )
 		    dim value as auto = values( i )
 		    
-		    dim returnPropName as text = propPrefix + key.ToText
-		    #if TargetiOS then
-		      dim returnPropNameKey as text = returnPropName
-		    #else
-		      dim returnPropNameKey as string = returnPropName
-		    #endif
+		    dim returnPropName as string = propPrefix + key
+		    dim returnPropNameKey as string = returnPropName
 		    
 		    dim prop as Xojo.Introspection.PropertyInfo = propsDict.Lookup( returnPropNameKey, nil )
 		    if prop is nil then
@@ -1257,30 +1356,26 @@ Implements PrivateMessage,UnitTestRESTMessage
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Sub JSONObjectToProps(json As Xojo.Core.Dictionary, propsDict As Xojo.Core.Dictionary, propPrefix As Text, hostObject As Object)
-		  #if DebugBuild then
-		    json = json // A place to break
-		    
-		    #if not TargetiOS then
-		      if propsDict.Count <> 0 then
-		        for each entry as Xojo.Core.DictionaryEntry in propsDict
-		          if Xojo.Introspection.GetType( entry.Key ).Name <> "String" then
-		            entry = entry // A place to break
-		          end if
-		          exit for entry
-		        next
-		      end if
-		    #endif
-		  #endif
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
+		Private Sub JSONObjectToProps(json As Xojo.Core.Dictionary, propsDict As Dictionary, propPrefix As Text, hostObject As Object)
+		  '#if DebugBuild then
+		  'json = json // A place to break
+		  '
+		  '#if not TargetiOS then
+		  'if propsDict.Count <> 0 then
+		  'for each entry as Xojo.Core.DictionaryEntry in propsDict
+		  'if Xojo.Introspection.GetType( entry.Key ).Name <> "String" then
+		  'entry = entry // A place to break
+		  'end if
+		  'exit for entry
+		  'next
+		  'end if
+		  '#endif
+		  '#endif
 		  
 		  for each entry as Xojo.Core.DictionaryEntry in json
 		    dim returnPropName as text = propPrefix + entry.Key
-		    #if TargetiOS then
-		      dim returnPropNameKey as text = returnPropName
-		    #else
-		      dim returnPropNameKey as string = returnPropName
-		    #endif
+		    dim returnPropNameKey as text = returnPropName
 		    
 		    dim prop as Xojo.Introspection.PropertyInfo = propsDict.Lookup( returnPropNameKey, nil )
 		    if prop is nil then
@@ -1487,8 +1582,9 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    
 		    dim picProps() as Xojo.Introspection.PropertyInfo
 		    
-		    for each entry as Xojo.Core.DictionaryEntry in meta.ReturnPropertiesDict
-		      dim prop as Xojo.Introspection.PropertyInfo = entry.Value
+		    dim returnValues() as variant = meta.ReturnPropertiesDict.Values
+		    for returnValuesIndex as integer = 0 to returnValues.Ubound
+		      dim prop as Xojo.Introspection.PropertyInfo = returnValues( returnValuesIndex )
 		      if prop.PropertyType.Name = matchType then
 		        picProps.Append prop
 		      end if
@@ -1508,7 +1604,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		Private Sub ProcessJSONPayload(payload As Auto)
 		  CreateMeta // REALLY shouldn't be needed, but let's make sure
 		  
-		  dim returnProps as Xojo.Core.Dictionary = MyMeta.ReturnPropertiesDict
+		  dim returnProps as Dictionary = MyMeta.ReturnPropertiesDict
 		  
 		  //
 		  // Let the subclass modify as needed
@@ -1525,10 +1621,13 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    
 		    if returnProps.Count = 1 then
 		      dim prop as Xojo.Introspection.PropertyInfo
-		      for each entry as Xojo.Core.DictionaryEntry in returnProps
-		        prop = entry.Value
-		      next
-		      
+		      #if TargetiOS then
+		        for each entry as Xojo.Core.DictionaryEntry in returnProps
+		          prop = entry.Value
+		        next
+		      #else
+		        prop = returnProps.Value( returnProps.Key( 0 ) )
+		      #endif
 		      try
 		        prop.Value( self ) = DeserializeArray( payload, prop, prop.Value( self ) )
 		      catch err as TypeMismatchException
