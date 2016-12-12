@@ -50,7 +50,7 @@ Implements PrivateOptions
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Attributes( hidden ) Private mReturnPropertyPrefix As Text = "Return"
+		Attributes( hidden ) Private mReturnPropertyPrefix As String = "Return"
 	#tag EndProperty
 
 	#tag ComputedProperty, Flags = &h21
@@ -103,7 +103,7 @@ Implements PrivateOptions
 			  
 			End Set
 		#tag EndSetter
-		ReturnPropertyPrefix As Text
+		ReturnPropertyPrefix As String
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h0

@@ -1,13 +1,13 @@
 #tag Interface
 Protected Interface UnitTestRESTMessage
 	#tag Method, Flags = &h0
-		Function Deserialize(value As Auto, intoProp As Xojo.Introspection.PropertyInfo, currentValue As Auto) As Auto
+		Function Deserialize(value As Auto, intoProp As Introspection.PropertyInfo, currentValue As Auto) As Auto
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function ExpandURLPattern(urlPattern As Text, ByRef returnPayloadProps() As Xojo.Introspection.PropertyInfo) As Text
+		Function ExpandURLPattern(urlPattern As Text, ByRef returnPayloadProps() As Introspection.PropertyInfo) As Text
 		  
 		End Function
 	#tag EndMethod

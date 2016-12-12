@@ -301,17 +301,27 @@ Protected Module M_REST
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function GetZeroParamConstructor(ti As Xojo.Introspection.TypeInfo) As Xojo.Introspection.ConstructorInfo
-		  dim constructors() as Xojo.Introspection.ConstructorInfo = ti.Constructors
+		Private Function GetZeroParamConstructor(ti As Introspection.TypeInfo) As Introspection.ConstructorInfo
+		  dim constructors() as Introspection.ConstructorInfo
+		  #if TargetiOS then
+		    constructors = ti.Constructors
+		  #else
+		    constructors = ti.GetConstructors
+		  #endif
 		  
 		  //
 		  // Works backwords in the hope that that subclass Constructor if any, is later in the array
 		  //
 		  for i as integer = constructors.Ubound downto 0
-		    dim c as Xojo.Introspection.ConstructorInfo = constructors( i )
+		    dim c as Introspection.ConstructorInfo = constructors( i )
 		    try
 		      #pragma BreakOnExceptions false
-		      dim params() as Xojo.Introspection.ParameterInfo = c.Parameters
+		      dim params() as Introspection.ParameterInfo
+		      #if TargetiOS then
+		        params = c.Parameters
+		      #else
+		        params = c.GetParameters
+		      #endif
 		      #pragma BreakOnExceptions default 
 		      if params.Ubound = -1 then
 		        return c
@@ -330,6 +340,12 @@ Protected Module M_REST
 		  
 		  return nil
 		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Private Function Length(Extends s As String) As Integer
+		  return s.Len
 		End Function
 	#tag EndMethod
 
