@@ -1258,7 +1258,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		      //
 		      // Get the text version of the value
 		      //
-		      dim tiValue as Introspection.TypeInfo = Introspection.GetType( value )
+		      dim tiValue as Xojo.Introspection.TypeInfo = Xojo.Introspection.GetType( value )
 		      dim textValue as text
 		      
 		      select case tiValue.Name
