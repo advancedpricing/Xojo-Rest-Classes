@@ -248,8 +248,24 @@ Implements PrivateMessage,UnitTestRESTMessage
 		      #endif
 		      
 		    elseif propType = "Auto()" then
-		      dim arr() as auto = prop.Value( self )
-		      redim arr( -1 )
+		      #if TargetiOS then
+		        dim arr() as auto = prop.Value( self )
+		        redim arr( -1 )
+		      #else
+		        //
+		        // Classic Introspection will now allow assignment of an Auto() value
+		        //
+		        #pragma warning "When this framework is converted to using Xojo.Introspection again, we can get rid of this code!!"
+		        dim propNameText as text = prop.Name.ToText
+		        dim tiNew as Xojo.Introspection.TypeInfo = Xojo.Introspection.GetType( self )
+		        for each newProp as Xojo.Introspection.PropertyInfo in tiNew.Properties
+		          if newProp.Name = propNameText then
+		            dim arr() as auto = newProp.Value( self )
+		            redim arr( -1 )
+		            exit for newProp
+		          end if
+		        next
+		      #endif
 		      
 		    elseif propType.EndsWith( "()" ) then
 		      //
