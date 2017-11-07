@@ -826,6 +826,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  dim hour as integer
 		  dim minute as integer
 		  dim second as integer
+		  dim ns as integer
 		  
 		  dim tz as Xojo.Core.TimeZone = Xojo.Core.TimeZone.Current
 		  dim tzHours as double = tz.SecondsFromGMT / 3600.0
@@ -857,10 +858,18 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    // The time will either be in HH:MM:SS format or HHMMSS format
 		    //
 		    timePart = timePart.ReplaceAll( ":", "" )
+		    dim nsPart as string
+		    dim dotPos as integer = timePart.InStr( "." )
+		    if dotPos <> 0 then
+		      nsPart = timePart.Right( timePart.Len - dotPos )
+		      timePart = timePart.Left( dotPos - 1 )
+		    end if
+		    
 		    if timePart.Len = 6 then
 		      hour = timePart.Left( 2 ).Val
 		      minute = timePart.Mid( 2, 2 ).Val
 		      second = timePart.Right( 2 ).Val
+		      ns = nsPart.Val / 1000000000
 		      
 		      //
 		      // Process the timezone, maybe
@@ -881,7 +890,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  //
 		  select case intoProp.PropertyType.FullName.Replace( "()", "")
 		  case "Xojo.Core.Date"
-		    dim d as new Xojo.Core.Date( year, month, day, hour, minute, second, 0, tz )
+		    dim d as new Xojo.Core.Date( year, month, day, hour, minute, second, ns, tz )
 		    return d
 		    
 		  case else
@@ -1197,6 +1206,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    end if
 		    
 		    SetRequestContent payload, mimeType
+		    System.DebugLog Xojo.Core.TextEncoding.UTF8.ConvertDataToText(payload)
 		  end if
 		  
 		  MessageSurrogate = surrogate
