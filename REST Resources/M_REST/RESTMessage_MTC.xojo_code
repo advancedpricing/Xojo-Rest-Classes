@@ -1206,7 +1206,6 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    end if
 		    
 		    SetRequestContent payload, mimeType
-		    System.DebugLog Xojo.Core.TextEncoding.UTF8.ConvertDataToText(payload)
 		  end if
 		  
 		  MessageSurrogate = surrogate
