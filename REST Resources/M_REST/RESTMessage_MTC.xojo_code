@@ -531,8 +531,8 @@ Implements PrivateMessage,UnitTestRESTMessage
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Function DeserializeArray(value As Auto, intoProp As Introspection.PropertyInfo, existingArray As Auto) As Auto
+	#tag Method, Flags = &h1
+		Protected Function DeserializeArray(value As Auto, intoProp As Introspection.PropertyInfo, existingArray As Auto) As Auto
 		  dim tiDestination as Introspection.TypeInfo = intoProp.PropertyType
 		  dim typeName as String = tiDestination.Name
 		  
@@ -1064,8 +1064,8 @@ Implements PrivateMessage,UnitTestRESTMessage
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Function DeserializeObject(value As Auto, intoProp As Introspection.PropertyInfo, objectTypeInfo As Introspection.TypeInfo = Nil) As Object
+	#tag Method, Flags = &h1
+		Protected Function DeserializeObject(value As Auto, intoProp As Introspection.PropertyInfo, objectTypeInfo As Introspection.TypeInfo = Nil) As Object
 		  if value = nil then
 		    return nil
 		  end if
