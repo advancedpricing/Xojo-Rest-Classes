@@ -10,8 +10,17 @@ Implements PrivateSurrogate
 
 	#tag Method, Flags = &h0
 		Sub DisconnectAll()
+		  //
+		  // We have to do this in two phases so the dictionary isn't changed while we are iterating over it
+		  //
+		  
+		  dim msgs() as M_REST.RESTMessage_MTC
 		  for each entry as Xojo.Core.DictionaryEntry in OutstandingMessagesDict
 		    dim msg as M_REST.RESTMessage_MTC = M_REST.RESTMessage_MTC( entry.Key )
+		    msgs.Append msg
+		  next
+		  
+		  for each msg as M_REST.RESTMessage_MTC in msgs
 		    msg.Disconnect
 		  next
 		  
