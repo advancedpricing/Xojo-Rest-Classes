@@ -1944,7 +1944,8 @@ Implements PrivateMessage,UnitTestRESTMessage
 		      #if TargetiOS then
 		        json = Xojo.Data.ParseJSON( textValue )
 		      #else
-		        json = JSONItem_MTC.ParseJSON( textValue )
+		        'json = JSONItem_MTC.ParseJSON( textValue )
+		        json = ParseJSON_MTC( textValue )
 		      #endif
 		      
 		      #pragma BreakOnExceptions default
