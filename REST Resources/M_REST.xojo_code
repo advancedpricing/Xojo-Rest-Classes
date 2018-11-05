@@ -302,6 +302,13 @@ Protected Module M_REST
 
 	#tag Method, Flags = &h21
 		Private Function GetZeroParamConstructor(ti As Introspection.TypeInfo) As Introspection.ConstructorInfo
+		  static constructorCache as new Dictionary
+		  
+		  dim result as Introspection.ConstructorInfo = constructorCache.Lookup( ti.FullName, nil )
+		  if result isa object then
+		    return result
+		  end if
+		  
 		  dim constructors() as Introspection.ConstructorInfo
 		  #if TargetiOS then
 		    constructors = ti.Constructors
@@ -324,7 +331,8 @@ Protected Module M_REST
 		      #endif
 		      #pragma BreakOnExceptions default 
 		      if params.Ubound = -1 then
-		        return c
+		        result = c
+		        exit for i
 		      end if
 		      
 		    catch err as OutOfBoundsException
@@ -333,12 +341,18 @@ Protected Module M_REST
 		      // specific Constructor created for the class
 		      // If this exception is raised, we've found the only 
 		      // Constructor
-		      return c
+		      result = c
+		      exit for i
 		      
 		    end try
 		  next i
 		  
-		  return nil
+		  if result isa object then
+		    constructorCache.Value( ti.FullName ) = result
+		    return result
+		  else
+		    return nil
+		  end if
 		  
 		End Function
 	#tag EndMethod
