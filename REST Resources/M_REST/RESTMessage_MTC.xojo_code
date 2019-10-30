@@ -162,7 +162,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 	#tag Method, Flags = &h21
 		Private Sub ClearClassMeta()
 		  #if TargetiOS then
-		    dim classNameKey as String = ClassName
+		    dim classNameKey as Text = ClassName
 		  #else
 		    dim classNameKey as string = ClassName
 		  #endif
