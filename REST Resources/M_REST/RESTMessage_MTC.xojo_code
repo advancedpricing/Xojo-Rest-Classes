@@ -272,7 +272,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		        next
 		      #endif
 		      
-		    elseif propType.EndsWith( "()" ) then
+		    elseif propType.Right( 2 ) = "()" then
 		      //
 		      // Object array
 		      //
