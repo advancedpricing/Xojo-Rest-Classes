@@ -258,7 +258,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		        redim arr( -1 )
 		      #else
 		        //
-		        // Classic Introspection will now allow assignment of an Auto() value
+		        // Classic Introspection will not allow assignment of an Auto() value
 		        //
 		        #pragma warning "When this framework is converted to using Xojo.Introspection again, we can get rid of this code!!"
 		        dim propNameText as text = prop.Name.ToText
