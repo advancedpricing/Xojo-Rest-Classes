@@ -27,21 +27,26 @@ Begin Window WndSQLFormatter
    Visible         =   True
    Width           =   600
    Begin SQLFormatter msgSQLFormatter
+      AllowCertificateValidation=   False
       DBVendor        =   1
       DefaultRESTType =   "0"
       Enabled         =   True
+      HTTPStatusCode  =   0
       Index           =   -2147483648
       InputSQL        =   ""
+      IsActive        =   False
       IsConnected     =   False
       LockedInPosition=   False
       MessageSerialNumber=   ""
+      QueueState      =   ""
       RESTType        =   ""
       RoundTripMs     =   0.0
       RoundTripWithProcessingMs=   0.0
       Rspn_Formatted_SQL=   ""
       Scope           =   2
+      SentPayload     =   ""
       TabPanelIndex   =   0
-      ValidateCertificates=   False
+      ValidateCertificates=   "False"
    End
    Begin TextArea fldSQLIn
       AcceptTabs      =   False
@@ -85,6 +90,7 @@ Begin Window WndSQLFormatter
       TextSize        =   0.0
       TextUnit        =   0
       Top             =   20
+      Transparent     =   False
       Underline       =   False
       UseFocusRing    =   True
       Visible         =   True
@@ -117,6 +123,7 @@ Begin Window WndSQLFormatter
       TextSize        =   0.0
       TextUnit        =   0
       Top             =   132
+      Transparent     =   False
       Underline       =   False
       Visible         =   True
       Width           =   132
@@ -163,6 +170,7 @@ Begin Window WndSQLFormatter
       TextSize        =   0.0
       TextUnit        =   0
       Top             =   164
+      Transparent     =   False
       Underline       =   False
       UseFocusRing    =   True
       Visible         =   True
@@ -175,8 +183,8 @@ End
 #tag EndWindowCode
 
 #tag Events msgSQLFormatter
-	#tag Event
-		Sub ResponseReceived(url As Text, httpStatus As Integer, payload As Auto)
+	#tag Event , Description = 546865205245535466756C20736572766572206861732072657475726E6564206120726573706F6E73652E
+		Sub ResponseReceived(url As String, httpStatus As Integer, payload As Variant)
 		  #pragma unused url
 		  #pragma unused httpStatus
 		  #pragma unused payload

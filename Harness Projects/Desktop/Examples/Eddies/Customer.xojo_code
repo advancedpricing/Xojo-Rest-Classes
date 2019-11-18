@@ -1,27 +1,27 @@
 #tag Class
 Protected Class Customer
 	#tag Property, Flags = &h0
-		City As Text
+		City As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		Email As Text
+		Email As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		FirstName As Text
+		FirstName As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		ID As Text
+		ID As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		LastName As Text
+		LastName As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		Phone As Text
+		Phone As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
@@ -29,7 +29,7 @@ Protected Class Customer
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		State As Text
+		State As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
@@ -37,7 +37,7 @@ Protected Class Customer
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		Zip As Text
+		Zip As String
 	#tag EndProperty
 
 

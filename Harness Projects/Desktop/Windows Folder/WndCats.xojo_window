@@ -27,23 +27,26 @@ Begin Window WndCats
    Visible         =   True
    Width           =   600
    Begin GetCatsMessage msgGetCats
+      AllowCertificateValidation=   False
       DefaultRESTType =   "7"
-      Enabled         =   True
       Format          =   "src"
+      HTTPStatusCode  =   0
       Index           =   -2147483648
+      IsActive        =   False
       IsConnected     =   False
       LockedInPosition=   False
       MessageSerialNumber=   ""
+      QueueState      =   ""
       RESTType        =   "7"
       ResultsPerPage  =   1
       ReturnPicture   =   0
       RoundTripMs     =   0.0
       RoundTripWithProcessingMs=   0.0
       Scope           =   2
+      SentPayload     =   ""
       Size            =   "full"
       TabPanelIndex   =   0
       Type            =   "png"
-      ValidateCertificates=   False
    End
    Begin PushButton btnGetCat
       AutoDeactivate  =   True
@@ -72,6 +75,7 @@ Begin Window WndCats
       TextSize        =   0.0
       TextUnit        =   0
       Top             =   20
+      Transparent     =   False
       Underline       =   False
       Visible         =   True
       Width           =   80
@@ -116,8 +120,8 @@ End
 #tag EndWindowCode
 
 #tag Events msgGetCats
-	#tag Event
-		Sub ResponseReceived(url As Text, httpStatus As Integer, payload As Auto)
+	#tag Event , Description = 546865205245535466756C20736572766572206861732072657475726E6564206120726573706F6E73652E
+		Sub ResponseReceived(url As String, httpStatus As Integer, payload As Variant)
 		  #pragma unused url
 		  #pragma unused httpStatus
 		  #pragma unused payload

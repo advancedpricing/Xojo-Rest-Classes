@@ -27,33 +27,39 @@ Begin Window WndEddies
    Visible         =   True
    Width           =   758
    Begin Eddies.GetCustomerList msgGetCustomerList
+      AllowCertificateValidation=   False
       DefaultRESTType =   "RESTTypes.Unknown"
-      Enabled         =   True
+      HTTPStatusCode  =   0
       Index           =   -2147483648
+      IsActive        =   False
       IsConnected     =   False
       LockedInPosition=   False
       MessageSerialNumber=   ""
+      QueueState      =   ""
       RESTType        =   ""
       RoundTripMs     =   0.0
       RoundTripWithProcessingMs=   0.0
       Scope           =   2
+      SentPayload     =   ""
       TabPanelIndex   =   0
-      ValidateCertificates=   False
    End
    Begin Eddies.GetCustomer msgGetCustomer
+      AllowCertificateValidation=   False
       DefaultRESTType =   "RESTTypes.Unknown"
-      Enabled         =   True
-      ID              =   0
+      HTTPStatusCode  =   0
+      ID              =   "0"
       Index           =   -2147483648
+      IsActive        =   False
       IsConnected     =   False
       LockedInPosition=   False
       MessageSerialNumber=   ""
+      QueueState      =   ""
       RESTType        =   ""
       RoundTripMs     =   0.0
       RoundTripWithProcessingMs=   0.0
       Scope           =   2
+      SentPayload     =   ""
       TabPanelIndex   =   0
-      ValidateCertificates=   False
    End
    Begin Listbox lbCustomers
       AutoDeactivate  =   True
@@ -91,6 +97,7 @@ Begin Window WndEddies
       ScrollbarHorizontal=   False
       ScrollBarVertical=   True
       SelectionType   =   0
+      ShowDropIndicator=   False
       TabIndex        =   0
       TabPanelIndex   =   0
       TabStop         =   True
@@ -98,6 +105,7 @@ Begin Window WndEddies
       TextSize        =   0.0
       TextUnit        =   0
       Top             =   20
+      Transparent     =   False
       Underline       =   False
       UseFocusRing    =   True
       Visible         =   True
@@ -142,6 +150,7 @@ Begin Window WndEddies
       TextSize        =   0.0
       TextUnit        =   0
       Top             =   278
+      Transparent     =   False
       Underline       =   False
       UseFocusRing    =   True
       Visible         =   True
@@ -184,6 +193,7 @@ Begin Window WndEddies
       TextSize        =   0.0
       TextUnit        =   0
       Top             =   278
+      Transparent     =   False
       Underline       =   False
       UseFocusRing    =   True
       Visible         =   True
@@ -226,6 +236,7 @@ Begin Window WndEddies
       TextSize        =   0.0
       TextUnit        =   0
       Top             =   312
+      Transparent     =   False
       Underline       =   False
       UseFocusRing    =   True
       Visible         =   True
@@ -268,6 +279,7 @@ Begin Window WndEddies
       TextSize        =   0.0
       TextUnit        =   0
       Top             =   312
+      Transparent     =   False
       Underline       =   False
       UseFocusRing    =   True
       Visible         =   True
@@ -310,6 +322,7 @@ Begin Window WndEddies
       TextSize        =   0.0
       TextUnit        =   0
       Top             =   312
+      Transparent     =   False
       Underline       =   False
       UseFocusRing    =   True
       Visible         =   True
@@ -352,6 +365,7 @@ Begin Window WndEddies
       TextSize        =   0.0
       TextUnit        =   0
       Top             =   346
+      Transparent     =   False
       Underline       =   False
       UseFocusRing    =   True
       Visible         =   True
@@ -394,6 +408,7 @@ Begin Window WndEddies
       TextSize        =   0.0
       TextUnit        =   0
       Top             =   346
+      Transparent     =   False
       Underline       =   False
       UseFocusRing    =   True
       Visible         =   True
@@ -454,13 +469,13 @@ Begin Window WndEddies
       TextSize        =   0.0
       TextUnit        =   0
       Top             =   380
+      Transparent     =   False
       Underline       =   False
       Value           =   False
       Visible         =   True
       Width           =   100
    End
    Begin Timer tmrUpdateControls
-      Enabled         =   True
       Index           =   -2147483648
       LockedInPosition=   False
       Mode            =   2
@@ -530,13 +545,13 @@ Begin Window WndEddies
       TextSize        =   0.0
       TextUnit        =   0
       Top             =   20
+      Transparent     =   False
       Underline       =   False
       Value           =   False
       Visible         =   True
       Width           =   129
    End
    Begin M_REST.RESTMessageSurrogate_MTC smsgGetCustomerSurrogate
-      Enabled         =   True
       Index           =   -2147483648
       IsBusy          =   False
       LockedInPosition=   False
@@ -561,6 +576,7 @@ Begin Window WndEddies
       TabPanelIndex   =   0
       TabStop         =   True
       Top             =   468
+      Transparent     =   False
       Visible         =   True
       Width           =   16
    End
@@ -612,14 +628,16 @@ End
 		Private Sub RefreshListbox()
 		  lbCustomers.DeleteAllRows
 		  
-		  dim dict as Xojo.Core.Dictionary = msgGetCustomerList.ReturnGetAllCustomers
+		  dim dict as Dictionary = msgGetCustomerList.ReturnGetAllCustomers
 		  if dict is nil then
 		    return
 		  end if
 		  
-		  for each entry as Xojo.Core.DictionaryEntry in dict
-		    dim id as text = entry.Key
-		    dim cust as Xojo.Core.Dictionary = entry.Value
+		  dim keys() as variant = dict.Keys
+		  dim values() as variant = dict.Values
+		  for i as integer = 0 to keys.Ubound
+		    dim id as string = keys( i )
+		    dim cust as Dictionary = values( i )
 		    
 		    lbCustomers.AddRow id, cust.Value( "LastName" ) + ", " + cust.Value( "FirstName" )
 		    lbCustomers.RowTag( lbCustomers.LastIndex ) = id
@@ -632,12 +650,12 @@ End
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function RowOfCustomerID(id As Text) As Integer
+		Private Function RowOfCustomerID(id As String) As Integer
 		  dim lastListIndex as integer = lbCustomers.ListCount - 1
 		  for row as integer = 0 to lastListIndex
 		    dim tag as variant = lbCustomers.RowTag( row )
 		    if ( tag isa Eddies.Customer and Eddies.Customer( tag ).ID = id ) or _
-		      (tag.Type = Variant.TypeText and tag.TextValue = id ) then
+		      (tag.Type = Variant.TypeString and tag.StringValue = id ) then
 		      return row
 		    end if
 		  next
@@ -685,8 +703,8 @@ End
 #tag EndWindowCode
 
 #tag Events msgGetCustomerList
-	#tag Event
-		Sub ResponseReceived(url As Text, httpStatus As Integer, payload As Auto)
+	#tag Event , Description = 546865205245535466756C20736572766572206861732072657475726E6564206120726573706F6E73652E
+		Sub ResponseReceived(url As String, httpStatus As Integer, payload As Variant)
 		  #pragma unused url
 		  #pragma unused httpStatus
 		  #pragma unused payload
@@ -699,8 +717,8 @@ End
 	#tag EndEvent
 #tag EndEvents
 #tag Events msgGetCustomer
-	#tag Event
-		Sub ResponseReceived(url As Text, httpStatus As Integer, payload As Auto)
+	#tag Event , Description = 546865205245535466756C20736572766572206861732072657475726E6564206120726573706F6E73652E
+		Sub ResponseReceived(url As String, httpStatus As Integer, payload As Variant)
 		  #pragma unused url
 		  #pragma unused httpStatus
 		  #pragma unused payload
@@ -726,7 +744,7 @@ End
 		    
 		    if me.ListIndex <> -1 then
 		      dim tag as variant = me.RowTag( me.ListIndex )
-		      dim id as text = if( tag isa Eddies.Customer, Eddies.Customer( tag ).ID, tag.TextValue )
+		      dim id as string = if( tag isa Eddies.Customer, Eddies.Customer( tag ).ID, tag.StringValue )
 		      
 		      //
 		      // Use surrogate method?
@@ -832,7 +850,7 @@ End
 #tag EndEvents
 #tag Events smsgGetCustomerSurrogate
 	#tag Event , Description = 546865205245535466756C20736572766572206861732072657475726E6564206120726573706F6E73652E
-		Sub ResponseReceived(message As RESTMessage_MTC, url As Text, httpStatus As Integer, payload As Auto)
+		Sub ResponseReceived(message As RESTMessage_MTC, url As String, httpStatus As Integer, payload As Variant)
 		  #pragma unused url
 		  #pragma unused httpStatus
 		  #pragma unused payload

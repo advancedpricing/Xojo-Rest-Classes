@@ -1,31 +1,31 @@
 #tag Interface
 Protected Interface UnitTestRESTMessage
 	#tag Method, Flags = &h0
-		Function Deserialize(value As Auto, intoProp As Introspection.PropertyInfo, currentValue As Auto) As Auto
+		Function Deserialize(value As Variant, intoProp As Introspection.PropertyInfo, currentValue As Variant) As Variant
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function ExpandURLPattern(urlPattern As Text, ByRef returnPayloadProps() As Introspection.PropertyInfo) As Text
+		Function ExpandURLPattern(urlPattern As String, ByRef returnPayloadProps() As Introspection.PropertyInfo) As String
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function GetSendParameters(ByRef action As Text, ByRef url As Text, ByRef mimeType As Text, ByRef payload As Xojo.Core.MemoryBlock) As Boolean
+		Function GetSendParameters(ByRef action As String, ByRef url As String, ByRef mimeType As String, ByRef payload As String) As Boolean
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function ProcessPayload(payload As Xojo.Core.MemoryBlock) As Auto
+		Function ProcessPayload(payload As String) As Variant
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Serialize(value As Auto) As Auto
+		Function Serialize(value As Variant) As Variant
 		  
 		End Function
 	#tag EndMethod

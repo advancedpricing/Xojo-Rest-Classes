@@ -1,20 +1,6 @@
 #tag Class
-Protected Class RESTException
+Protected Class XojoUnitTestFailedException
 Inherits RuntimeException
-	#tag Method, Flags = &h0
-		Sub Constructor()
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub Constructor(reason As String)
-		  self.Reason = reason.ToText
-		  self.Message = reason
-		End Sub
-	#tag EndMethod
-
-
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="ErrorNumber"
@@ -49,11 +35,6 @@ Inherits RuntimeException
 			Type="String"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="Reason"
-			Group="Behavior"
-			Type="Text"
-		#tag EndViewProperty
-		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
@@ -65,6 +46,11 @@ Inherits RuntimeException
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Reason"
+			Group="Behavior"
+			Type="Text"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class

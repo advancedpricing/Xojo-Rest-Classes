@@ -1,7 +1,7 @@
 #tag Module
 Protected Module M_REST
 	#tag Method, Flags = &h1
-		Protected Function AssembleURL(baseURL As Text, encodedQueries() As Text) As Text
+		Protected Function AssembleURL(baseURL As String, encodedQueries() As String) As String
 		  //
 		  // Appends the properly encoded queries to a base URL
 		  //
@@ -23,21 +23,21 @@ Protected Module M_REST
 		  //   - Queries will be trimmed and blank queries will be skipped
 		  //
 		  
-		  dim queries() as text
+		  dim queries() as string
 		  
-		  for each query as text in encodedQueries
+		  for each query as string in encodedQueries
 		    query = query.Trim
 		    if query <> "" then
 		      queries.Append query
 		    end if
 		  next
 		  
-		  dim queryText as text = Text.Join( queries, "&" )
+		  dim queryText as string = Join( queries, "&" )
 		  
 		  //
 		  // Append to the base URL
 		  //
-		  dim result as text = baseURL.Trim
+		  dim result as string = baseURL.Trim
 		  
 		  if queryText = "" then
 		    //
@@ -50,7 +50,7 @@ Protected Module M_REST
 		    //
 		    result = queryText
 		    
-		  elseif baseURL.IndexOf( "?" ) = -1 then
+		  elseif baseURL.InStr( "?" ) = 0 then
 		    result = result + "?" + queryText
 		    
 		  else
@@ -63,18 +63,18 @@ Protected Module M_REST
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function AssembleURL(baseURL As Text, encodedQuery As Text, ParamArray additionalQueries() As Text) As Text
+		Protected Function AssembleURL(baseURL As String, encodedQuery As String, ParamArray additionalQueries() As String) As String
 		  //
 		  // Appends the properly encoded queries to a base URL
 		  //
 		  // See examples in overloaded method
 		  //
 		  
-		  dim queries() as text
+		  dim queries() as string
 		  
 		  queries.Append encodedQuery
 		  
-		  for each query as text in additionalQueries
+		  for each query as string in additionalQueries
 		    queries.Append query
 		  next
 		  
@@ -261,7 +261,7 @@ Protected Module M_REST
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
+	#tag Method, Flags = &h1, CompatibilityFlags = (TargetIOS and (Target64Bit))
 		Protected Function EncodeURLComponent(src As Text, encoding As Xojo.Core.TextEncoding = Nil) As Text
 		  // Emulates the classic framework's EncodeURLComponent
 		  //

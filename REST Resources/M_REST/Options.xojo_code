@@ -3,7 +3,7 @@ Protected Class Options
 Implements PrivateOptions
 	#tag Method, Flags = &h0
 		Sub Constructor()
-		  ExpectedTextEncoding = Xojo.Core.TextEncoding.UTF8
+		  ExpectedTextEncoding = Encodings.UTF8
 		End Sub
 	#tag EndMethod
 
@@ -25,9 +25,9 @@ Implements PrivateOptions
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  dim result as Xojo.Core.TextEncoding = mExpectedTextEncoding
+			  dim result as TextEncoding = mExpectedTextEncoding
 			  if result is nil then
-			    result = Xojo.Core.TextEncoding.UTF8
+			    result = Encodings.UTF8
 			  end if
 			  
 			  return result
@@ -38,15 +38,15 @@ Implements PrivateOptions
 			  mExpectedTextEncoding = value
 			End Set
 		#tag EndSetter
-		ExpectedTextEncoding As Xojo.Core.TextEncoding
+		ExpectedTextEncoding As TextEncoding
 	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
-		Private mExpectedTextEncoding As Xojo.Core.TextEncoding
+		Private mExpectedTextEncoding As TextEncoding
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mParentMessageWR As Xojo.Core.WeakRef
+		Private mParentMessageWR As WeakRef
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -69,7 +69,7 @@ Implements PrivateOptions
 			  if value is nil then
 			    mParentMessageWR = nil
 			  else
-			    mParentMessageWR = Xojo.Core.WeakRef.Create( value )
+			    mParentMessageWR = new WeakRef( value )
 			  end if
 			  
 			End Set
@@ -144,7 +144,8 @@ Implements PrivateOptions
 		#tag ViewProperty
 			Name="ReturnPropertyPrefix"
 			Group="Behavior"
-			Type="Text"
+			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SendWithPayloadIfAvailable"

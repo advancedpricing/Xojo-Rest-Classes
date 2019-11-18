@@ -1,14 +1,14 @@
 #tag Class
 Protected Class GetCatsMessage
 Inherits RESTMessage_MTC
-	#tag Event
+	#tag Event , Description = 5468652052455354207479706520746F2075736520666F72207468697320636F6E6E656374696F6E2E204966206E6F7420696D706C656D656E7465642C2044656661756C7452455354547970652077696C6C206265207573656420696E73746561642E
 		Function GetRESTType() As RESTTypes
 		  return RESTTypes.GET
 		End Function
 	#tag EndEvent
 
-	#tag Event
-		Function GetURLPattern() As Text
+	#tag Event , Description = 5468652055524C207061747465726E20746F2075736520666F722074686520636F6E6E656374696F6E2E2043616E20696E636C7564652070726F7065727479206E616D657320746861742077696C6C20626520737562737469747574656420666F722076616C75652C20652E672E2C0A0A687474703A2F2F7777772E6578616D706C652E636F6D2F6765742F3A69643F6E616D653D3A6E616D650A0A3A696420616E64203A6E616D652077696C6C206265207265706C616365642062792070726F70657274696573206F66207468652073616D65206E616D652E
+		Function GetURLPattern() As String
 		  return "http://thecatapi.com/api/images/get?format=:Format&results_per_page=:ResultsPerPage&size=:Size&type=:Type"
 		  
 		End Function
@@ -37,6 +37,38 @@ Inherits RESTMessage_MTC
 
 
 	#tag ViewBehavior
+		#tag ViewProperty
+			Name="SentPayload"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="AllowCertificateValidation"
+			Group="Behavior"
+			Type="Boolean"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="HTTPStatusCode"
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="IsActive"
+			Group="Behavior"
+			Type="Boolean"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="QueueState"
+			Group="Behavior"
+			Type="QueueStates"
+			EditorType="Enum"
+			#tag EnumValues
+				"0 - Unused"
+				"1 - Queued"
+				"2 - Processed"
+			#tag EndEnumValues
+		#tag EndViewProperty
 		#tag ViewProperty
 			Name="DefaultRESTType"
 			Visible=true
@@ -166,12 +198,6 @@ Inherits RESTMessage_MTC
 			Group="Behavior"
 			InitialValue="jpg"
 			Type="Text"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="ValidateCertificates"
-			Visible=true
-			Group="Behavior"
-			Type="Boolean"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class

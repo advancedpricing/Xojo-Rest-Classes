@@ -15,19 +15,19 @@ Inherits TestGroup
 		  msg.DefaultRESTType = RESTMessage_MTC.RESTTypes.GET
 		  msg.UseURL = "http://example.com/:SomeString/:someindex"
 		  
-		  dim expectURL as text = "http://example.com/something/4"
-		  dim expectMIMEType as text = "application/json"
+		  dim expectURL as string = "http://example.com/something/4"
+		  dim expectMIMEType as string = "application/json"
 		  
-		  dim action as text
-		  dim url as text
-		  dim mimeType as text
-		  dim payload as Xojo.Core.MemoryBlock
+		  dim action as string
+		  dim url as string
+		  dim mimeType as string
+		  dim payload as string
 		  
 		  dim test as M_REST.UnitTestRESTMessage = msg
 		  Assert.IsTrue test.GetSendParameters( action, url, mimeType, payload )
 		  Assert.AreEqual action, "GET", "Action does not match"
 		  Assert.AreEqual expectURL, url, "URL does not match"
-		  Assert.IsNil payload, "Payload should be nil"
+		  Assert.AreEqual "", payload, "Payload should be empty"
 		  
 		  msg.DefaultRESTType = RESTMessage_MTC.RESTTypes.POST
 		  msg.IncludeBoolean = true
@@ -37,11 +37,11 @@ Inherits TestGroup
 		  Assert.IsTrue test.GetSendParameters( action, url, mimeType, payload )
 		  Assert.AreEqual "POST", action
 		  Assert.AreEqual expectMIMEType, mimeType
-		  Assert.IsNotNil payload, "Payload should not be nil"
+		  Assert.AreNotEqual "", payload, "Payload should not be empty"
 		  
-		  dim json as Xojo.Core.Dictionary
+		  dim json as Dictionary
 		  try
-		    json = Xojo.Data.ParseJSON( Xojo.Core.TextEncoding.UTF8.ConvertDataToText( payload ) )
+		    json = M_JSON.ParseJSON_MTC( payload )
 		    Assert.Pass "Payload was properly converted"
 		  catch err as RuntimeException
 		    if err isa EndException or err isa ThreadEndException then
@@ -68,22 +68,21 @@ Inherits TestGroup
 		  
 		  Assert.AreEqual 0, json.Count, "JSON has unexpected additional keys"
 		  
-		  dim exampleDict as new Xojo.Core.Dictionary
+		  dim exampleDict as new Dictionary
 		  exampleDict.Value( "hey" ) = "ho"
 		  exampleDict.Value( "blah" ) = 34
 		  
-		  dim returnJSON as new Xojo.Core.Dictionary
+		  dim returnJSON as new Dictionary
 		  returnJSON.Value( "Boolean" ) = true
 		  returnJSON.Value( "String" ) = "another string"
 		  returnJSON.Value( "Text" ) = "111 text"
 		  returnJSON.Value( "Dictionary" ) = exampleDict
 		  returnJSON.Value( "Date" ) = "2016-03-12T14:05:06Z"
-		  dim expectDate as new Xojo.Core.Date( 2016, 03, 12, 14, 5, 6, 0, Xojo.Core.TimeZone.Current )
-		  dim returnPayload as Xojo.Core.MemoryBlock = _
-		  Xojo.Core.TextEncoding.UTF8.ConvertTextToData( Xojo.Data.GenerateJSON( returnJSON ) )
+		  dim expectDate as new Date( 2016, 03, 12, 14, 5, 6 )
+		  dim returnPayload as string = M_JSON.GenerateJSON_MTC( returnJSON )
 		  
 		  #pragma BreakOnExceptions false
-		  dim dict as Xojo.Core.Dictionary = test.ProcessPayload( returnPayload )
+		  dim dict as Dictionary = test.ProcessPayload( returnPayload )
 		  #pragma unused dict
 		  #pragma BreakOnExceptions default 
 		  
@@ -91,13 +90,14 @@ Inherits TestGroup
 		  Assert.AreEqual msg.ReturnString, "another string"
 		  Assert.AreEqual msg.ReturnText, "111 text"
 		  Assert.IsNotNil msg.ReturnDate
-		  Assert.AreEqual expectDate.ToText, msg.ReturnDate.ToText
+		  Assert.AreEqual expectDate.SQLDateTime, msg.ReturnDate.SQLDateTime
 		  Assert.IsNotNil msg.ReturnDictionary
 		  
-		  for each entry as Xojo.Core.DictionaryEntry in exampleDict
-		    Assert.IsTrue msg.ReturnDictionary.HasKey( entry.Key ), "ReturnDictionary missing key " + entry.Key
-		    Assert.IsTrue entry.Value = _
-		    msg.ReturnDictionary.Value( entry.Key ), "ReturnDictionary values for " + entry.Key + " do not match"
+		  for each key as variant in exampleDict.Keys
+		    dim value as variant = exampleDict.Value( key )
+		    Assert.IsTrue msg.ReturnDictionary.HasKey( key ), "ReturnDictionary missing key " + key.StringValue.ToText
+		    Assert.IsTrue value = _
+		    msg.ReturnDictionary.Value( key ), "ReturnDictionary values for " + key.StringValue.ToText + " do not match"
 		  next
 		  
 		  return

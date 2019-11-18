@@ -1,27 +1,20 @@
 #tag Class
-Protected Class RESTException
-Inherits RuntimeException
+Protected Class XojoUnitSuperClassTests
+Inherits TestGroup
 	#tag Method, Flags = &h0
-		Sub Constructor()
-		  
+		Sub OverriddenMethodTest()
+		  Assert.Fail "This superclass method should have been ignored"
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(reason As String)
-		  self.Reason = reason.ToText
-		  self.Message = reason
+		Sub SuperClassMethodTest()
+		  Assert.Pass "This superclass method executed as intended"
 		End Sub
 	#tag EndMethod
 
 
 	#tag ViewBehavior
-		#tag ViewProperty
-			Name="ErrorNumber"
-			Group="Behavior"
-			InitialValue="0"
-			Type="Integer"
-		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
 			Visible=true
@@ -37,21 +30,10 @@ Inherits RuntimeException
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="Message"
-			Group="Behavior"
-			Type="String"
-			EditorType="MultiLineEditor"
-		#tag EndViewProperty
-		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
 			Type="String"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="Reason"
-			Group="Behavior"
-			Type="Text"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"

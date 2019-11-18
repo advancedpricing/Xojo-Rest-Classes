@@ -7,7 +7,7 @@ Private Interface PrivateSurrogate
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function RaiseAuthenticationRequired(message As RESTMessage_MTC, realm As Text, ByRef name As Text, ByRef password As Text) As Boolean
+		Function RaiseAuthenticationRequired(message As RESTMessage_MTC, realm As String, ByRef name As String, ByRef password As String) As Boolean
 		  
 		End Function
 	#tag EndMethod
@@ -25,25 +25,25 @@ Private Interface PrivateSurrogate
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub RaiseError(message As RESTMessage_MTC, msg As Text)
+		Sub RaiseError(message As RESTMessage_MTC, msg As String)
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub RaiseHeadersReceived(message As RESTMessage_MTC, url As Text, httpStatus As Integer)
+		Sub RaiseHeadersReceived(message As RESTMessage_MTC, url As String, httpStatus As Integer)
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub RaiseReceiveProgress(message As RESTMessage_MTC, bytesReceived As Int64, totalBytes As Int64, newData As Xojo.Core.MemoryBlock)
+		Sub RaiseReceiveProgress(message As RESTMessage_MTC, bytesReceived As Int64, totalBytes As Int64, newData As String)
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub RaiseResponseReceived(message As RESTMessage_MTC, url As Text, httpStatus As Integer, payload As Auto)
+		Sub RaiseResponseReceived(message As RESTMessage_MTC, url As String, httpStatus As Integer, payload As Variant)
 		  
 		End Sub
 	#tag EndMethod
