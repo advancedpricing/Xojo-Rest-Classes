@@ -1639,6 +1639,17 @@ Implements PrivateMessage,UnitTestRESTMessage
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function ParseJSON(json As String) As Variant
+		  #if XojoVersion < 2012.02 then
+		    return M_JSON.ParseJSON_MTC( json )
+		  #else
+		    return ParseJSON( json )
+		  #endif
+		  
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Shared Function PositionInQueue(msg As M_REST.RESTMessage_MTC) As Integer
 		  for i as integer = 0 to MessageQueue.Ubound
@@ -1950,8 +1961,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		      #if TargetiOS then
 		        json = Xojo.Data.ParseJSON( textValue )
 		      #else
-		        'json = JSONItem_MTC.ParseJSON( textValue )
-		        json = ParseJSON_MTC( textValue )
+		        json = ParseJSON( textValue )
 		      #endif
 		      
 		      #pragma BreakOnExceptions default
