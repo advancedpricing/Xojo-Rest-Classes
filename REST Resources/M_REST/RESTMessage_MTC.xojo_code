@@ -1639,11 +1639,12 @@ Implements PrivateMessage,UnitTestRESTMessage
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function ParseJSON(json As String) As Variant
-		  #if XojoVersion < 2012.02 then
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Private Function ParseJSON(json As String) As Variant
+		  #if XojoVersion < 2019.02 then
 		    return M_JSON.ParseJSON_MTC( json )
 		  #else
+		    #pragma warning "Should be disabled in Xojo 2019r2 and later"
 		    return ParseJSON( json )
 		  #endif
 		  
