@@ -1950,7 +1950,24 @@ Implements PrivateMessage,UnitTestRESTMessage
 		      
 		      if pairs.HasKey( "charset" ) then
 		        try
-		          encoding = Encodings.GetFromCode( pairs.Value( "charset" ) )
+		          dim charset as string = pairs.Value( "charset" )
+		          select case charSet.ReplaceAll( "-", "" )
+		          case "UTF8"
+		            encoding = Encodings.UTF8
+		          case "UTF16"
+		            encoding = Encodings.UTF16
+		          case "UTF32"
+		            encoding = Encodings.UTF32
+		          case "ASCII"
+		            encoding = Encodings.ASCII
+		          case "ANSI", "Windows1252"
+		            encoding = Encodings.WindowsANSI
+		          case "ISO88591"
+		            encoding = Encodings.ISOLatin1
+		          case else
+		            encoding = Encodings.UTF8 // Take our chances
+		          end select
+		          
 		        catch err as RuntimeException
 		          if err isa EndException or err isa ThreadEndException then
 		            raise err
@@ -2481,7 +2498,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 
 
 	#tag Hook, Flags = &h0
-		Event AuthenticationRequired(realm As String, ByRef name As String, ByRef password As String) As Boolean
+		Event AuthenticationRequired(realm As String, ByRef username As String, ByRef password As String) As Boolean
 	#tag EndHook
 
 	#tag Hook, Flags = &h0, Description = 54686520696E636F6D696E67207061796C6F61642077617320636F6E76657274656420746F204A534F4E20616E642069732061626F757420746F2062652070726F6365737365642E20596F75206D6179206D6F6469667920746865206B65797320616E642076616C756573206173206E656564656420686572652E
