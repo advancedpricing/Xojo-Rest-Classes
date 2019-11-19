@@ -98,6 +98,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  #if XojoVersion >= 2019.02 then
 		    isNetException = isNetException or ( e isa NetworkException )
 		  #endif
+		  isNetException = isNetException or e.Message.InStr( "network connection was lost" ) <> 0
 		  
 		  if isNetException then
 		    select case e.ErrorNumber
