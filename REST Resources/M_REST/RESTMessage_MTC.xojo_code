@@ -508,6 +508,13 @@ Implements PrivateMessage,UnitTestRESTMessage
 
 	#tag Method, Flags = &h1
 		Protected Function Deserialize(value As Variant, intoProp As Introspection.PropertyInfo, currentValue As Variant) As Variant
+		  #if not DebugBuild 
+		    #pragma BackgroundTasks false
+		    #pragma BoundsChecking false
+		    #pragma NilObjectChecking false
+		    #pragma StackOverflowChecking false
+		  #endif
+		  
 		  dim tiDestination as Introspection.TypeInfo = intoProp.PropertyType
 		  #if TargetiOS then
 		    dim typeName as text = tiDestination.Name
@@ -553,6 +560,13 @@ Implements PrivateMessage,UnitTestRESTMessage
 
 	#tag Method, Flags = &h1
 		Protected Function DeserializeArray(value As Variant, intoProp As Introspection.PropertyInfo, existingArray As Variant) As Variant
+		  #if not DebugBuild 
+		    #pragma BackgroundTasks false
+		    #pragma BoundsChecking false
+		    #pragma NilObjectChecking false
+		    #pragma StackOverflowChecking false
+		  #endif
+		  
 		  dim tiDestination as Introspection.TypeInfo = intoProp.PropertyType
 		  dim typeName as String = tiDestination.Name
 		  
@@ -923,6 +937,13 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  // https://en.wikipedia.org/wiki/ISO_8601
 		  //
 		  
+		  #if not DebugBuild 
+		    #pragma BackgroundTasks false
+		    #pragma BoundsChecking false
+		    #pragma NilObjectChecking false
+		    #pragma StackOverflowChecking false
+		  #endif
+		  
 		  dim value as string = variantValue
 		  
 		  dim parts() as string = value.Split( "T" )
@@ -1034,6 +1055,13 @@ Implements PrivateMessage,UnitTestRESTMessage
 
 	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Private Function DeserializeDictionary(source As Dictionary, intoProp As Introspection.PropertyInfo) As Variant
+		  #if not DebugBuild 
+		    #pragma BackgroundTasks false
+		    #pragma BoundsChecking false
+		    #pragma NilObjectChecking false
+		    #pragma StackOverflowChecking false
+		  #endif
+		  
 		  select case intoProp.PropertyType.FullName.Replace( "()", "" )
 		  case "Xojo.Core.Dictionary"
 		    dim dict as new Xojo.Core.Dictionary
@@ -1095,6 +1123,14 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  if value = nil then
 		    return nil
 		  end if
+		  
+		  #if not DebugBuild 
+		    #pragma BackgroundTasks false
+		    #pragma BoundsChecking false
+		    #pragma NilObjectChecking false
+		    #pragma StackOverflowChecking false
+		  #endif
+		  
 		  
 		  dim tiObject as Introspection.TypeInfo = if( objectTypeInfo is nil, intoProp.PropertyType, objectTypeInfo )
 		  #if TargetiOS then
@@ -1464,6 +1500,13 @@ Implements PrivateMessage,UnitTestRESTMessage
 
 	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Private Sub JSONObjectToProps(json As Dictionary, propsDict As Dictionary, propPrefix As String, hostObject As Object)
+		  #if not DebugBuild 
+		    #pragma BackgroundTasks false
+		    #pragma BoundsChecking false
+		    #pragma NilObjectChecking false
+		    #pragma StackOverflowChecking false
+		  #endif
+		  
 		  '#if DebugBuild then
 		  'json = json // A place to break
 		  '
@@ -1671,7 +1714,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Private Function ParseJSON(json As String) As Variant
 		  #if XojoVersion < 2019.02 then
-		    return M_JSON.ParseJSON_MTC( json )
+		    return M_JSON.ParseJSON_MTC( json, IsJSONCaseSensitive )
 		  #else
 		    #pragma warning "Should be disabled in Xojo 2019r2 and later"
 		    return ParseJSON( json )
@@ -2644,6 +2687,10 @@ Implements PrivateMessage,UnitTestRESTMessage
 		#tag EndGetter
 		IsConnected As Boolean
 	#tag EndComputedProperty
+
+	#tag Property, Flags = &h0
+		IsJSONCaseSensitive As Boolean = True
+	#tag EndProperty
 
 	#tag Property, Flags = &h0
 		Shared MaximumConnections As Integer = 4
