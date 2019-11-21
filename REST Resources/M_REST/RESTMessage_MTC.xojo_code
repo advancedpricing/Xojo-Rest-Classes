@@ -1484,7 +1484,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  
 		  for i as integer = 0 to keys.Ubound
 		    dim key as string = keys( i )
-		    dim value as auto = values( i )
+		    dim value as variant = values( i )
 		    
 		    dim returnPropName as string = propPrefix + key
 		    dim returnPropNameKey as string = returnPropName
@@ -1502,7 +1502,8 @@ Implements PrivateMessage,UnitTestRESTMessage
 		        // If the value now holds an Object(), it was already populated by
 		        // DeserializeArray, so we can skip the TypeMismatchException
 		        //
-		        if value = nil or Xojo.Introspection.GetType( value ).Name <> "Object()" then
+		        if value.IsNull or not value.IsArray or Introspection.GetType( value ).Name <> "Object()" then
+		          'if value = nil or Xojo.Introspection.GetType( value ).Name <> "Object()" then
 		          #pragma BreakOnExceptions false
 		          prop.Value( hostObject ) = value
 		          #pragma BreakOnExceptions default
@@ -2147,6 +2148,17 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  MessageQueueTimer.Period = kQueuePeriodImmediate
 		  
 		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Protected Sub Send(method as String, url as String)
+		  //
+		  // Disable external access to this
+		  //
+		  
+		  PrepareToSend
+		  super.Send( method, url )
 		End Sub
 	#tag EndMethod
 
