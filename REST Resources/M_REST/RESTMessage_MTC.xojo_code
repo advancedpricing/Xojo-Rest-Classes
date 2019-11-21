@@ -3132,6 +3132,12 @@ Implements PrivateMessage,UnitTestRESTMessage
 			Type="String"
 			EditorType="MultiLineEditor"
 		#tag EndViewProperty
+		#tag ViewProperty
+			Name="IsJSONCaseSensitive"
+			Group="Behavior"
+			InitialValue="True"
+			Type="Boolean"
+		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
 #tag EndClass
