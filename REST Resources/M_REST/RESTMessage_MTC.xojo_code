@@ -953,6 +953,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  
 		  dim tz as Xojo.Core.TimeZone = Xojo.Core.TimeZone.Current
 		  dim tzHours as double = tz.SecondsFromGMT / 3600.0
+		  dim localTzHours as double = tzHours
 		  
 		  if parts.Ubound = 1 then
 		    dim timePart as string = parts( 1 )
@@ -963,7 +964,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    case timePart.InStr( "Z" ) <> 0
 		      timeParts = timePart.Split( "Z" )
 		      timePart = timeParts( 0 )
-		      tzPart = "0"
+		      tzPart = "00:00"
 		      
 		    case timePart.InStr( "-" ) <> 0
 		      timeParts = timePart.Split( "-" )
@@ -1019,6 +1020,11 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  case else
 		    #if not TargetiOS then
 		      dim d as new Date( year, month, day, hour, minute, second, tzHours )
+		      
+		      if MessageOptions.AdjustDatesForTimeZone then
+		        d.GMTOffset = localTzHours
+		      end if
+		      
 		      return d
 		    #endif
 		    
