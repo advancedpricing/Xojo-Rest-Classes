@@ -67,8 +67,8 @@ Implements PrivateSurrogate
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub RaiseError(message As RESTMessage_MTC, msg As String)
-		  RaiseEvent Error( message, msg )
+		Private Sub RaiseError(message As RESTMessage_MTC, msg As String, error As RuntimeException)
+		  RaiseEvent Error( message, msg, error )
 		End Sub
 	#tag EndMethod
 
@@ -133,7 +133,7 @@ Implements PrivateSurrogate
 	#tag EndHook
 
 	#tag Hook, Flags = &h0, Description = 416E206572726F7220686173206F636375727265642E
-		Event Error(message As RESTMessage_MTC, msg As String)
+		Event Error(message As RESTMessage_MTC, msg As String, error As RuntimeException)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0, Description = 54686520686561646572732063616D65206261636B2066726F6D20746865207365727665722E

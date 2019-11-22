@@ -94,40 +94,24 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    surrogate.RemoveMessage self
 		  end if
 		  
-		  dim isNetException as boolean = e isa Xojo.Net.NetException
-		  #if XojoVersion >= 2019.02 then
-		    isNetException = isNetException or ( e isa NetworkException )
-		  #endif
-		  isNetException = isNetException or e.Message.InStr( "network connection was lost" ) <> 0
+		  select case e.ErrorNumber
+		  case 102
+		    RaiseEvent Disconnected
+		    
+		    if surrogate isa object then
+		      surrogate.RaiseDisconnected( self )
+		    end if
+		    
+		  case else
+		    RaiseEvent Error( e.Message, e )
+		    
+		    if surrogate isa object then
+		      surrogate.RaiseError( self, e.Message, e )
+		    end if
+		    
+		  end select
 		  
-		  if isNetException then
-		    select case e.ErrorNumber
-		    case 102
-		      RaiseEvent Disconnected
-		      
-		      if surrogate isa object then
-		        surrogate.RaiseDisconnected( self )
-		      end if
-		      
-		    case else
-		      RaiseEvent Error( e.Message )
-		      
-		      if surrogate isa object then
-		        surrogate.RaiseError( self, e.Message )
-		      end if
-		      
-		    end select
-		    
-		    MessageSurrogate = nil
-		    
-		  else
-		    
-		    MessageSurrogate = nil
-		    raise e
-		    
-		  end if
-		  
-		  
+		  MessageSurrogate = nil
 		End Sub
 	#tag EndEvent
 
@@ -1253,6 +1237,8 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  dim mimeType as string
 		  dim payload as string
 		  
+		  mAttemptedURL = ""
+		  
 		  if not GetSendParameters( action, url, mimeType, payload ) then
 		    //
 		    // The user chose to cancel
@@ -1260,6 +1246,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    return
 		  end if
 		  
+		  mAttemptedURL = url
 		  mSentPayload = ""
 		  
 		  if payload <> "" then
@@ -2580,7 +2567,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 	#tag EndHook
 
 	#tag Hook, Flags = &h0, Description = 416E206572726F7220686173206F636375727265642E
-		Event Error(msg As String)
+		Event Error(msg As String, error As RuntimeException)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0, Description = 4578636C75646520612070726F70657274792066726F6D20746865206F7574676F696E67207061796C6F6164207468617420776F756C64206F746865727769736520626520696E636C756465642C206F72206368616E6765207468652070726F7065727479206E616D6520616E642F6F722076616C756520746861742077696C6C20626520757365642E
@@ -2631,6 +2618,15 @@ Implements PrivateMessage,UnitTestRESTMessage
 		Event SkipIncomingPayloadProcessing(url As String, httpStatus As Integer, ByRef payload As Variant) As Boolean
 	#tag EndHook
 
+
+	#tag ComputedProperty, Flags = &h0, Description = 4C6173742055524C20617474656D7074656420746F206265206C6F61646564
+		#tag Getter
+			Get
+			  return mAttemptedURL
+			End Get
+		#tag EndGetter
+		AttemptedURL As String
+	#tag EndComputedProperty
 
 	#tag Property, Flags = &h21
 		Private Shared ClassMetaDict As Dictionary
@@ -2690,6 +2686,10 @@ Implements PrivateMessage,UnitTestRESTMessage
 
 	#tag Property, Flags = &h0
 		IsJSONCaseSensitive As Boolean = True
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Attributes( hidden ) Private mAttemptedURL As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h0

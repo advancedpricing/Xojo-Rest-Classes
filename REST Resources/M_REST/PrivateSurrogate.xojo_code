@@ -25,7 +25,7 @@ Private Interface PrivateSurrogate
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub RaiseError(message As RESTMessage_MTC, msg As String)
+		Sub RaiseError(message As RESTMessage_MTC, msg As String, error As RuntimeException)
 		  
 		End Sub
 	#tag EndMethod
