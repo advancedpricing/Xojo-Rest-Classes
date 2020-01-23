@@ -3005,13 +3005,19 @@ Implements PrivateMessage,UnitTestRESTMessage
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="AllowCertificateValidation"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Boolean"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="HTTPStatusCode"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="DefaultRESTType"
@@ -3042,16 +3048,23 @@ Implements PrivateMessage,UnitTestRESTMessage
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IsActive"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Boolean"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IsConnected"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Boolean"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"
@@ -3059,21 +3072,29 @@ Implements PrivateMessage,UnitTestRESTMessage
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="MessageSerialNumber"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Int64"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
+			InitialValue=""
 			Type="String"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="QueueState"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="QueueStates"
 			EditorType="Enum"
 			#tag EnumValues
@@ -3084,7 +3105,9 @@ Implements PrivateMessage,UnitTestRESTMessage
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RESTType"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="RESTTypes"
 			EditorType="Enum"
 			#tag EnumValues
@@ -3105,19 +3128,27 @@ Implements PrivateMessage,UnitTestRESTMessage
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RoundTripMs"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Double"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RoundTripWithProcessingMs"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Double"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
+			InitialValue=""
 			Type="String"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
@@ -3125,18 +3156,31 @@ Implements PrivateMessage,UnitTestRESTMessage
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SentPayload"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="String"
 			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IsJSONCaseSensitive"
+			Visible=false
 			Group="Behavior"
 			InitialValue="True"
 			Type="Boolean"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="AttemptedURL"
+			Visible=false
+			Group="Behavior"
+			InitialValue=""
+			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
