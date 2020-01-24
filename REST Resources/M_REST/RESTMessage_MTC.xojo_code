@@ -1373,13 +1373,12 @@ Implements PrivateMessage,UnitTestRESTMessage
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
+	#tag Method, Flags = &h21, CompatibilityFlags = API1Only or true
 		Private Function GenerateJSON(value As Variant) As String
 		  #if XojoVersion < 2019.02 then
 		    return M_JSON.GenerateJSON_MTC( value )
 		  #else
-		    #pragma warning "Should be disabled in Xojo 2019r2 and later"
-		    return GenerateJSON( value )
+		    #pragma error "Should be disabled with API 2.0"
 		  #endif
 		  
 		End Function
@@ -1698,13 +1697,16 @@ Implements PrivateMessage,UnitTestRESTMessage
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h21, CompatibilityFlags = API1Only or ( (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) )
 		Private Function ParseJSON(json As String) As Variant
 		  #if XojoVersion < 2019.02 then
 		    return M_JSON.ParseJSON_MTC( json, IsJSONCaseSensitive )
 		  #else
-		    #pragma warning "Should be disabled in Xojo 2019r2 and later"
-		    return ParseJSON( json )
+		    if IsJSONCaseSensitive then
+		      return Xojo.ParseJSON( json )
+		    else
+		      return M_JSON.ParseJSON_MTC( json, IsJSONCaseSensitive )
+		    end if
 		  #endif
 		  
 		End Function
