@@ -3138,6 +3138,12 @@ Implements PrivateMessage,UnitTestRESTMessage
 			InitialValue="True"
 			Type="Boolean"
 		#tag EndViewProperty
+		#tag ViewProperty
+			Name="AttemptedURL"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
 #tag EndClass
