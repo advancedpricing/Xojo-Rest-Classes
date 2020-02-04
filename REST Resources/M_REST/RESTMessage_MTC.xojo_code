@@ -1373,13 +1373,12 @@ Implements PrivateMessage,UnitTestRESTMessage
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
+	#tag Method, Flags = &h21, CompatibilityFlags = API1Only or true
 		Private Function GenerateJSON(value As Variant) As String
 		  #if XojoVersion < 2019.02 then
 		    return M_JSON.GenerateJSON_MTC( value )
 		  #else
-		    #pragma warning "Should be disabled in Xojo 2019r2 and later"
-		    return GenerateJSON( value )
+		    #pragma error "Should be disabled with API 2.0"
 		  #endif
 		  
 		End Function
@@ -1698,13 +1697,16 @@ Implements PrivateMessage,UnitTestRESTMessage
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h21, CompatibilityFlags = API1Only or ( (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) )
 		Private Function ParseJSON(json As String) As Variant
 		  #if XojoVersion < 2019.02 then
 		    return M_JSON.ParseJSON_MTC( json, IsJSONCaseSensitive )
 		  #else
-		    #pragma warning "Should be disabled in Xojo 2019r2 and later"
-		    return ParseJSON( json )
+		    if IsJSONCaseSensitive then
+		      return Xojo.ParseJSON( json )
+		    else
+		      return M_JSON.ParseJSON_MTC( json, IsJSONCaseSensitive )
+		    end if
 		  #endif
 		  
 		End Function
@@ -3005,13 +3007,19 @@ Implements PrivateMessage,UnitTestRESTMessage
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="AllowCertificateValidation"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Boolean"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="HTTPStatusCode"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="DefaultRESTType"
@@ -3042,16 +3050,23 @@ Implements PrivateMessage,UnitTestRESTMessage
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IsActive"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Boolean"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IsConnected"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Boolean"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"
@@ -3059,21 +3074,29 @@ Implements PrivateMessage,UnitTestRESTMessage
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="MessageSerialNumber"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Int64"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
+			InitialValue=""
 			Type="String"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="QueueState"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="QueueStates"
 			EditorType="Enum"
 			#tag EnumValues
@@ -3084,7 +3107,9 @@ Implements PrivateMessage,UnitTestRESTMessage
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RESTType"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="RESTTypes"
 			EditorType="Enum"
 			#tag EnumValues
@@ -3105,19 +3130,27 @@ Implements PrivateMessage,UnitTestRESTMessage
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RoundTripMs"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Double"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RoundTripWithProcessingMs"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Double"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
+			InitialValue=""
 			Type="String"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
@@ -3125,18 +3158,31 @@ Implements PrivateMessage,UnitTestRESTMessage
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SentPayload"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="String"
 			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IsJSONCaseSensitive"
+			Visible=false
 			Group="Behavior"
 			InitialValue="True"
 			Type="Boolean"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="AttemptedURL"
+			Visible=false
+			Group="Behavior"
+			InitialValue=""
+			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="AttemptedURL"
