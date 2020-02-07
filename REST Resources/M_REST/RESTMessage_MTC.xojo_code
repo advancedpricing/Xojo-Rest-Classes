@@ -3186,7 +3186,9 @@ Implements PrivateMessage,UnitTestRESTMessage
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="AttemptedURL"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="String"
 			EditorType="MultiLineEditor"
 		#tag EndViewProperty
