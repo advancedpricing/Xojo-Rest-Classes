@@ -378,8 +378,6 @@ Protected Module M_REST
 		  
 		  return value.StringValue // Expect this to maybe raise an exception
 		  
-		  dim ti as Introspection.TypeInfo = Introspection.GetType( value )
-		  
 		End Function
 	#tag EndMethod
 
