@@ -18,17 +18,17 @@ Implements PrivateMessage,UnitTestRESTMessage
 
 	#tag Event
 		Sub ContentReceived(URL As String, HTTPStatus As Integer, content As String)
+		  //
+		  // Preserve the surrogate
+		  //
+		  dim surrogate as M_REST.PrivateSurrogate = MessageSurrogate
+		  
+		  Disconnect
+		  
 		  ResponseReceivedMicroseconds = Microseconds
 		  System.DebugLog "Response received at " + format( ResponseReceivedMicroseconds / 1000.0, "#,0" ) + ", " + _
 		  "size = " + format( content.LenB / 1000, "#,0.000" ) + " Kb"
 		  System.DebugLog "Round-trip ms = " + format( ( ResponseReceivedMicroseconds - RequestSentMicroseconds ) / 1000.0, "#,0" )
-		  
-		  mIsConnected = false
-		  dim surrogate as M_REST.PrivateSurrogate = MessageSurrogate
-		  
-		  if surrogate isa object then
-		    surrogate.RemoveMessage self
-		  end if
 		  
 		  ClearReturnProperties
 		  
@@ -74,7 +74,6 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  
 		  if surrogate isa object then
 		    surrogate.RaiseResponseReceived( self, url, httpStatus, payload )
-		    MessageSurrogate = nil
 		  end if
 		  
 		  dim eventsFinishedMicroseconds as double = Microseconds
@@ -86,13 +85,15 @@ Implements PrivateMessage,UnitTestRESTMessage
 
 	#tag Event
 		Sub Error(e As RuntimeException)
-		  mIsConnected = false
-		  
+		  //
+		  // Preserve the surrogate
+		  //
 		  dim surrogate as M_REST.PrivateSurrogate = MessageSurrogate
 		  
-		  if surrogate isa object then
-		    surrogate.RemoveMessage self
-		  end if
+		  //
+		  // Make sure we are disconnected
+		  //
+		  Disconnect
 		  
 		  select case e.ErrorNumber
 		  case 102
@@ -111,7 +112,6 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    
 		  end select
 		  
-		  MessageSurrogate = nil
 		End Sub
 	#tag EndEvent
 
@@ -319,7 +319,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  CreateMeta
 		  
 		  TimeoutTimer = new Timer
-		  TimeoutTimer.Mode = Timer.ModeOff
+		  TimeoutTimer.RunMode = Timer.RunModes.Off
 		  
 		  AddHandler TimeoutTimer.Action, WeakAddressOf TimeoutTimer_Action
 		  
@@ -327,7 +327,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    MessageQueueTimer = new Timer
 		    MessageQueueTimer.Period = kQueuePeriodNormal
 		    AddHandler MessageQueueTimer.Action, AddressOf ProcessMessageQueue
-		    MessageQueueTimer.Mode = Timer.ModeMultiple
+		    MessageQueueTimer.RunMode = Timer.RunModes.Off // Will be turned on when a message is sent
 		  end if
 		  
 		  RaiseEvent Setup
@@ -1185,7 +1185,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 	#tag Method, Flags = &h21
 		Private Sub Destructor()
 		  if TimeoutTimer isa Object then
-		    TimeoutTimer.Mode = Timer.ModeOff
+		    TimeoutTimer.RunMode = Timer.RunModes.Off
 		    RemoveHandler TimeoutTimer.Action, WeakAddressOf TimeoutTimer_Action
 		    TimeoutTimer = nil
 		  end if
@@ -1204,13 +1204,10 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  // Change the state to make sure it's removed from the queue
 		  //
 		  
-		  mQueueState = QueueStates.Processed
-		  
-		  if IsConnected then
-		    mIsConnected = false
-		    TimeoutTimer.Mode = Timer.ModeOff
-		    super.Disconnect
-		  end if
+		  mQueueState = QueueStates.Finished
+		  super.Disconnect
+		  mIsConnected = false
+		  TimeoutTimer.RunMode = Timer.RunModes.Off
 		  
 		  dim surrogate as M_REST.PrivateSurrogate = MessageSurrogate
 		  if surrogate isa object then
@@ -1258,7 +1255,8 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  end if
 		  
 		  MessageSurrogate = surrogate
-		  Send action, url
+		  PrepareToSend
+		  super.Send action, url, kTimeoutParamValue
 		  
 		  //
 		  // Store the raw data
@@ -1733,7 +1731,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  ResponseReceivedMicroseconds = -1.0
 		  
 		  TimeoutTimer.Period = MessageOptions.TimeOutSeconds * 1000
-		  TimeoutTimer.Mode = Timer.ModeMultiple
+		  TimeoutTimer.RunMode = Timer.RunModes.Multiple
 		  
 		  System.DebugLog "Message sent at " + format(Microseconds / 1000.0, "#,0")
 		End Sub
@@ -1851,43 +1849,75 @@ Implements PrivateMessage,UnitTestRESTMessage
 
 	#tag Method, Flags = &h21
 		Private Shared Sub ProcessMessageQueue(sender As Timer)
+		  #if DebugBuild then
+		    static µs as double = Microseconds
+		    var nowµs as double = Microseconds
+		    var diffms as double = ( nowµs - µs ) / 1000.0
+		    µs = nowµs
+		    
+		    System.DebugLog CurrentMethodName + ": Since last run " + diffms.ToString( "#,##0.000" ) + " ms, " + _
+		    "Messages in queue " + MessageQueue.Count.ToString( "#,##0" )
+		  #endif
+		  
 		  dim connectedCount as integer
-		  dim queuedCount as integer
+		  
 		  //
 		  // First clear the stale connections
-		  // and count the connections
+		  // and count the connections; also build
+		  // a separate array to send
 		  //
+		  dim sendThese() as M_REST.RESTMessage_MTC
+		  
 		  for i as integer = MessageQueue.Ubound downto 0
 		    dim msg as M_REST.RESTMessage_MTC = MessageQueue( i )
-		    if msg.QueueState = QueueStates.Processed and not msg.IsConnected then // Same as IsActive
+		    if msg.QueueState = QueueStates.Finished or _
+		      ( msg.QueueState = QueueStates.Processed and not msg.IsConnected ) then // Same as IsActive
 		      MessageQueue.Remove i
 		    elseif msg.IsConnected then
 		      connectedCount = connectedCount + 1
 		    elseif msg.QueueState = QueueStates.Queued then
-		      queuedCount = queuedCount + 1
+		      sendThese.AddAt 0, msg // Match the order of the messages
 		    end if
 		  next
 		  
 		  //
-		  // See if we need to connect more
+		  // Trim the sendThese queue
 		  //
-		  if queuedCount <> 0 and _ 
-		    ( MaximumConnections <= 0 or connectedCount < MaximumConnections ) then
-		    for i as integer = 0 to MessageQueue.Ubound
-		      dim msg as M_REST.RESTMessage_MTC = MessageQueue( i )
-		      
-		      if msg.QueueState = QueueStates.Queued then
-		        msg.DoSend
-		        connectedCount = connectedCount + 1
-		        queuedCount = queuedCount - 1
-		        if connectedCount >= MaximumConnections or queuedCount <= 0 then
-		          exit for i
-		        end if
-		      end if
-		    next
+		  if MaximumConnections > 0 then
+		    dim openSlots as integer = MaximumConnections - connectedCount
+		    if openSlots < 0 then
+		      openSlots = 0
+		    end if
+		    
+		    if sendThese.Count > openSlots then
+		      sendThese.ResizeTo openSlots - 1
+		    end if
 		  end if
 		  
+		  //
+		  // Send what's left in the order they were requested
+		  //
+		  for i as integer = 0 to sendThese.LastIndex
+		    dim msg as M_REST.RESTMessage_MTC = sendThese( i )
+		    
+		    //
+		    // Let's make super-duper sure
+		    //
+		    if msg.QueueState = QueueStates.Queued then
+		      msg.DoSend
+		    end if
+		  next
+		  
 		  sender.Period = kQueuePeriodNormal
+		  if MessageQueue.Count <> 0 then
+		    sender.RunMode = Timer.RunModes.Single // Reset for the next round
+		  end if
+		  
+		  #if DebugBuild then
+		    if sender.RunMode = Timer.RunModes.Off then
+		      System.DebugLog CurrentMethodName + ": Stopping MessageQueueTimer"
+		    end if
+		  #endif
 		  
 		End Sub
 	#tag EndMethod
@@ -2177,44 +2207,69 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  MessageSurrogate = surrogate
 		  MessageQueue.Append self
 		  
+		  //
+		  // Reset the Timer so it runs immediately
+		  //
 		  MessageQueueTimer.Period = kQueuePeriodImmediate
-		  
-		  
+		  MessageQueueTimer.RunMode = Timer.RunModes.Single
+		  MessageQueueTimer.Reset
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Protected Sub Send(method as String, url as String)
+		Protected Sub Send(method As String, url As String, file As FolderItem, timeout As Integer = kTimeoutParamValue)
 		  //
 		  // Disable external access to this
 		  //
 		  
 		  PrepareToSend
-		  super.Send( method, url )
+		  super.Send( method, url, file, timeout )
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Protected Sub Send(method as String, url as String, file as FolderItem)
+		Protected Sub Send(method As String, url As String, timeout As Integer = kTimeoutParamValue)
 		  //
 		  // Disable external access to this
 		  //
 		  
 		  PrepareToSend
-		  super.Send( method, url, file )
+		  super.Send( method, url, timeout )
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1, CompatibilityFlags = (TargetIOS and (Target64Bit))
-		Protected Sub Send(method as Text, url as Text)
+		Protected Sub Send(method As Text, url As Text, timeout As Integer = kTimeoutParamValue)
 		  //
 		  // Disable external access to this
 		  //
 		  
 		  PrepareToSend
-		  super.Send( method, url )
+		  super.Send( method, url, timeout )
 		  
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub SendSync(method As String, url As String, file As FolderItem, timeout As Integer = 0)
+		  //
+		  // Disable external access to this
+		  //
+		  
+		  super.SendSync( method, url, file, timeout )
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function SendSync(method As String, url As String, timeout As Integer = 0) As String
+		  //
+		  // Disable external access to this
+		  //
+		  
+		  return super.SendSync( method, url, timeout )
+		  
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
@@ -2486,9 +2541,9 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    end if
 		  end if
 		  
-		  sender.Mode = Timer.ModeOff
+		  sender.RunMode = Timer.RunModes.Off
 		  if IsConnected then
-		    sender.Mode = Timer.ModeMultiple
+		    sender.RunMode = Timer.RunModes.Multiple
 		  end if
 		  
 		End Sub
@@ -2977,6 +3032,9 @@ Implements PrivateMessage,UnitTestRESTMessage
 	#tag Constant, Name = kQueuePeriodNormal, Type = Double, Dynamic = False, Default = \"200", Scope = Private
 	#tag EndConstant
 
+	#tag Constant, Name = kTimeoutParamValue, Type = Double, Dynamic = False, Default = \"600", Scope = Private
+	#tag EndConstant
+
 	#tag Constant, Name = kVersion, Type = String, Dynamic = False, Default = \"1.3", Scope = Public
 	#tag EndConstant
 
@@ -2984,7 +3042,8 @@ Implements PrivateMessage,UnitTestRESTMessage
 	#tag Enum, Name = QueueStates, Type = Integer, Flags = &h0
 		Unused
 		  Queued
-		Processed
+		  Processed
+		Finished
 	#tag EndEnum
 
 	#tag Enum, Name = RESTTypes, Type = Integer, Flags = &h0
@@ -3103,6 +3162,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 				"0 - Unused"
 				"1 - Queued"
 				"2 - Processed"
+				"3 - Finished"
 			#tag EndEnumValues
 		#tag EndViewProperty
 		#tag ViewProperty
