@@ -66,6 +66,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  System.DebugLog "Processed at " + format( ReceiveFinishedMicroseconds / 1000.0, "#,0" )
 		  System.DebugLog "Processing ms = " + format( ( ReceiveFinishedMicroseconds - ResponseReceivedMicroseconds ) / 1000.0, "#,0" )
 		  
+		  StartProfiling
 		  RaiseEvent ResponseReceived url, httpStatus, payload 
 		  
 		  //
@@ -75,6 +76,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  if surrogate isa object then
 		    surrogate.RaiseResponseReceived( self, url, httpStatus, payload )
 		  end if
+		  StopProfiling
 		  
 		  dim eventsFinishedMicroseconds as double = Microseconds
 		  System.DebugLog "Finished raising event at " + format( eventsFinishedMicroseconds / 1000.0, "#,0" )
