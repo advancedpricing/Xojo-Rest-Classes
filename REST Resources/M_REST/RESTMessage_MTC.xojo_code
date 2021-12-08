@@ -2347,7 +2347,8 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    return value
 		    
 		  else // It's some object array
-		    dim arr() as object = value
+		    var autoValue as auto = value
+		    dim arr() as object = autoValue
 		    dim result() as auto
 		    redim result( arr.Ubound )
 		    for i as integer = 0 to arr.Ubound
