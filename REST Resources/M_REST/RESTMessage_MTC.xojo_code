@@ -26,9 +26,9 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  Disconnect
 		  
 		  ResponseReceivedMicroseconds = Microseconds
-		  System.DebugLog "Response received at " + format( ResponseReceivedMicroseconds / 1000.0, "#,0" ) + ", " + _
+		  DebugLogIfVerbose "Response received at " + format( ResponseReceivedMicroseconds / 1000.0, "#,0" ) + ", " + _
 		  "size = " + format( content.LenB / 1000, "#,0.000" ) + " Kb"
-		  System.DebugLog "Round-trip ms = " + format( ( ResponseReceivedMicroseconds - RequestSentMicroseconds ) / 1000.0, "#,0" )
+		  DebugLogIfVerbose "Round-trip ms = " + format( ( ResponseReceivedMicroseconds - RequestSentMicroseconds ) / 1000.0, "#,0" )
 		  
 		  ClearReturnProperties
 		  
@@ -63,8 +63,8 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  end if
 		  
 		  ReceiveFinishedMicroseconds = Microseconds
-		  System.DebugLog "Processed at " + format( ReceiveFinishedMicroseconds / 1000.0, "#,0" )
-		  System.DebugLog "Processing ms = " + format( ( ReceiveFinishedMicroseconds - ResponseReceivedMicroseconds ) / 1000.0, "#,0" )
+		  DebugLogIfVerbose "Processed at " + format( ReceiveFinishedMicroseconds / 1000.0, "#,0" )
+		  DebugLogIfVerbose "Processing ms = " + format( ( ReceiveFinishedMicroseconds - ResponseReceivedMicroseconds ) / 1000.0, "#,0" )
 		  
 		  StartProfiling
 		  RaiseEvent ResponseReceived url, httpStatus, payload 
@@ -79,8 +79,8 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  StopProfiling
 		  
 		  dim eventsFinishedMicroseconds as double = Microseconds
-		  System.DebugLog "Finished raising event at " + format( eventsFinishedMicroseconds / 1000.0, "#,0" )
-		  System.DebugLog "Events ms = " + format( ( eventsFinishedMicroseconds - ReceiveFinishedMicroseconds ) / 1000.0, "#,0" )
+		  DebugLogIfVerbose "Finished raising event at " + format( eventsFinishedMicroseconds / 1000.0, "#,0" )
+		  DebugLogIfVerbose "Events ms = " + format( ( eventsFinishedMicroseconds - ReceiveFinishedMicroseconds ) / 1000.0, "#,0" )
 		  
 		End Sub
 	#tag EndEvent
@@ -490,6 +490,15 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  return result
 		  
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Shared Sub DebugLogIfVerbose(msg As String)
+		  if IsVerbose then
+		    System.DebugLog msg
+		  end if
+		  
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
@@ -1735,7 +1744,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  TimeoutTimer.Period = MessageOptions.TimeOutSeconds * 1000
 		  TimeoutTimer.RunMode = Timer.RunModes.Multiple
 		  
-		  System.DebugLog "Message sent at " + format(Microseconds / 1000.0, "#,0")
+		  DebugLogIfVerbose "Message sent at " + format(Microseconds / 1000.0, "#,0")
 		End Sub
 	#tag EndMethod
 
@@ -1857,7 +1866,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		    var diffms as double = ( nowµs - µs ) / 1000.0
 		    µs = nowµs
 		    
-		    System.DebugLog CurrentMethodName + ": Since last run " + diffms.ToString( "#,##0.000" ) + " ms, " + _
+		    DebugLogIfVerbose CurrentMethodName + ": Since last run " + diffms.ToString( "#,##0.000" ) + " ms, " + _
 		    "Messages in queue " + MessageQueue.Count.ToString( "#,##0" )
 		  #endif
 		  
@@ -1917,7 +1926,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		  
 		  #if DebugBuild then
 		    if sender.RunMode = Timer.RunModes.Off then
-		      System.DebugLog CurrentMethodName + ": Stopping MessageQueueTimer"
+		      DebugLogIfVerbose CurrentMethodName + ": Stopping MessageQueueTimer"
 		    end if
 		  #endif
 		  
@@ -2087,7 +2096,7 @@ Implements PrivateMessage,UnitTestRESTMessage
 		      #pragma BreakOnExceptions default
 		      #if not TargetiOS then
 		        dim msDiff as double = ( Microseconds - processStart ) / 1000.0
-		        System.DebugLog format( msDiff, "#,0" ) + " ms for ParseJSON"
+		        DebugLogIfVerbose format( msDiff, "#,0" ) + " ms for ParseJSON"
 		      #endif
 		      subtype = "json"
 		      result = json
@@ -2746,6 +2755,10 @@ Implements PrivateMessage,UnitTestRESTMessage
 
 	#tag Property, Flags = &h0
 		IsJSONCaseSensitive As Boolean = True
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		Shared IsVerbose As Boolean
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
